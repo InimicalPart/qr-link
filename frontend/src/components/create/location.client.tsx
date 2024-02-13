@@ -14,7 +14,7 @@ export default function Location() {
     const [polygonPositions, setPolygonPositions] = useState([] as LatLngTuple[]); // The positions of the polygon's vertices [lat, lng
     const colors = ["blue", "red", "green", "yellow", "purple", "orange"]; // Add more colors if needed
     const [verifiying, setVerifying] = useState(false)
-    const [map, setMap] = useState(null)
+    const [leafletMap, setMap] = useState(null)
 
     
     useEffect(()=>{
@@ -267,7 +267,6 @@ export default function Location() {
             }
 
 
-
             let intersections = []
             for (let zoneIndex in zones) {
                 for (let zoneIndex2 in zones) {
@@ -356,11 +355,11 @@ export default function Location() {
             const zone = zones[index];
 
             if (zone.L._map) {
-                zone.L.removeFrom(map);
+                zone.L.removeFrom(leafletMap);
                 zones[index].hidden = true;
                 return;
             } else {
-                zone.L.addTo(map);
+                zone.L.addTo(leafletMap);
                 zones[index].hidden = false;
             }
         }
@@ -390,19 +389,13 @@ export default function Location() {
     }
     function LayerOrganizer({zones}: {zones: any[]}) {
         const context = useLeafletContext();
-        const map = context.map
+        setMap(context.map)
         useEffect(()=>{
             const copy = [...zones];
             for (let zone of copy.sort((a,b)=>a.priority - b.priority)) { 
                 zone.L.bringToFront();
             }
         },[zones])
-        return <></>
-    }
-    function HideController() {
-        const context = useLeafletContext();
-        const map = context.map
-        setMap(map)
         return <></>
     }
 
@@ -416,7 +409,7 @@ export default function Location() {
     },[selectedZoneIndex])
     return (
         <div>
-            <MapContainer maxBounds={[[-85.05115, -180], [85, 180]]} maxBoundsViscosity={1.0} style={{ width: 600, height: 400, left:"50%", transform:"translateX(-50%)" }} center={zones.length > 0 && selectedZoneIndex >= 0 && selectedZoneIndex < zones.length ? zones[selectedZoneIndex].position : [51.505, -0.09]} zoom={2} minZoom={2} >
+            <MapContainer maxBounds={[[-85.05115, -180], [85, 180]]} maxBoundsViscosity={1.0} style={{ width: "90vw", maxWidth: 600, height: 400, left:"50%", transform:"translateX(-50%)" }} center={zones.length > 0 && selectedZoneIndex >= 0 && selectedZoneIndex < zones.length ? zones[selectedZoneIndex].position : [51.505, -0.09]} zoom={2} minZoom={2} >
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -428,7 +421,6 @@ export default function Location() {
                 <PolygonPointsController points={polygonPositions} />
                 <SizeInvalidator/>
                 <LayerOrganizer zones={zones}/>
-                <HideController/>
             </MapContainer>
             <p style={{
                 color: "darkgray",
@@ -436,7 +428,8 @@ export default function Location() {
                 fontWeight: 500,
                 position:"absolute",
                 left:"50%",
-                transform:"translateX(-50%)"
+                transform:"translateX(-50%)",
+                width: "100%"
             }} hidden={!isCreatingZone}>{zoneType == "circle" ? "Click/Tap on the map to create a circle zone" : zoneType == "polygon" ? "Click/Tap on the map to place your first polygon point" : "Click/Tap on the map to create a zone for the entire world"}</p>
             <br/>
         <button style={{
@@ -572,7 +565,8 @@ export default function Location() {
                     textAlign: "center",
                     maxHeight: 250,
                     minHeight: 30,
-                    height: 30
+                    height: 30,
+                    width: "90%"
                 }}
                 ></textarea>
                 <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:5, fontSize:14}} title="Where to navigate once the QR-code has expired"><b>After Expiry</b> <span style={{
@@ -599,7 +593,8 @@ export default function Location() {
                     textAlign: "center",
                     maxHeight: 250,
                     minHeight: 30,
-                    height: 30
+                    height: 30,
+                    width: "90%"
                   }}
                 ></textarea>
                 

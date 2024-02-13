@@ -18,58 +18,47 @@ RUN adduser \
     --gecos "" \
     --home "/home/appuser" \
     --shell "/sbin/nologin" \
-    # --no-create-home \
     --uid "10001" \
     appuser
 
-# # supervisor group
-# RUN groupadd -g 10002 supervisor
-# RUN usermod -aG supervisor appuser
 
 ENV NODE_VERSION=18.17.1
 ENV IS_DOCKER=1
+
 RUN mkdir -p /var/lock/apache2 /var/run/apache2 /var/run/sshd /var/log/supervisor
-# RUN setfacl -Rm u:appuser:rwX /var/log/supervisor
-# RUN setfacl -dRm u:appuser:rwX /var/log/supervisor
-
-# RUN setfacl -Rm u:appuser:rwX /etc/supervisor
-# RUN setfacl -dRm u:appuser:rwX /etc/supervisor
-
-
 COPY ./backend/resources/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-# allow "appuser" to read and write to all files in /var/log/supervisor (take into account new files)
-
-# # /var/run/supervisor.sock
-# RUN setfacl -Rm u:appuser:rwX /var/run/supervisor
-# RUN setfacl -dRm u:appuser:rwX /var/run/supervisor
 WORKDIR /app
 COPY . /app
 
 RUN chown -R appuser:appuser /app
 USER appuser
+
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 ENV NVM_DIR=/home/appuser/.nvm
 RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 ENV PATH="${NVM_DIR}/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+
 USER root
+
 # link /usr/bin/node to the node binary
 RUN ln -s ${NVM_DIR}/versions/node/v${NODE_VERSION}/bin/node /usr/bin/node
 # link /usr/bin/npm to the npm binary
 RUN ln -s ${NVM_DIR}/versions/node/v${NODE_VERSION}/bin/npm /usr/bin/npm
+
 USER appuser
-# RUN chown -R appuser:appuser /tmp/supervisor.sock
+
 # Install typescript and nodemon
 RUN /usr/bin/npm install -g typescript nodemon
 RUN /usr/bin/npm install
+
 EXPOSE 3000 8080
 # Set the DISPLAY environment variable
 ENV DISPLAY=:99
 
 
 USER root
-# RUN ls -la /var/run/supervisor
-# Start supervisord within xvfb
+
 CMD ["xvfb-run", "-a", "/usr/bin/supervisord","-c", "/etc/supervisor/supervisord.conf"]
 HEALTHCHECK --interval=1s --timeout=1s --start-period=1m --retries=10 CMD if [ $(lsof -i :3000,8080 | (grep -E "*:(8080|3000) \(LISTEN\)"||echo 0)|wc -l) -eq 2 ]; then exit 0; else exit 1; fi

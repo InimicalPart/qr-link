@@ -8,10 +8,10 @@ backend/node_modules
 backend/dist
 
 ### MongoDQR ###
-mongodqr/node_modules
+MongoDQR/node_modules
 
 ### Credentials ###
-.env
+backend/.env
 frontend/.env
 
 
@@ -25,4 +25,4 @@ backend/resources/qrcodes.jsonc
 # remove all js files because we have ts files and sometimes they appear in the src/ folder
 frontend/src/**/*.js
 src/**/*.js
-mongodqr/src/**/*.js
+MongoDQR/src/**/*.js

@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 8080",
+    "dev": "next dev -p 80",
     "build": "next build",
-    "start": "next start -p 8080",
+    "start": "next start -p 80",
     "lint": "next lint",
-    "build_and_run": "next build && next start -p 8080"
+    "build_and_run": "next build && next start -p 80"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.8",
@@ -15,6 +15,7 @@
     "dotenv": "^16.4.1",
     "jose": "^5.2.0",
     "leaflet": "^1.9.4",
+    "moment-timezone": "^0.5.45",
     "next": "14.1.0",
     "p5": "^1.9.0",
     "pigeon-maps": "^0.21.3",

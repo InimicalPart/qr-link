@@ -21,7 +21,7 @@ button:disabled {
 }
 input[type="number"] {
     border-radius:8px;
-    padding-left:16px;
+    /* padding-left:16px; */
     text-align: center;
     border: 1px black solid;
 }
@@ -38,4 +38,9 @@ select {
 select > option {
     text-align: center;
     padding-left:0px;
+}
+input[type='number']::-webkit-inner-spin-button, 
+input[type='number']::-webkit-outer-spin-button { 
+    -webkit-appearance: none;
+    margin: 0;
 }
