@@ -23,7 +23,7 @@ To install the NPM dependencies for both the DynamicQR API and the frontend, you
 npm install
 ```
 
-### API server
+### API server (:3000)
 To start the API server, run the following command in the project's root directory:
 ```bash
 # Compile and run the API (:3000)
@@ -35,7 +35,7 @@ Alternatively, to run the API server in development mode (meaning that the file 
 npm run watch
 ```
 
-### NextJS frontend
+### NextJS frontend (:8080)
 To build and run the frontend for DynamicQR, you can run this command in the `frontend/` directory:
 ```bash
 # Compile and run the NextJS frontend (:8080)
