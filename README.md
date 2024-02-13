@@ -31,6 +31,10 @@ DynamicQR's API as well as it's frontend can be ran via Docker.
 To create and launch both MongoDQR (a MongoDB instance with a custom made API) and DynamicQR's API and frontend, you can run the following command in the root of the project's directory:
 ```bash
 # Create and launch Docker containers, you may also use docker-compose instead of 'docker compose' if you wish to do so.
+# Linux (best storage optimizations)
+DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose up
+
+# Windows
 docker compose up
 ```
 
@@ -38,24 +42,24 @@ docker compose up
 To start the API server, run the following command in the project's root directory:
 ```bash
 # Compile and run the API (:3000)
-npm run build_and_run
+npm run backend
 ```
 Alternatively, to run the API server in development mode (meaning that the file is rebuilt when changes happen), you can run the following command instead:
 ```bash
 # Watch for changes and run the API (:3000)
-npm run watch
+npm run backend:dev
 ```
 
 ### NextJS frontend (:8080)
-To build and run the frontend for DynamicQR, you can run this command in the `frontend/` directory:
+To build and run the frontend for DynamicQR, you can run this command in the project's root directory:
 ```bash
 # Compile and run the NextJS frontend (:8080)
-npm run build_and_run
+npm run frontend
 ```
 Alternatively, to run the frontend in development mode (meaning that the files are rebuilt when changes happen), you can run the following command instead:
 ```bash
 # Watch for changes, compile the frontend, and run the frontend (:8080)
-npm run dev
+npm run frontend:dev
 ```
 > [!CAUTION] 
 > You should **NEVER** use the development mode when running in production. This could cause major security risks.

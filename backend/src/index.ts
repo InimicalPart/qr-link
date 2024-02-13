@@ -318,7 +318,7 @@ async function convertToQRCTFormat(data: Array<MongoQRCodeInformation>): Promise
 async function readQRCodeTable(storage=storageMethod) {
   return new Promise<QRCodeTable>(async (resolve, reject) => {
     if (storage == "file") {
-        fs.readFile("./qrcodes.jsonc", "utf8", (err, data) => {
+        fs.readFile("./resources/qrcodes.jsonc", "utf8", (err, data) => {
             if (err) {
                 reject(err);
             }
@@ -471,9 +471,9 @@ async function randomString(length: number) {
 async function saveQR(id: string = null, obj: QRCodeInformation | object = {}, update:boolean=false) {
     return new Promise<void>((resolve, reject) => {
         if (storageMethod == "file") {
-            console.log("[QR] Saving QRCodeTable to qrCodes.jsonc...");
+            console.log("[QR] Saving QRCodeTable to resources/qrcodes.jsonc...");
             fs.writeFile(
-                "./qrcodes.jsonc",
+                "./resources/qrcodes.jsonc",
                 JSON.stringify(QRCodeTable, null, 2),
                 (err) => {
                     if (err) {

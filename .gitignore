@@ -4,8 +4,8 @@ frontend/.next
 frontend/build
 
 ### DQR API ###
-node_modules
-dist
+backend/node_modules
+backend/dist
 
 ### MongoDQR ###
 mongodqr/node_modules
@@ -21,7 +21,7 @@ frontend/.env
 .history
 
 # Do not commit the QR code data
-qrcodes.jsonc
+backend/resources/qrcodes.jsonc
 # remove all js files because we have ts files and sometimes they appear in the src/ folder
 frontend/src/**/*.js
 src/**/*.js
