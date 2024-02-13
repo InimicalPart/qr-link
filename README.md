@@ -23,6 +23,17 @@ To install the NPM dependencies for both the DynamicQR API and the frontend, you
 npm install
 ```
 
+### Docker (recommended)
+DynamicQR's API as well as it's frontend can be ran via Docker.
+#### Prerequisites
+- Docker (>=25.0.3)
+#### Usage
+To create and launch both MongoDQR (a MongoDB instance with a custom made API) and DynamicQR's API and frontend, you can run the following command in the root of the project's directory:
+```bash
+# Create and launch Docker containers, you may also use docker-compose instead of 'docker compose' if you wish to do so.
+docker compose up
+```
+
 ### API server (:3000)
 To start the API server, run the following command in the project's root directory:
 ```bash
@@ -48,6 +59,7 @@ npm run dev
 ```
 > [!CAUTION] 
 > You should **NEVER** use the development mode when running in production. This could cause major security risks.
+
 
 <br>
 <footer>
