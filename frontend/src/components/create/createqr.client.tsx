@@ -320,11 +320,55 @@ export default function CreateQR({
                 })
         }
         function receiveLocation(e: any) {
-            console.log("Data received", e.detail)
+            const zones = JSON.parse(e.detail.zones)
+            validateInputs(type, {data:{zones}}).then((res)=>{
+                fetch(apiURL + "/qrcode", {
+                    method: "POST",
+                    headers: {
+                    "Content-Type": "application/json",
+                    Authorization: token,
+                    },
+                    body: JSON.stringify({
+                        id: res.ID == "" ? undefined : res.ID,
+                        update_key: res.updateKey == "" ? undefined : res.updateKey,
+                        expires: res.expires,
+                        name: res.name,
+                        description: res.description,
+                        type: "redirect",
+                        data: {
+                            location: zones
+                        },
+                    }),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                    if (data.error) {
+                        alert("An error occurred while linking the QR code: " + data.error + " - " + data.message);
+                        (document.getElementById("qr-submit") as HTMLInputElement).disabled = false;
+                        document.getElementById("qr-submit").innerHTML = "Create";
+                    } else {
+                        console.log("ID: " + data.id);
+                        console.log("Update key: " + data.update_key);
+                        alert(
+                        "QR code created successfully!\nID: " +
+                            data.id +
+                            "\nUpdate key: " +
+                            data.update_key
+                        );
+                        window.location.href = "/ui";
+                    }
+                    });
+                }).catch((e)=>{
+                    if (e.message) alert(e.message)
+                    console.error(e)
+                    window.removeEventListener('data', receiveLocation);
+                    (document.getElementById("qr-submit") as HTMLInputElement).disabled = false;
+                    document.getElementById("qr-submit").innerHTML = "Create";
+                })
         }
         function verifyResults(e:any) {
             console.log("Received verifyResults event", e.detail)
-            if ((e as CustomEvent).detail?.result == "success") {
+            if ((e as CustomEvent).detail?.status == "success") {
                 window.addEventListener('data', receiveLocation)
                 window.dispatchEvent(new CustomEvent("getData"))
             } else {

@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import yaml from 'yaml'
 import { config } from 'dotenv';
+import fs from 'fs';
+import { exec } from 'child_process';
 config()
 const app = express();
 app.use(cors());
@@ -14,13 +16,11 @@ app.get('/test', (_req, res) => {
 });
 
 app.get("/mongodb/config", (_req, res) => {
-    const fs = require('fs');
     const config = yaml.parse(fs.readFileSync('/data/configdb/mongod.conf', 'utf8'));
     res.send(config);
 })
 
 app.post("/mongodb/config", (req, res) => {
-    const fs = require('fs');
     fs.writeFileSync('/data/configdb/mongod.conf', yaml.stringify(req.body));
     res.send({
         status: "success"
@@ -28,7 +28,6 @@ app.post("/mongodb/config", (req, res) => {
 })
 
 app.post("/mongodb/restart", (_req, res) => {
-    const { exec } = require('child_process');
     exec('supervisorctl restart mongod', (err) => {
         if (err) {
             console.error(err);

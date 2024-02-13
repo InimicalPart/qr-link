@@ -129,6 +129,5 @@ export default async function Home() {
 
             </div>
         </div>
-        <Script src="/res/js/create.js"/>
     </div>);
 }

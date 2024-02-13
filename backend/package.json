@@ -8,7 +8,7 @@
     "copyenv": "cp .env dist/.env",
     "build_and_run": "npm run build && node dist/index.js",
     "clean": "rm -rf dist",
-    "watch": "nodemon -x \"npm run build_and_run\" -e ts -i frontend"
+    "watch": "nodemon -x \"npm run build_and_run\" -e ts,env"
   },
   "author": "Inimi",
   "license": "MIT",
