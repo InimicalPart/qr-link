@@ -1,0 +1,3 @@
+document.getElementById("genPDF").onclick = () => {
+    
+}

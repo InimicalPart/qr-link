@@ -1,0 +1,25 @@
+### NextJS ###
+frontend/node_modules
+frontend/.next
+frontend/build
+
+### DQR API ###
+node_modules
+dist
+
+### MongoDQR ###
+mongodqr/node_modules
+
+### Credentials ###
+.env
+frontend/.env
+
+
+
+
+### Miscellanous ###
+.history
+# remove all js files because we have ts files and sometimes they appear in the src/ folder
+frontend/src/**/*.js
+src/**/*.js
+mongodqr/src/**/*.js
