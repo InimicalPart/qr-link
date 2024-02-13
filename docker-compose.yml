@@ -29,17 +29,17 @@ services:
             reservations:
               cpus: '0.25'
               memory: 512M
-        image: dynamicqr:latest
+        image: dynamicqr
         depends_on:
           mongo:
             condition: service_healthy
             required: true
         build:
             context: .
-            dockerfile: dynamicqr.Dockerfile
+            dockerfile: docker/dynamicqr.Dockerfile
     mongo:
-      hostname: MongoDB-DQR
-      container_name: MongoDB-DQR
+      hostname: MongoDQR
+      container_name: MongoDQR
       environment:
         - IS_DOCKER=1
       privileged: true
@@ -67,10 +67,10 @@ services:
       volumes:
         - MongoDQR-DATA:/data/db
         - MongoDQR-CONFIG:/data/configdb
-      image: mongodqr:latest
+      image: mongodqr
       build:
         context: .
-        dockerfile: mongo.Dockerfile
+        dockerfile: docker/mongodqr.Dockerfile
 networks:
   MDBDQR: # MongoDB-DynamicQR
     driver: bridge

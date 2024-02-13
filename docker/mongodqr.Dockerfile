@@ -7,10 +7,10 @@ ENV NODE_VERSION=18.17.1
 
 RUN apt-get update && apt-get install -y curl openssh-server apache2 supervisor lsof
 WORKDIR /app
-COPY ./mongodqr /app
 RUN mkdir -p /var/lock/apache2 /var/run/apache2 /var/run/sshd /var/log/supervisor
-COPY ./mongodqr/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY ./mongodqr/mongod.conf /data/configdb/mongod.conf
+COPY . /app
+COPY ./MongoDQR/resources/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY ./MongoDQR/resources/mongod.conf /data/configdb/mongod.conf
 RUN mkdir /root/.nvm
 RUN ls -la /root
 ENV NVM_DIR=/root/.nvm
@@ -33,7 +33,7 @@ RUN ls -la /usr/bin/npm
 
 RUN whoami
 
-RUN /usr/bin/npm install
+RUN cd /app/MongoDQR && /usr/bin/npm install
 
 EXPOSE 27017 3010
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
