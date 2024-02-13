@@ -1,0 +1,26 @@
+.DQR-container {
+    margin-top:5px;
+}
+
+.DQR-create {
+    margin-top:40px;
+}
+
+li::marker {
+    font-size: 1.5rem;
+}
+ul::marker {
+    font-size:1.5rem
+}
+ul {
+    text-align: left;
+
+}
+
+ul.moveover {
+    margin-left: 40px;
+}
+
+/* button#qr-submit:disabled {
+    background-color: rgb(149,149,149) !important;
+} */

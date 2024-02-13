@@ -1,0 +1,82 @@
+name: mongodb-dynamicqr
+services:
+    dynamicqr:
+        environment:
+            - API_URL=http://192.168.1.187:3000
+            - UI_URL=http://localhost:8080
+            - IS_DOCKER=1
+        hostname: DynamicQR
+        container_name: DynamicQR
+        privileged: true
+        init: true
+        cap_add:
+            - SYS_ADMIN
+        networks:
+            MDBDQR: # MongoDB-DynamicQR
+              ipv4_address: "172.16.238.2"
+        ports:
+            - 3000:3000
+            - 8080:8080
+        restart: on-failure:3
+        cpus: 0.5
+        mem_limit: 1G
+        mem_reservation: 512M
+        deploy:
+          resources:
+            limits:
+              cpus: '0.50'
+              memory: 1G
+            reservations:
+              cpus: '0.25'
+              memory: 512M
+        image: dynamicqr:latest
+        depends_on:
+          mongo:
+            condition: service_healthy
+            required: true
+        build:
+            context: .
+            dockerfile: dynamicqr.Dockerfile
+    mongo:
+      hostname: MongoDB-DQR
+      container_name: MongoDB-DQR
+      environment:
+        - IS_DOCKER=1
+      privileged: true
+      init: true
+      cap_add:
+          - SYS_ADMIN
+      networks:
+          MDBDQR: # MongoDB-DynamicQR
+            ipv4_address: "172.16.238.3"
+      ports:
+        - 27017:27017
+        # 3010 internal for API control
+      restart: on-failure:3
+      cpus: 0.5
+      mem_limit: 1G
+      mem_reservation: 512M
+      deploy:
+        resources:
+          limits:
+            cpus: '0.50'
+            memory: 1G
+          reservations:
+            cpus: '0.25'
+            memory: 512M
+      volumes:
+        - MongoDQR-DATA:/data/db
+        - MongoDQR-CONFIG:/data/configdb
+      image: mongodqr:latest
+      build:
+        context: .
+        dockerfile: mongo.Dockerfile
+networks:
+  MDBDQR: # MongoDB-DynamicQR
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.16.238.0/24"
+volumes:
+  MongoDQR-DATA:
+  MongoDQR-CONFIG:
