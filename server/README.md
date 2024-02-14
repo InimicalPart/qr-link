@@ -1,0 +1,1 @@
+This folder's main purpose is to show other collaborators what's running on the server without having the need to log into the server and find out. This folder also acts like a backup in-case stuff breaks. The server will also access certain files from this folder, so the server configuration can be done completely from GitHub.

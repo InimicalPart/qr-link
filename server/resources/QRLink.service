@@ -1,0 +1,33 @@
+#! This is a systemd service file for the QRLink server
+#! It is used to start the server on boot and restart it if it crashes
+#! This file should be symlinked to /lib/systemd/system/QRLink.service
+#!
+#! ln -s /opt/QRLink/server/resources/QRLink.service /lib/systemd/system/QRLink.service
+#! chmod 644 /lib/systemd/system/QRLink.service
+
+[Unit]
+Description= QRLink
+# After network is up
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=root
+WorkingDirectory=/opt/QRLink
+# Run the "start" script specified in package.json, which starts the server. Building has to be done before this manually.
+# To build, run "npm run build" in the project directory.
+ExecStart=/usr/bin/npm run start
+# The command to stop NextJS completely
+# This searches for processes listening on port 8080, grabs their PIDs, and kills them
+ExecStop=/bin/bash -c "for pid in $(/usr/bin/lsof -i :8080 | grep -E 'TCP .*:(8080) \(LISTEN\)' | awk '{ print $2 }'); do kill -9 $pid; done
+# Restart the service if it crashes
+Restart=on-failure
+# The service will only restart 5 times per day if it crashes
+StartLimitIntervalSec=1d
+StartLimitBurst=5
+KillMode=mixed
+KillSignal=SIGTERM
+
+
+[Install]
+WantedBy=multi-user.target
