@@ -1,7 +1,7 @@
 {
-  "name": "mongodqr",
+  "name": "mongoqrl",
   "version": "1.0.0",
-  "description": "add API support to MongoDB's docker container",
+  "description": "Add API support to MongoDB's docker container",
   "main": "index.js",
   "scripts": {
     "CnR": "npm run build && npm run start",

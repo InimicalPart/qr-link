@@ -16,7 +16,7 @@ import { validateUpdate, checkDataValidity } from "./utilities/update";
 // variables not to be changed
 const mongoConnectionString = `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_URL}/${process.env.MONGO_ENABLE_TLS ? "?tls=true" : ""}`; //TODO: enable TLS
 global.mongoClient = null
-console.log("[DQ] DynamicQR is starting up...");
+console.log("[DQ] QRLink is starting up...");
 
 (async () => {
 global.storageMethod = "file";
@@ -675,7 +675,7 @@ api.get("/qrcode/:id/handler", async (req, res) => {
                     return res.status(500).send(`
                     <html>
                         <head>
-                            <title>DynamicQR</title>
+                            <title>QRLink</title>
                         </head>
                         <body>
                             <p>This QR-code has an invalid schedule, please check back later.</p>
@@ -707,7 +707,7 @@ api.get("/qrcode/:id/handler", async (req, res) => {
         return res.status(400).send(`
         <html>
             <head>
-                <title>DynamicQR</title>
+                <title>QRLink</title>
             </head>
             <body>
                 <p>This QR-code has expired.</p>
@@ -792,7 +792,7 @@ api.get("/qrcode/:id/handler", async (req, res) => {
             <!DOCTYPE html>
             <html lang="en">
             <head>
-                <title>DynamicQR</title>
+                <title>QRLink</title>
             </head>
             <body>
                 <p>Redirecting...</p>

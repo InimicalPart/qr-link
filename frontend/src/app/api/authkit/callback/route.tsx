@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   // Use the information in `user` for further business logic.
 
   // Cleanup params and redirect to homepage
-    const response = NextResponse.redirect(new URL('/ui', req.nextUrl.href)) // TODO: Change this to the actual URL before deploying to production
+    const response = NextResponse.redirect(new URL('/dashboard', req.nextUrl.href)) // TODO: Change this to the actual URL before deploying to production
 
   // Create a JWT with the user's information
   const token = await new SignJWT({

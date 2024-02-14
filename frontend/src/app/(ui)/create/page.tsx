@@ -24,9 +24,9 @@ export default async function Home() {
         }).catch(()=>{
             valid = false
         })
-        if (!valid) redirect("/ui/login")
+        if (!valid) redirect("/login")
     } else {
-        redirect("/ui/login")
+        redirect("/login")
     }
     console.log("valid")
 
@@ -55,7 +55,7 @@ export default async function Home() {
                 position: 'relative',
                 top: 50
             }} className="select-none">
-                <div id="qr-id-cntr" className="DQR-container">
+                <div id="qr-id-cntr" className="QRL-container">
                     <p className="qr-info-label flex justify-center items-center flex-wrap"><b>ID</b> <span style={{
                         fontSize: '8pt',
                         flexBasis: '100%',
@@ -68,7 +68,7 @@ export default async function Home() {
                         textAlign: 'center'
                     }} autoCapitalize="false" spellCheck="false" type="text" placeholder="Leave blank for random" maxLength={50}/>
                 </div>
-                <div id="qr-updatekey-cntr" className="DQR-container">
+                <div id="qr-updatekey-cntr" className="QRL-container">
                     <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Update Key</b> <span style={{
                         fontSize: '8pt',
                         flexBasis: '100%',
@@ -81,7 +81,7 @@ export default async function Home() {
                         textAlign: 'center'
                     }} autoCapitalize="false" spellCheck="false" type="password" placeholder="Leave blank for random" maxLength={100}/>
                 </div>
-                <div id="qr-name-cntr" className="DQR-container">
+                <div id="qr-name-cntr" className="QRL-container">
                     <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Name</b><span style={{
                         fontSize: '8pt',
                         flexBasis: '100%',
@@ -94,7 +94,7 @@ export default async function Home() {
                         textAlign: 'center'
                     }} type="text" maxLength={50}/>
                 </div>
-                <div id="qr-description-cntr" className="DQR-container">
+                <div id="qr-description-cntr" className="QRL-container">
                     <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Description</b><span style={{
                         fontSize: '8pt',
                         flexBasis: '100%',
@@ -109,7 +109,7 @@ export default async function Home() {
                         maxHeight: 400
                     }} maxLength={200}></textarea>
                 </div>
-                <div id="qr-expires-cntr" className="DQR-container">
+                <div id="qr-expires-cntr" className="QRL-container">
                     <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Expires</b></p>
                     <input id="qr-expires" className="disabled:bg-neutral-400" style={{
                         border: '1px black solid',

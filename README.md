@@ -1,22 +1,22 @@
-<h1 align="center">DynamicQR</h1>
+<h1 align="center">QRLink</h1>
 <p align="center"><sub><i>Created by <b><a href="https://github.com/InimicalPart">@InimicalPart</a></b> on behalf of <b><a href="https://newseed.se/">NewSeed IT Solutions AB</a></b></i></sub></p>
 
 <br>
 
 ## Description
-DynamicQR is a system that allows someone to generate a QR-code and change where it's pointing to based on multiple factors like time, location, etc.. DynamicQR can also be integrated with various other systems to add custom factors.
+QRLink is a system that allows someone to generate a QR-code and change where it's pointing to based on multiple factors like time, location, etc.. QRLink can also be integrated with various other systems to add custom factors.
 
 ## Prerequisites
-To run DynamicQR, you need to have the following installed:
+To run QRLink, you need to have the following installed:
 - NodeJS (>=18.17.1)
 - NPM (>=9.6.7)
 
 ## Documentation
-You can find the OpenAPI specification file for DynamicQR [here](https://github.com/newseedit/dynamic-qr-link/blob/main/openapi.yml)
+You can find the OpenAPI specification file for QRLink [here](https://github.com/newseedit/dynamic-qr-link/blob/main/openapi.yml)
 
 ## Usage
 ### Install NPM Dependencies
-To install the NPM dependencies for both the DynamicQR API and the frontend, you can run the following command in the project's root directory:
+To install the NPM dependencies for both the QRLink API and the frontend, you can run the following command in the project's root directory:
 ```bash
 # Install the dependencies for the API and the frontend
 # A "postinstall" script is configured (in package.json) to also install the required dependencies in the `frontend/` folder.
@@ -24,11 +24,11 @@ npm install
 ```
 
 ### Docker (recommended)
-DynamicQR's API as well as it's frontend can be ran via Docker.
+QRLink's API as well as it's frontend can be ran via Docker.
 #### Prerequisites
 - Docker (>=25.0.3)
 #### Usage
-To create and launch both MongoDQR (a MongoDB instance with a custom made API) and DynamicQR's API and frontend, you can run the following command in the root of the project's directory:
+To create and launch both MongoQRL (a MongoDB instance with a custom made API) and QRLink's API and frontend, you can run the following command in the root of the project's directory:
 ```bash
 # Create and launch Docker containers, you may also use docker-compose instead of 'docker compose' if you wish to do so.
 # Linux (best storage optimizations)
@@ -51,7 +51,7 @@ npm run backend:dev
 ```
 
 ### NextJS frontend (:8080)
-To build and run the frontend for DynamicQR, you can run this command in the project's root directory:
+To build and run the frontend for QRLink, you can run this command in the project's root directory:
 ```bash
 # Compile and run the NextJS frontend (:8080)
 npm run frontend

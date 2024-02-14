@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Dynamic QR Code API
+  title: QRLink API
   description: An API for generating and handling dynamic QR codes.
   version: 1.0.0
   contact: 
@@ -101,17 +101,17 @@ paths:
         1:06 PM): `2024-02-06T13:06`. |
 
         | `name` | `null` | The QR-code's name, this name shows up on the
-        DynamicQR UI. Max 50 chars, has to be `null` or a string. |
+        QRLink UI. Max 50 chars, has to be `null` or a string. |
 
         | `description` | `null` | The QR-code's description, this description
-        shows up on the DynamicQR UI. Max 200 chars, has to be `null` or a
+        shows up on the QRLink UI. Max 200 chars, has to be `null` or a
         string. |
 
         | `settings` | `{}` | The settings that the QR-code follows. |
 
         | `settings.getScanData` | `true` | Get information about each scan. |
 
-        | `settings.scanData` | `{}` | More in-depth settings about what to
+        | `sett.scanData` | `{}` | More in-depth settings about what to
         collect, beware of your country's privacy laws, as this could violate
         them. |
 
@@ -1092,7 +1092,7 @@ paths:
                 "expires": "2024-11-15T21:42:00",
                 "id": "mynewid",
                 "description": "This QR-code signifies the importance of Dynamic QR-codes and how with them, the world has no limits.",
-                "name": "DynamicQR Sample",
+                "name": "QRLink Sample",
                 "settings": {
                     "getScanData": true,
                     "scanData": {
@@ -1169,10 +1169,10 @@ paths:
         1:06 PM): `2024-02-06T13:06`. |
 
         | `update.name` | The QR-code's name, this name shows up on the
-        DynamicQR UI. Max 50 chars, has to be `null` or a string. |
+        QRLink UI. Max 50 chars, has to be `null` or a string. |
 
         | `update.description` | The QR-code's description, this description
-        shows up on the DynamicQR UI. Max 200 chars, has to be `null` or a
+        shows up on the QRLink UI. Max 200 chars, has to be `null` or a
         string. |
 
         | `update.linked_to` | The token to the account that this QR-code should
@@ -1242,7 +1242,7 @@ paths:
                     name:
                       type: string
                       examples:
-                      - DynamicQR Sample
+                      - QRLink Sample
                     settings:
                       type: object
                       properties:
@@ -1307,7 +1307,7 @@ paths:
                     id: mynewid
                     linked_to: >-
                       eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Im9iamVjdCI6InVzZXIiLCJpZCI6InVzZXJfMDFITkdaSkZDVko2RlZGRzI3MTk2MjQzWU0iLCJlbWFpbCI6Im1lQGluaW1pY2FscGFydC5jb20iLCJlbWFpbFZlcmlmaWVkIjp0cnVlLCJmaXJzdE5hbWUiOiJJbmltaSIsImxhc3ROYW1lIjpudWxsLCJjcmVhdGVkQXQiOiIyMDI0LTAyLTAxVDAwOjAyOjIwLjY4M1oiLCJ1cGRhdGVkQXQiOiIyMDI0LTAyLTA1VDA4OjAzOjIxLjYwMloifSwiaWF0IjoxNzA3MjA3MDI2LCJleHAiOjE3MDcyMTA2MjZ9.6wE6B-KpJsVuvcNwQZFVrLjX_MsNA9CjFTKYKnApEMA
-                    name: DynamicQR Sample
+                    name: QRLink Sample
                     settings:
                       getScanData: true
                       requirements:
@@ -1855,7 +1855,7 @@ paths:
 
                     <html lang="en">
                         <head>
-                        <title>DynamicQR</title>
+                        <title>QRLink</title>
                         </head>
                         <body>
                         <p>Redirecting...</p>
@@ -2326,7 +2326,7 @@ paths:
       summary: Get all dynamic QR-codes linked to an account
       description: >-
         This endpoint allows you to retrieve all QR-codes that are linked to
-        your account, this endpoint was specifically designed for the DynamicQR
+        your account, this endpoint was specifically designed for the QRLink
         UI, where the website will retrieve all linked QR-codes.
 
 
@@ -3673,11 +3673,11 @@ paths:
     get:
       summary: Get server information
       description: >-
-        This endpoint is used by DynamicQR UI to ask the server for the server
-        URL that it has. We do this so that the server and DynamicQR UI are in
+        This endpoint is used by QRLink UI to ask the server for the server
+        URL that it has. We do this so that the server and QRLink UI are in
         sync with what URL should be used to communicate to the server. This
         endpoint simply returns the server URL that the server has as well as
-        DynamicQR's version. You can see an example of what a response from this
+        QRLink's version. You can see an example of what a response from this
         endpoint looks like.
 
 

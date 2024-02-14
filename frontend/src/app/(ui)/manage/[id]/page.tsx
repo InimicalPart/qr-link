@@ -22,9 +22,9 @@ export default async function Home({params}: {
         }).catch(()=>{
             valid = false
         })
-        if (!valid) redirect("/ui/login")
+        if (!valid) redirect("/login")
     } else {
-        redirect("/ui/login")
+        redirect("/login")
     }
 
     const qrCodeDetails = await fetch(`${API_URL}/qrcode/${params.id}`, {

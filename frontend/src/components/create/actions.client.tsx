@@ -91,7 +91,7 @@ export default function Actions({
 
     return (
       <>
-        <div id="qr-actiontype-cntr" className="DQR-container">
+        <div id="qr-actiontype-cntr" className="QRL-container">
           <p className="qr-info-label flex justify-center items-center flex-wrap">
             <b>Action:</b>
           </p>

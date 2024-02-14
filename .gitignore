@@ -3,12 +3,12 @@ frontend/node_modules
 frontend/.next
 frontend/build
 
-### DQR API ###
+### QRL API ###
 backend/node_modules
 backend/dist
 
-### MongoDQR ###
-MongoDQR/node_modules
+### MongoQRL ###
+MongoQRL/node_modules
 
 ### Credentials ###
 backend/.env
@@ -25,4 +25,4 @@ backend/resources/qrcodes.jsonc
 # remove all js files because we have ts files and sometimes they appear in the src/ folder
 frontend/src/**/*.js
 src/**/*.js
-MongoDQR/src/**/*.js
+MongoQRL/src/**/*.js
