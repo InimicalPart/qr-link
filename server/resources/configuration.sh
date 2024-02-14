@@ -54,30 +54,22 @@ chmod -R ug=rwX,o= /opt/QRLink/frontend/build
 # Set the setuid bit on the frontend directory so that new files and directories inherit the group of the parent directory
 chmod g+s /opt/QRLink/frontend
 
-
-
-
-
-
 # remove execute from all files in /opt/QRLink that arent .sh files
 find /opt/QRLink -type f ! -name "*.sh" -exec chmod -x {} \;
 
-
-ln 
-
-
-
 #setfacl -R -m u:appuser:rwx,d:u:appuser:rwx /opt/QRLink/frontend/build
 
-exit 0
+# exit 0
 
-mkdir -p /opt/QRLink/frontend/build
-mkdir -p /opt/QRLink/frontend/src
-touch /opt/QRLink/frontend/somefile.txt
-touch /opt/QRLink/frontend/build/somefile.txt
-touch /opt/QRLink/frontend/src/somefile.txt
-mkdir -p /opt/QRLink/backend/build
-mkdir -p /opt/QRLink/backend/src
-touch /opt/QRLink/backend/somefile.txt
-touch /opt/QRLink/backend/build/somefile.txt
-touch /opt/QRLink/backend/src/somefile.txt
+
+#! Use when testing configuration.sh
+# mkdir -p /opt/QRLink/frontend/build
+# mkdir -p /opt/QRLink/frontend/src
+# touch /opt/QRLink/frontend/somefile.txt
+# touch /opt/QRLink/frontend/build/somefile.txt
+# touch /opt/QRLink/frontend/src/somefile.txt
+# mkdir -p /opt/QRLink/backend/build
+# mkdir -p /opt/QRLink/backend/src
+# touch /opt/QRLink/backend/somefile.txt
+# touch /opt/QRLink/backend/build/somefile.txt
+# touch /opt/QRLink/backend/src/somefile.txt
