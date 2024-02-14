@@ -19,7 +19,7 @@ WorkingDirectory=/opt/QRLink
 ExecStart=/usr/bin/npm run start
 # The command to stop NextJS completely
 # This searches for processes listening on port 8080, grabs their PIDs, and kills them
-ExecStop=/bin/bash -c "for pid in $(/usr/bin/lsof -i :8080 | grep -E 'TCP .*:(8080) \(LISTEN\)' | awk '{ print $2 }'); do kill -9 $pid; done
+ExecStop=/bin/bash -c "for pid in $(/usr/bin/lsof -i :8080 | grep -E 'TCP .*:(8080) \(LISTEN\)' | awk '{ print $2 }'); do kill -9 $pid; done"
 # Restart the service if it crashes
 Restart=on-failure
 # The service will only restart 5 times per day if it crashes
