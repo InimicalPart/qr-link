@@ -1,18 +1,18 @@
-name: mongodb-dynamicqr
+name: mongodb-qrlink
 services:
-    dynamicqr:
+    qrlink:
         environment:
-            - API_URL=http://192.168.1.187:3000
+            - API_URL=http://localhost:3000
             - UI_URL=http://localhost:8080
             - IS_DOCKER=1
-        hostname: DynamicQR
-        container_name: DynamicQR
+        hostname: QRLink
+        container_name: QRLink
         privileged: true
         init: true
         cap_add:
             - SYS_ADMIN
         networks:
-            MDBDQR: # MongoDB-DynamicQR
+            MDBQRL: # MongoDB-QRLink
               ipv4_address: "172.16.238.2"
         ports:
             - 3000:3000
@@ -29,17 +29,17 @@ services:
             reservations:
               cpus: '0.25'
               memory: 512M
-        image: dynamicqr
+        image: qrlink
         depends_on:
           mongo:
             condition: service_healthy
             required: true
         build:
             context: .
-            dockerfile: docker/dynamicqr.Dockerfile
+            dockerfile: docker/qrlink.Dockerfile
     mongo:
-      hostname: MongoDQR
-      container_name: MongoDQR
+      hostname: MongoQRL
+      container_name: MongoQRL
       environment:
         - IS_DOCKER=1
       privileged: true
@@ -47,7 +47,7 @@ services:
       cap_add:
           - SYS_ADMIN
       networks:
-          MDBDQR: # MongoDB-DynamicQR
+          MDBQRL: # MongoDB-QRLink
             ipv4_address: "172.16.238.3"
       ports:
         - 27017:27017
@@ -65,18 +65,18 @@ services:
             cpus: '0.25'
             memory: 512M
       volumes:
-        - MongoDQR-DATA:/data/db
-        - MongoDQR-CONFIG:/data/configdb
-      image: mongodqr
+        - MongoQRL-DATA:/data/db
+        - MongoQRL-CONFIG:/data/configdb
+      image: mongoqrl
       build:
         context: .
-        dockerfile: docker/mongodqr.Dockerfile
+        dockerfile: docker/mongoqrl.Dockerfile
 networks:
-  MDBDQR: # MongoDB-DynamicQR
+  MDBQRL: # MongoDB-QRLink
     driver: bridge
     ipam:
       config:
         - subnet: "172.16.238.0/24"
 volumes:
-  MongoDQR-DATA:
-  MongoDQR-CONFIG:
+  MongoQRL-DATA:
+  MongoQRL-CONFIG:

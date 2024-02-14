@@ -141,7 +141,7 @@ export async function QRCode2PDF(qrcode, id) {
             <img alt="QR Code" loading="eager" width="250" height="250" decoding="async" data-nimg="1" style="color:transparent;position:relative;left:50%;top:50px;transform:translateX(-50%)" src="${await QRCodeGenerator.toDataURL(global.serverURL + ":" + global.port  + "/qrcode/" + id + "/handler",{ errorCorrectionLevel: "H" })}"/>
             <hr style="position:relative;left:50%;transform:translateX(-50%);top:70px;width:80%;height:4px;background:#000000;border-radius:8px;"/>
             <div id="title" style="position: relative;left:50%;top: 80px;transform:translateX(-50%);width:60%;height:auto;text-align:center">
-                <h1 id="name" style="font-size:30px;font-weight:900">DynamicQR</h1>
+                <h1 id="name" style="font-size:30px;font-weight:900">QRLink</h1>
                 <p id="id" style="font-size:16px;font-weight:500;color:#929292;bottom: 5px;position:relative">[${id}]</p>
             </div>
             <hr style="position: relative;left:50%;transform:translateX(-50%);top: 85px;width:50%;height:3px;background:#c1c1c1;border-radius:8px;">

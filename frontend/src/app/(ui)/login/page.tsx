@@ -27,7 +27,7 @@ export default async function Home() {
               provider: 'authkit',
           
               // The callback endpoint that WorkOS will redirect to after a user authenticates
-              redirectUri: thisURL+'/authkit/callback',
+              redirectUri: thisURL+'/api/authkit/callback',
               clientId: WORKOS_CLIENT_ID
             });
           
@@ -38,7 +38,7 @@ export default async function Home() {
     async function setURL(form:FormData) {
         "use server"
         console.log("Setting URL to " + form.get("url"))
-        thisURL = (form.get("url") as string).replace("/ui/login", "")
+        thisURL = (form.get("url") as string).replace("/login", "")
     }
 
     if (cookies()?.get("token")?.value) {
@@ -47,7 +47,7 @@ export default async function Home() {
             valid = true
         }).catch(()=>{})
         console.log(valid)
-        if (valid) redirect("/ui")
+        if (valid) redirect("/dashboard")
     }
     
 

@@ -14,7 +14,7 @@ export default async function Home() {
     async function logout() {
         "use server";
         cookies().delete("token")
-        redirect("/ui/login")
+        redirect("/login")
     }
 
     async function manageQR(form: FormData) {
@@ -22,13 +22,13 @@ export default async function Home() {
         const id = form.get("id")
         console.log("A-",id)
         if (id) {
-            redirect(`/ui/manage/${id}`)
+            redirect(`/manage/${id}`)
         }
     }
 
     async function addQR() {
         "use server";
-        redirect("/ui/create")
+        redirect("/create")
     }
 
 
@@ -39,9 +39,9 @@ export default async function Home() {
         }).catch(()=>{
             valid = false
         })
-        if (!valid) redirect("/ui/login")
+        if (!valid) redirect("/login")
     } else {
-        redirect("/ui/login")
+        redirect("/login")
     }
     return (
       <div>

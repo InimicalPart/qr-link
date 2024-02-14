@@ -30,9 +30,9 @@ export async function bareBonesConnection(mongoConnectionString: string) {
           }
             console.log(`[DB] Warning: The database at ${process.env.MONGO_URL} is accessible without credentials. We will now attempt to configure the database to be protected from unauthorized access.`)
 
-            // Create account for DynamicQR
+            // Create account for QRLink
             const authenticatingDatabase = client.db("admin")
-            authenticatingDatabase.command({createUser: process.env.MONGO_USERNAME, pwd: process.env.MONGO_PASSWORD, roles: [{role: "readWrite", db: "DynamicQR"}]})
+            authenticatingDatabase.command({createUser: process.env.MONGO_USERNAME, pwd: process.env.MONGO_PASSWORD, roles: [{role: "readWrite", db: "QRLink"}]})
             console.log(`[DB] Created user ${process.env.MONGO_USERNAME} with password ${process.env.MONGO_PASSWORD} in the database 'admin'.`)
             // Create root user 
             let rootUserPasswd = await randomString(32)
@@ -44,7 +44,7 @@ export async function bareBonesConnection(mongoConnectionString: string) {
             const isOpen = await fetch(process.env.MONGO_API_PROTOCOL + "://" + process.env.MONGO_URL.replace(/:[0-9]{1,5}/g, ":3010") + "/test").then((res) => res.ok).catch((err) => false)
             if (isOpen) {
                 // DOCKER:DOCKER
-                console.log("[DB] DynamicQR has detected that the database has the DQR API enabled. Attempting to configure the database to be protected from unauthorized access...")
+                console.log("[DB] QRLink has detected that the database has the QRL API enabled. Attempting to configure the database to be protected from unauthorized access...")
                 const currentDBConfig = await fetch(process.env.MONGO_API_PROTOCOL + "://" + process.env.MONGO_URL.replace(/:[0-9]{1,5}/g, ":3010") + "/mongodb/config").then((res) => res.json()).catch((err) => null)
                 if (currentDBConfig) {
                     if (!currentDBConfig["security"]) {
@@ -99,7 +99,7 @@ export async function bareBonesConnection(mongoConnectionString: string) {
                             })
                             await new Promise(() => {}) // sleep forever
                         }
-                        console.log("[DB] DynamicQR has detected that the database is running on the same machine as this program, but the database is not set up correctly to be protected from unauthorized access and is not compatible with DynamicQR.")
+                        console.log("[DB] QRLink has detected that the database is running on the same machine as this program, but the database is not set up correctly to be protected from unauthorized access and is not compatible with QRLink.")
                         console.log("[DB] In 10 seconds, the program will automatically make the necessary changes to the database configuration and restart the database.")
                         console.log("[DB] To cancel this process, press CTRL+C now.")
                         await new Promise((resolve) => setTimeout(resolve, 10000))
@@ -211,7 +211,7 @@ export async function ensureDBSetup(clientORmCS: MongoClient | string) {
         dbClient = new MongoClient(mongoConnectionString);
     }
     try {
-        const db = dbClient.db("DynamicQR");
+        const db = dbClient.db("QRLink");
         const collections = (await db.listCollections().toArray()).map((collection) => collection.name);
         if (!collections.includes("qrcodes")) {
             await db.createCollection("qrcodes");
@@ -232,7 +232,7 @@ function showDBSetupInstructions(isDocker) {
     console.log()
     console.log()
     console.log("-------")
-    console.log("The specified database is not set up correctly to be protected from unauthorized access and is not compatible with DynamicQR.")
+    console.log("The specified database is not set up correctly to be protected from unauthorized access and is not compatible with QRLink.")
     console.log()
     console.log("Please follow the following steps to set up the database correctly:")
     console.log()
@@ -258,7 +258,7 @@ export async function readQRCodeTable(storage=global.storageMethod) {
           });
       } else {
           try {
-              let results: Array<MongoQRCodeInformation> = await global.mongoClient.db("DynamicQR").collection("qrcodes").find({}).toArray() as unknown as Array<MongoQRCodeInformation>
+              let results: Array<MongoQRCodeInformation> = await global.mongoClient.db("QRLink").collection("qrcodes").find({}).toArray() as unknown as Array<MongoQRCodeInformation>
               resolve(await convertToQRCTFormat(results))
           } catch (err) {
               reject(err)
@@ -283,7 +283,7 @@ export async function saveQR(id: string = null, obj: QRCodeInformation | object 
         } else {
             if (update) {
                 console.log("[DB] Updating QR-code " + id + " in the database...")
-                global.mongoClient.db("DynamicQR").collection("qrcodes").updateOne({id: id}, {$set: obj}).then((status) => {
+                global.mongoClient.db("QRLink").collection("qrcodes").updateOne({id: id}, {$set: obj}).then((status) => {
                     if (status.modifiedCount == 0) {
                         console.log("[DB] Failed to update QR-code " + id + " in the database.")
                     }
@@ -291,7 +291,7 @@ export async function saveQR(id: string = null, obj: QRCodeInformation | object 
                 })
             } else {
                 console.log("[DB] Inserting QR-code " + id + " into the database...")
-                global.mongoClient.db("DynamicQR").collection("qrcodes").insertOne(obj).then((status) => {
+                global.mongoClient.db("QRLink").collection("qrcodes").insertOne(obj).then((status) => {
                     if (!status.acknowledged) {
                         console.log("[DB] Failed to insert QR-code " + id + " into the database.")
                     }
@@ -324,7 +324,7 @@ export async function convertFile2MongoDB() {
     })
 
     if (dataToInsert.length != 0) {
-        await global.mongoClient.db("DynamicQR").collection("qrcodes").insertMany(dataToInsert)
+        await global.mongoClient.db("QRLink").collection("qrcodes").insertMany(dataToInsert)
         console.log("[DB] " + dataToInsert.length + " QR-codes were converted from file storage to MongoDB.")
     }
 }

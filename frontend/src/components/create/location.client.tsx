@@ -29,7 +29,7 @@ export default function Location() {
             window.removeEventListener("getData", getData)
         }
         
-    },[zones])
+    },[zones,type])
 
     function convertToBeautiful(zones: any, includeFunctions = false) {
         console.log(zones)
@@ -206,7 +206,7 @@ export default function Location() {
 
     useEffect(() => {
         (document.getElementById("radiusChange") as HTMLInputElement).value = zones.length > 0 && selectedZoneIndex != -1 && zones[selectedZoneIndex].radius ? zones[selectedZoneIndex].radius : 300;
-    }, [selectedZoneIndex]);
+    }, [selectedZoneIndex, zones]);
 
     function flyToZone(index: number, _e: any) {
         let map = zones[index].L._map as L.Map;
@@ -383,7 +383,10 @@ export default function Location() {
                 }
             }
             window.addEventListener("typeChange", onTypeChanged)
-        },[])
+            return ()=>{
+                window.removeEventListener("typeChange", onTypeChanged)
+            }
+        },[map])
 
         return <></>
     }
@@ -406,7 +409,7 @@ export default function Location() {
             (document.getElementById("locRedirect") as HTMLInputElement).value = zones[selectedZoneIndex]?.redirectTo || "";
             (document.getElementById("locAERedirect") as HTMLInputElement).value = zones[selectedZoneIndex]?.afterExpiry || "";
         }
-    },[selectedZoneIndex])
+    },[selectedZoneIndex, zones])
     return (
         <div>
             <MapContainer maxBounds={[[-85.05115, -180], [85, 180]]} maxBoundsViscosity={1.0} style={{ width: "90vw", maxWidth: 600, height: 400, left:"50%", transform:"translateX(-50%)" }} center={zones.length > 0 && selectedZoneIndex >= 0 && selectedZoneIndex < zones.length ? zones[selectedZoneIndex].position : [51.505, -0.09]} zoom={2} minZoom={2} >
@@ -480,7 +483,7 @@ export default function Location() {
                 }}><b>Points:</b></p>
             <ul style={{textAlign:"center",marginTop:10}}>
             {polygonPositions.map((point, index) => (
-                <li style={{cursor:"pointer", fontWeight:600, textDecoration:"underline"}} onMouseOver={()=>highlightPolygonPoint(index)} onMouseOut={()=>unHighlightPolygonPoint(index)} onClick={() => handleDeletePoint(index)}>Delete Point {index + 1}</li>
+                <li key={"point-"+index} style={{cursor:"pointer", fontWeight:600, textDecoration:"underline"}} onMouseOver={()=>highlightPolygonPoint(index)} onMouseOut={()=>unHighlightPolygonPoint(index)} onClick={() => handleDeletePoint(index)}>Delete Point {index + 1}</li>
             ))}
             </ul>
             </div>
@@ -751,7 +754,7 @@ export default function Location() {
                     setElements([...elements, polygon]);
                 }
             })
-        }, [zones, selectedZoneIndex ]);
+        }, [zones, selectedZoneIndex, container, elements]);
 
         return <></>
     }

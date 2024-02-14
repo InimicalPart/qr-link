@@ -256,7 +256,7 @@ export default function CreateQR({
                             "\nUpdate key: " +
                             data.update_key
                         );
-                        window.location.href = "/ui";
+                        window.location.href = "/dashboard";
                     }
                     });
                 }).catch((e)=>{
@@ -308,7 +308,7 @@ export default function CreateQR({
                             "\nUpdate key: " +
                             data.update_key
                         );
-                        window.location.href = "/ui";
+                        window.location.href = "/dashboard";
                     }
                     });
                 }).catch((e)=>{
@@ -355,7 +355,7 @@ export default function CreateQR({
                             "\nUpdate key: " +
                             data.update_key
                         );
-                        window.location.href = "/ui";
+                        window.location.href = "/dashboard";
                     }
                     });
                 }).catch((e)=>{
@@ -401,7 +401,7 @@ export default function CreateQR({
 
     return (
       <>
-        <div id="qr-submit-cntr" className="DQR-container DQR-create">
+        <div id="qr-submit-cntr" className="QRL-container QRL-create">
         <button type="button" id="qr-submit" disabled={buttonDisabled} onClick={submit} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 disabled:text-white disabled:bg-blue-300 disabled:hover:bg-blue-300">Create</button>
         </div>
       </>
