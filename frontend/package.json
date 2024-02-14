@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 80",
+    "dev": "next dev -p 8080",
     "build": "next build",
-    "start": "next start -p 80",
+    "start": "next start -p 8080",
     "lint": "next lint",
-    "build_and_run": "next build && next start -p 80"
+    "build_and_run": "next build && next start -p 8080"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.8",
