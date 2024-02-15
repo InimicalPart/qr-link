@@ -1,4 +1,9 @@
 module.exports = {
     reactStrictMode: false,
-    distDir: 'build'
+    distDir: 'build',
+    experimental: {
+        serverActions: {
+            allowedOrigins: ["qrlink.newseed.se"]
+        }
+    }
 }

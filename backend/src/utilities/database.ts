@@ -339,5 +339,5 @@ export async function convertToQRCTFormat(data: Array<MongoQRCodeInformation>): 
         }
         resolve(result)
     })
-
 }
+

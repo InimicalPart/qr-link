@@ -7,30 +7,34 @@ import crypto from "crypto";
 import QRCodeGenerator from "qrcode";
 import {MongoClient, MongoError} from "mongodb";
 config();
-import {QRCodeData } from "./types/QRCode"
+import {QRCodeData , QRCodeTable } from "./types/QRCode"
 import { bareBonesConnection, readQRCodeTable, saveQR, ensureDBSetup, convertFile2MongoDB } from "./utilities/database";
 import { QRCode2PDF, generateTrackingCode, getPassedTime, randomString } from "./utilities/misc";
 import { getUser } from "./utilities/authentication";
 import { supportedTypes, supportedUpdateKeys } from "./utilities/static";
 import { validateUpdate, checkDataValidity } from "./utilities/update";
+import { QRLinkGlobal } from "./types/global";
 // variables not to be changed
 const mongoConnectionString = `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_URL}/${process.env.MONGO_ENABLE_TLS ? "?tls=true" : ""}`; //TODO: enable TLS
+declare const global: QRLinkGlobal;
 global.mongoClient = null
-console.log("[DQ] QRLink is starting up...");
+console.log("[QL] QRLink is starting up...");
+
+
 
 (async () => {
 global.storageMethod = "file";
 // Check if the database is accessible
 if (process.env.MONGO_URL && process.env.MONGO_USERNAME && process.env.MONGO_PASSWORD) {
-    console.log("[DQ] Attempting to connect to the database at " + process.env.MONGO_URL + " (barebones)...");
+    console.log("[QL] Attempting to connect to the database at " + process.env.MONGO_URL + " (barebones)...");
     await bareBonesConnection(mongoConnectionString).catch(async (information) => {
         if (information == "not_accessible") {
-          console.log("[DQ] Failed to connect to the database at " + process.env.MONGO_URL + ". Using file storage method.")
+          console.log("[QL] Failed to connect to the database at " + process.env.MONGO_URL + ". Using file storage method.")
           return false
         } else if (information == "creds_req") {
           try {
 
-            console.log("[DQ] Attempting to connect to the database with credentials...");
+            console.log("[QL] Attempting to connect to the database with credentials...");
             // Attempt to connect using valid credentials
             const client = new MongoClient(mongoConnectionString, {
                 serverSelectionTimeoutMS: 1000,
@@ -41,20 +45,20 @@ if (process.env.MONGO_URL && process.env.MONGO_USERNAME && process.env.MONGO_PAS
 
             if (succeeded instanceof MongoError) {
                 console.error(succeeded)
-                console.log("[DQ] Failed to connect to the database at " + process.env.MONGO_URL + ". Using file storage method.")
+                console.log("[QL] Failed to connect to the database at " + process.env.MONGO_URL + ". Using file storage method.")
                 return false
             }
 
             
             console.log(`[DB] Successfully connected, checking if the database is set up correctly...`)
             await ensureDBSetup(client)
-            console.log(`[DQ] Connection to the database at ${process.env.MONGO_URL} was established. Switching storage method to 'mongo'.`)
+            console.log(`[QL] Connection to the database at ${process.env.MONGO_URL} was established. Switching storage method to 'mongo'.`)
             global.storageMethod = "mongo"
             global.mongoClient = client
             return true
         } catch (e) {
             console.error(e)
-            console.log(`[DQ] Failed to connect to the database at ${process.env.MONGO_URL}. Using file storage method.`)
+            console.log(`[QL] Failed to connect to the database at ${process.env.MONGO_URL}. Using file storage method.`)
             return false
         }
       }
@@ -63,6 +67,14 @@ if (process.env.MONGO_URL && process.env.MONGO_USERNAME && process.env.MONGO_PAS
 global.QRCodeTable = await readQRCodeTable()
 
 await convertFile2MongoDB()
+
+
+console.log("[QL] Removing QR-codes that have a non-existing user linked to them...");
+for (let linked_user_id of Object.values(global.QRCodeTable as QRCodeTable).map(a=>a.linked_to).filter(a=>a)) {
+
+}
+
+console.log("[QL] QRLink is ready to accept requests.");
 
 global.serverURL = (process.env.API_URL ?? "http://localhost:3000").replace(/:[0-9]{1,5}/g, "")
 global.port = parseInt((process.env.API_URL ?? "http://localhost:3000").replace(/.*:/g, ""))
