@@ -65,7 +65,18 @@ npm run frontend:dev
 > You should **NEVER** use the development mode when running in production. This could cause major security risks.
 
 
+## Information for developers
+### "main" branch
+The main branch is designed for people to commit when work is in progress but not ready to be submitted to the server yet or all hell comes to life.
+
+> [!WARNING]
+> Please do not upload to the server from the "main" branch. Doing so may result in a highly un-stable server edition and/or an un-stable server configuration.
+
+### "production" branch
+The production branch is specifically designed to be used for uploads. This is the branch you should choose when choosing to upload to a server. Developers, do not push code here unless you're extremely sure that it's stable. This applies to all developers - unless you're cool like this guy -> 😎.
+
+
 <br>
 <footer>
-  <p align="center">&copy; Copyright 2024 | <a href="https://github.com/InimicalPart">InimicalPart</a> & <a href="https://newseed.se/">NewSeed IT Solutions AB</a></p>
+  <p align="center">&copy; Copyright 2024 | <a href="https://github.com/InimicalPart">InimicalPart</a> & <a href="https://newseed.se/">NewSeed IT Solutions AB</a> - All rights reserved.
 </footer>

@@ -26,7 +26,10 @@ export async function GET(req: NextRequest) {
   // Use the information in `user` for further business logic.
 
   // Cleanup params and redirect to homepage
-    const response = NextResponse.redirect(new URL('/dashboard', req.nextUrl.href)) // TODO: Change this to the actual URL before deploying to production
+    console.log("Redirecting to /dashboard")
+    console.log(req.headers.get("host") || req.nextUrl.href)
+    let proto = req.headers.get("host")?.split(":")[0] === "localhost" ? "http" : "https"
+    const response = NextResponse.redirect(new URL('/dashboard', proto+"://" +req.headers.get("host")))
 
   // Create a JWT with the user's information
   const token = await new SignJWT({
