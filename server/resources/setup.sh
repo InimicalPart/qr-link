@@ -10,6 +10,8 @@ fi
 
 echo "[SYS] Moving configuration.sh to /root"
 mv /opt/QRLink/server/resources/configuration.sh /root
+echo "[SYS] Moving unavailable.html to /var/www/errors"
+mv /opt/QRLink/server/resources/unavailable.html /var/www/errors
 cd /opt/QRLink
 echo "[SYS] Installing dependencies"
 npm install

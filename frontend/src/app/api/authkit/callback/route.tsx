@@ -23,11 +23,7 @@ export async function GET(req: NextRequest) {
     clientId,
   });
 
-  // Use the information in `user` for further business logic.
-
   // Cleanup params and redirect to homepage
-    console.log("Redirecting to /dashboard")
-    console.log(req.headers.get("host") || req.nextUrl.href)
     let proto = req.headers.get("host")?.split(":")[0] === "localhost" ? "http" : "https"
     const response = NextResponse.redirect(new URL('/dashboard', proto+"://" +req.headers.get("host")))
 
