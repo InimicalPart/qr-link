@@ -1,3 +1,4 @@
+<!-- Logo/banner here, coming soon -->
 <h1 align="center">QRLink</h1>
 <p align="center"><sub><i>Created by <b><a href="https://github.com/InimicalPart">@InimicalPart</a></b> on behalf of <b><a href="https://newseed.se/">NewSeed IT Solutions AB</a></b></i></sub></p>
 
