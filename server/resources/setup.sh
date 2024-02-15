@@ -18,9 +18,17 @@ npm install
 cd /opt/QRLink/frontend
 echo "[SYS] Building frontend"
 npm run build
+if [ $? -ne 0 ]; then
+  echo "[SYS] Frontend build failed"
+  exit 1
+fi
 cd /opt/QRLink/backend
 echo "[SYS] Building backend"
 npm run build
+if [ $? -ne 0 ]; then
+  echo "[SYS] Backend build failed"
+  exit 1
+fi
 cd /root
 echo "[SYS] Running configuration.sh"
 bash /root/configuration.sh

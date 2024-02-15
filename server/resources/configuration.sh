@@ -29,32 +29,26 @@ setfacl -R -m u:appuser:r-X /opt/QRLink/frontend
 # other shall be allowed to read /opt/QRLink/frontend
 chmod o=rX /opt/QRLink/frontend
 # Remove execute from all files in /opt/QRLink/frontend that arent .sh files
-find /opt/QRLink/frontend -type f ! -name "*.sh" -exec chmod -x {} \;
+find /opt/QRLink -name node_modules -prune -o -name build -prune -o -type f ! -name "*.sh" -exec chmod -x {} \;
 # Set the setuid bit on the frontend directory so that new files and directories inherit the group of the parent directory
 chmod g+s /opt/QRLink/frontend
 
 echo "[SYS] Configuring /opt/QRLink/frontend/build"
 chmod -R u=rX,g=rwX,o= /opt/QRLink/frontend/build
 # (default) owner (root) can read, write to all files and directories in /opt/QRLink/frontend/build
-setfacl -R -d -m u::rw /opt/QRLink/frontend/build
 # (default) group (project-manager) can read, write to all files and directories in /opt/QRLink/frontend/build
-setfacl -R -d -m g::rw /opt/QRLink/frontend/build
 # (default) user 'appuser' can read, and execute files and directories in /opt/QRLink/frontend/build (X = only execute if it previously had execute permissions)
-setfacl -R -d -m u:appuser:r-X /opt/QRLink/frontend/build
 # (default) group 'project-manager' can read, write, and execute files and directories in /opt/QRLink/frontend/build (X = only execute if it previously had execute permissions)
-setfacl -R -d -m g:project-manager:rwX /opt/QRLink/frontend/build
 # (default) others cannot read, write, or execute files and directories in /opt/QRLink/frontend/build
-setfacl -R -d -m o::--- /opt/QRLink/frontend/build
+setfacl -R -d -m u::rw,g::rw,u:appuser:r-X,g:project-manager:rwX,o::--- /opt/QRLink/frontend/build
+
 # owner (root) can read, write to all files and directories in /opt/QRLink/frontend/build (X = only execute if it previously had execute permissions)
-setfacl -R -m u::rwX /opt/QRLink/frontend/build
 # group (project-manager) can read, write to all files and directories in /opt/QRLink/frontend/build (X = only execute if it previously had execute permissions)
-setfacl -R -m g::rwX /opt/QRLink/frontend/build
 # user 'appuser' can read, and execute files and directories in /opt/QRLink/frontend/build (X = only execute if it previously had execute permissions)
-setfacl -R -m u:appuser:r-X /opt/QRLink/frontend/build
 # group 'project-manager' can read, write, and execute files and directories in /opt/QRLink/frontend/build (X = only execute if it previously had execute permissions)
-setfacl -R -m g:project-manager:rwx /opt/QRLink/frontend/build
 # others cannot read, write, or execute files and directories in /opt/QRLink/frontend/build
-setfacl -R -m o::--- /opt/QRLink/frontend/build
+setfacl -R -m u::rwX,g::rwX,u:appuser:r-X,g:project-manager:rwX,o::--- /opt/QRLink/frontend/build
+
 # owner (root) and group (project-manager) can read, write to all files and directories in /opt/QRLink/frontend/build, others can't do anything (X = only execute if it previously had execute permissions)
 chmod -R ug=rwX,o= /opt/QRLink/frontend/build
 
@@ -67,8 +61,7 @@ setfacl -R -m u:appuser:rwX /opt/QRLink/frontend/build/cache
 
 echo "[SYS] Removing execute from all files in /opt/QRLink/frontend/build that arent .sh files"
 # remove execute from all files in /opt/QRLink that arent .sh files
-find /opt/QRLink -type f ! -name "*.sh" -exec chmod -x {} \;
-
+find /opt/QRLink -name node_modules -prune -o -name build -prune -o -type f ! -name "*.sh" -exec chmod -x {} \;
 
 
 
