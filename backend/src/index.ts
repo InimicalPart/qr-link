@@ -10,7 +10,7 @@ config();
 import {QRCodeData , QRCodeTable } from "./types/QRCode"
 import { bareBonesConnection, readQRCodeTable, saveQR, ensureDBSetup, convertFile2MongoDB } from "./utilities/database";
 import { QRCode2PDF, generateTrackingCode, getPassedTime, randomString } from "./utilities/misc";
-import { getUser } from "./utilities/authentication";
+import { doesUserExist, getUser } from "./utilities/authentication";
 import { supportedTypes, supportedUpdateKeys } from "./utilities/static";
 import { validateUpdate, checkDataValidity } from "./utilities/update";
 import { QRLinkGlobal } from "./types/global";
@@ -70,8 +70,19 @@ await convertFile2MongoDB()
 
 
 console.log("[QL] Removing QR-codes that have a non-existing user linked to them...");
-for (let linked_user_id of Object.values(global.QRCodeTable as QRCodeTable).map(a=>a.linked_to).filter(a=>a)) {
-
+let allLinkedIDs = Object.values(global.QRCodeTable as QRCodeTable).map(a=>a.linked_to)
+let uniqueLinkedIDs = allLinkedIDs.filter((a, b) => allLinkedIDs.indexOf(a) === b)
+for (let linked_user_id of uniqueLinkedIDs) {
+    doesUserExist(linked_user_id).then((exists) => {
+        if (!exists) {
+            for (let key of Object.keys(global.QRCodeTable)) {
+                if (global.QRCodeTable[key].linked_to == linked_user_id) {
+                    delete global.QRCodeTable[key]
+                    console.log("[QL] Removed QR-code " + key + " as it was linked to a non-existing user. (ID: " + linked_user_id + ")")
+                }
+            }
+        }
+    })
 }
 
 console.log("[QL] QRLink is ready to accept requests.");
