@@ -4,6 +4,14 @@ module.exports = {
     experimental: {
         serverActions: {
             allowedOrigins: ["qrlink.newseed.se"]
-        }
-    }
+        },
+        instrumentationHook: true,
+    },
+    poweredByHeader: false,
+    logging: {
+        fetches: {
+          fullUrl: true,
+        },
+      },
+
 }

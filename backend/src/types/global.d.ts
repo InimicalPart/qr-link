@@ -2,6 +2,8 @@ import { MongoClient } from "mongodb";
 import { QRCodeTable } from "./QRCode";
 
 interface QRLinkGlobal extends Global {
+    supportedTypes: string[];
+    supportedUpdateKeys: string[];
     QRCodeTable: QRCodeTable;
     mongoClient: MongoClient;
     storageMethod: "file" | "mongo";
