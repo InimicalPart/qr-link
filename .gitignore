@@ -11,8 +11,10 @@ backend/dist
 MongoQRL/node_modules
 
 ### Credentials ###
+# TODO: REMOVE
 backend/.env
-frontend/.env
+frontend/.env.development
+frontend/.env.production
 
 
 
