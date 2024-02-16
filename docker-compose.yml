@@ -2,8 +2,8 @@ name: mongodb-qrlink
 services:
     qrlink:
         environment:
-            - API_URL=http://localhost:3000
-            - UI_URL=http://localhost:8080
+            - API_URL=http://localhost:8080/api/v1
+            - BASE_URL=http://localhost:8080
             - IS_DOCKER=1
         hostname: QRLink
         container_name: QRLink
@@ -15,7 +15,6 @@ services:
             MDBQRL: # MongoDB-QRLink
               ipv4_address: "172.16.238.2"
         ports:
-            - 3000:3000
             - 8080:8080
         restart: on-failure:3
         cpus: 0.5

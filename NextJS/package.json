@@ -1,0 +1,47 @@
+{
+  "name": "qrlink-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx next dev -p 8080",
+    "build": "npx next build",
+    "start": "npx next start -p 8080",
+    "lint": "npx next lint",
+    "build_and_run": "npx next build && npx next start -p 8080"
+  },
+  "dependencies": {
+    "@types/leaflet": "^1.9.8",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@workos-inc/node": "^5.1.4",
+    "dotenv": "^16.4.1",
+    "jose": "^5.2.0",
+    "jsonc-parser": "^3.2.1",
+    "leaflet": "^1.9.4",
+    "moment-timezone": "^0.5.45",
+    "mongodb": "^6.3.0",
+    "next": "14.1.0",
+    "p5": "^1.9.0",
+    "puppeteer": "^20.3.0",
+    "qrcode": "^1.5.3",
+    "qz-tray": "^2.2.3",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-leaflet": "^4.2.1",
+    "sharp": "^0.33.2",
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "@types/p5": "^1.7.6",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.1.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5"
+  }
+}

@@ -3,28 +3,21 @@
   "version": "1.0.0",
   "description": "A QR-code that can change where it points to",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=18.17.1"
+  },
+  "engineStrict": true,
   "scripts": {
-    "backend": "cd backend && npm start && cd ..",
-    "backend:dev": "cd backend && npm run watch && cd ..",
-    "backend:build": "cd backend && npm run build && cd ..",
-    "frontend": "cd frontend && npm run start && cd ..",
-    "frontend:dev": "cd frontend && npm run dev && cd ..",
-    "frontend:build": "cd frontend && npm run build && cd ..",
+    "NextJS": "cd NextJS && npm run start && cd ..",
+    "NextJS:dev": "cd NextJS && npm run dev && cd ..",
+    "NextJS:build": "cd NextJS && npm run build && cd ..",
 
-    "start": "npm run frontend",
+    "start": "npm run NextJS",
 
-    "install": "cd backend && npm install && cd ../frontend && npm install && cd ..",
-    "docker:build": "npm run docker:clean;  docker build -t qrlink .",
-    "docker:create": "docker create --init --cap-add=SYS_ADMIN -e API_URL=http://localhost:3000 -e UI_URL=http://localhost:8080 -e IS_DOCKER=1 -h QRLink --name QRLink --privileged -p 3000:3000 -p 8080:8080 --restart on-failure:3 qrlink:latest",
-    "docker": "npm run docker:build && npm run docker:create && npm run docker:start",
-    "docker:start": "docker start QRLink",
-    "docker:stop": "docker stop QRLink",
-    "docker:clean": "docker stop QRLink && docker rm QRLink && docker rmi qrlink:latest",
-    "docker:deepclean": "docker system prune",
-    "docker:doubledeepclean": "docker system prune -a",
-    "docker:mongo:pull": "docker pull mongo:latest",
-    "docker:mongo:start": "docker run --name mongo -p 27017:27017 -d mongo:latest",
-    "docker:mongo": "npm run docker:mongo:pull && npm run docker:mongo:start"
+    "install": "cd NextJS && npm install && cd ..",
+    "docker": "node -e \"require('os').platform() === 'win32' ? require('child_process').execSync('npm run docker-windows', {stdio: 'inherit'}) : require('child_process').execSync('npm run docker-linux', {stdio: 'inherit'})\"",
+    "docker-linux": "DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose up",
+    "docker-windows": "docker compose up"
   },
   "author": "Inimi",
   "license": "MIT"

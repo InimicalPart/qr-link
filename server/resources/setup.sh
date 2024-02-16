@@ -10,30 +10,31 @@ fi
 
 echo "[SYS] Moving configuration.sh to /root"
 mv /opt/QRLink/server/resources/configuration.sh /root
+
 echo "[SYS] Moving unavailable.html to /var/www/errors"
 mv /opt/QRLink/server/resources/unavailable.html /var/www/errors
-cd /opt/QRLink
+
 echo "[SYS] Installing dependencies"
+cd /opt/QRLink
 npm install
-cd /opt/QRLink/frontend
+
 echo "[SYS] Building frontend"
+cd /opt/QRLink/NextJS
 npm run build
 if [ $? -ne 0 ]; then
-  echo "[SYS] Frontend build failed"
+  echo "[SYS] frontend build failed"
   exit 1
 fi
-cd /opt/QRLink/backend
-echo "[SYS] Building backend"
-npm run build
-if [ $? -ne 0 ]; then
-  echo "[SYS] Backend build failed"
-  exit 1
-fi
-cd /root
+
 echo "[SYS] Running configuration.sh"
+cd /root
 bash /root/configuration.sh
+
+echo "[SYS] configuration.sh has finished configuring QRLink for maximum security"
 systemctl daemon-reload
+
 echo "[SYS] Restarting QRLink.service"
 systemctl restart QRLink
+
 
 echo "[SYS] Setup complete"
