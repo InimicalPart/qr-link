@@ -11,10 +11,10 @@ info:
     url: https://www.gnu.org/licenses/gpl-3.0.html
 servers:
   -
-    url: http://localhost:3000
+    url: http://localhost:8080
     description: Development Server
 paths:
-  /qrcode:
+  /api/v1/qrcode:
     post:
       summary: Create a new dynamic QR-code
       description: >-
@@ -42,7 +42,7 @@ paths:
         It is also recommended to provide your token (using the `Authorization`
         header) as if you do so, the QR-code will automatically be linked to
         your account. If you forget to do this, you can link a QR-code to your
-        account using `PATCH /qrcode/:id` and passing in the `token` property
+        account using `PATCH /api/v1/qrcode/:id` and passing in the `token` property
         with your token.
 
 
@@ -156,14 +156,14 @@ paths:
                   examples:
                   - redirect
             examples:
-              /qrcode:
+              /api/v1/qrcode:
                 value:
                   data:
                     redirect_to: https://inimicalpart.com
                   type: redirect
           text/plain:
             examples:
-              /qrcode:
+              /api/v1/qrcode:
                 value: ''
       responses:
         '200':
@@ -519,7 +519,7 @@ paths:
                   value:
                     error: INVALID_UPDATE_KEY
                     message: update_key needs to be a string.
-  /qrcode/{id}:
+  /api/v1/qrcode/{id}:
     get:
       summary: Get a dynamic QR-code
       description: >-
@@ -1294,7 +1294,7 @@ paths:
                   - >-
                     d176af628d129a9afdc230a810237c9cb2c844f0c350f9119bfd2221d1c738fe
             examples:
-              /qrcode/:id:
+              /api/v1/qrcode/:id:
                 value:
                   update:
                     data:
@@ -1324,7 +1324,7 @@ paths:
                     d176af628d129a9afdc230a810237c9cb2c844f0c350f9119bfd2221d1c738fe
           text/plain:
             examples:
-              /qrcode/:id:
+              /api/v1/qrcode/:id:
                 value: ''
       responses:
         '200':
@@ -1788,7 +1788,7 @@ paths:
           type: string
           examples:
           - 181a9421-3b20-4a3e-bec1-4e29f567b60f
-  /qrcode/{id}/handler:
+  /api/v1/qrcode/{id}/handler:
     get:
       summary: The endpoint that manages the redirects for the dynamic QR-codes
       description: >-
@@ -1904,7 +1904,7 @@ paths:
                             
                             function send_and_redirect() {
                                 console.log("[QRCode] Sending data to server...")
-                                fetch("http://localhost:3000/qrcode/8c8435e9-f630-4008-844d-31a4c928f1b9/scan", {
+                                fetch("http://localhost:8080/api/v1/qrcode/8c8435e9-f630-4008-844d-31a4c928f1b9/scan", {
                                     method: "POST",
                                     headers: {
                                         "Content-Type": "application/json"
@@ -2123,7 +2123,7 @@ paths:
           type: string
           examples:
             - 31e9597b-1b01-46f9-8e0a-ef80ddf79b2b
-  /qrcode/{id}/scan:
+  /api/v1/qrcode/{id}/scan:
     post:
       summary: Submit scan data for a 'getScanData' enabled dynamic QR-code
       description: >-
@@ -2168,7 +2168,7 @@ paths:
                       examples:
                       - 62.4422
             examples:
-              /qrcode/:id/scan:
+              /api/v1/qrcode/:id/scan:
                 value:
                   fingerprint: 32942839
                   user-agent: "Mozilla/5.0 (Linux x86_64) AppleWebKit/602.15 (KHTML, like Gecko) Chrome/47.0.3008.235 Safari/535"
@@ -2180,7 +2180,7 @@ paths:
                     accuracy: 62.4422
           text/plain:
             examples:
-              /qrcode/:id/scan:
+              /api/v1/qrcode/:id/scan:
                 value: |-
                   {
                       "fingerprint":32942839,
@@ -2321,7 +2321,7 @@ paths:
           type: string
           examples:
           - 31e9597b-1b01-46f9-8e0a-ef80ddf79b2b
-  /qrcode/list:
+  /api/v1/qrcode/list:
     get:
       summary: Get all dynamic QR-codes linked to an account
       description: >-
@@ -3669,82 +3669,4 @@ paths:
                   value:
                     error: NO_TOKEN
                     message: No token provided.
-  /srvinfo:
-    get:
-      summary: Get server information
-      description: >-
-        This endpoint is used by QRLink UI to ask the server for the server
-        URL that it has. We do this so that the server and QRLink UI are in
-        sync with what URL should be used to communicate to the server. This
-        endpoint simply returns the server URL that the server has as well as
-        QRLink's version. You can see an example of what a response from this
-        endpoint looks like.
-
-
-        ``` json
-
-        {
-            "serverURL": "http://localhost:3000",
-            "version": "1.0.0"
-        }
-
-        ```
-      operationId: srvinfo
-      responses:
-        '200':
-          description: (200) OK
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: string
-                examples:
-                - '*'
-            Connection:
-              schema:
-                type: string
-                examples:
-                - keep-alive
-            Content-Length:
-              schema:
-                type: string
-                examples:
-                - '55'
-            Date:
-              schema:
-                type: string
-                examples:
-                - Tue, 06 Feb 2024 09:40:29 GMT
-            ETag:
-              schema:
-                type: string
-                examples:
-                - W/"37-Ky+l0MfvdrPxhTYB14EMfGn3kqA"
-            Keep-Alive:
-              schema:
-                type: string
-                examples:
-                - timeout=5
-            X-Powered-By:
-              schema:
-                type: string
-                examples:
-                - Express
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  serverURL:
-                    type: string
-                    examples:
-                    - http://localhost:3000
-                  version:
-                    type: string
-                    examples:
-                    - 1.0.0
-              examples:
-                (200) OK:
-                  value:
-                    serverURL: http://localhost:3000
-                    version: 1.0.0
 tags: []

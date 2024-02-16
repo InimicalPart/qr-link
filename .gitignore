@@ -1,30 +1,20 @@
-### NextJS ###
-frontend/node_modules
-frontend/.next
-frontend/build
+### NextJS & backend ###
+NextJS/node_modules
+NextJS/.next
+NextJS/build
 
-### QRL API ###
-backend/node_modules
-backend/dist
 
 ### MongoQRL ###
 MongoQRL/node_modules
 
 ### Credentials ###
-# TODO: REMOVE
-backend/.env
-frontend/.env.development
-frontend/.env.production
 
-
-
+NextJS/.env.development
+NextJS/.env.production
 
 ### Miscellanous ###
 .history
-
-# Do not commit the QR code data
-backend/resources/qrcodes.jsonc
 # remove all js files because we have ts files and sometimes they appear in the src/ folder
-frontend/src/**/*.js
+NextJS/src/**/*.js
 src/**/*.js
 MongoQRL/src/**/*.js

@@ -9,7 +9,7 @@ export QRLinkDIR='/home/user/Desktop/QRLink'    # EDIT
 
 alias connectQRL='ssh $sshuser@$server'
 alias rmQRL="connectQRL rm -rf /opt/QRLink"
-alias uploadQRL='rmQRL && rsync -azvhP --delete --exclude="**/node_modules" --exclude="frontend/build" --exclude "backend/dist" --exclude "MongoQRL/dist" --exclude ".git" --exclude ".history" $QRLinkDIR $sshuser@$server:/opt'
+alias uploadQRL='rmQRL && rsync -azvhP --delete --exclude="**/node_modules" --exclude="NextJS/build" --exclude "MongoQRL/dist" --exclude ".git" --exclude ".history" $QRLinkDIR $sshuser@$server:/opt'
 alias configureQRL='connectQRL sudo -S bash /opt/QRLink/server/resources/setup.sh' # Warning! When asked for password, it will not be covered!
 
 
