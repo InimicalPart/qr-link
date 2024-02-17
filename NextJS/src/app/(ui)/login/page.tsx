@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose';
 import GetURL from "@/components/all/getURL.client";
+import Background from "@/components/login/background.client";
 const secret = new Uint8Array(
     Buffer.from(process.env.JWT_SECRET, 'base64'),
     );
@@ -53,7 +54,8 @@ export default async function Home() {
 
 
     return (
-      <div>
+      <>
+      <Background/>
         <div id="loginBGCover" style={{zIndex: 50 }}>
           <div
             id="loginPage"
@@ -66,8 +68,8 @@ export default async function Home() {
             <Image
               src="/res/img/newseed.png"
               alt="NewSeed Logo"
-                width={300}
-                height={300}
+                width={279}
+                height={129}
               style={{
                 maxWidth: "70%",
                 position: "absolute",
@@ -98,8 +100,7 @@ export default async function Home() {
             </div>
           </div>
         </div>
-        <GetURL setURL={setURL}/>
         <Script src="/res/js/login.js"/>
-      </div>
+      </>
     );
 }

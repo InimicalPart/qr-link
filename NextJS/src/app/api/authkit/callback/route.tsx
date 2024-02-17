@@ -1,9 +1,6 @@
 // app/callback/route.js
 import { NextRequest, NextResponse } from 'next/server';
 import { WorkOS } from '@workos-inc/node';
-
-// Javascript Object Signing and Encryption (JOSE)
-// https://www.npmjs.com/package/jose
 import { SignJWT } from 'jose';
 
 // Get secret
@@ -24,8 +21,7 @@ export async function GET(req: NextRequest) {
   });
 
   // Cleanup params and redirect to homepage
-    let proto = req.headers.get("host")?.split(":")[0] === "localhost" ? "http" : "https"
-    const response = NextResponse.redirect(new URL('/dashboard', proto+"://" +req.headers.get("host")))
+    const response = NextResponse.redirect(new URL('/dashboard', process.env.BASE_URL))
 
   // Create a JWT with the user's information
   const token = await new SignJWT({
