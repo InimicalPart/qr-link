@@ -213,7 +213,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }), {status:201}); 
 }
     
-export async function randomString(length: number) {
+async function randomString(length: number) {
     return new Promise<string>((resolve, reject) => {
         crypto.randomBytes(length, function (err, buffer) {
             if (err) {
