@@ -1,3 +1,4 @@
+#! THIS FILE IS OUTDATED AS OF 21/2/2024. UPDATES WILL BE MADE SOON.
 openapi: 3.1.0
 info:
   title: QRLink API

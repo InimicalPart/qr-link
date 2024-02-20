@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import {QRLinkGlobal} from "@/types/api/v1/global"
-import { QRCodeData } from "@/types/api/v1/QRCode"
+import { QRCodeData, RedirectQRCodeData, ScheduleQRCodeData } from "@/types/api/v1/QRCode"
 import moment from "moment-timezone"
 import { generateTrackingCode, getPassedTime } from "@/utilities/api/v1/misc"
 import { saveQR } from "@/utilities/api/v1/database"
@@ -27,19 +27,21 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
       }), { status: 400 });
     }
     console.log("[QRCode] QR-code was scanned: " + id);
-    const { type, data } = global.QRCodeTable[id];
-    let currentAction: Partial<QRCodeData> = {}
-    if (data.schedule) {
-      let day = moment().tz(data.schedule.timezone ?? moment.tz.guess()).format("dddd").toLowerCase() as "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday"
-      let time = getPassedTime(Object.keys(data.schedule[day]), data.schedule.timezone ?? moment.tz.guess())
+    const { type } = global.QRCodeTable[id];
+    let currentAction: Partial<RedirectQRCodeData> = {}
+    if (type == "schedule") {
+      const data = global.QRCodeTable[id].data as ScheduleQRCodeData
+
+      let day = moment().tz(data.timezone ?? moment.tz.guess()).format("dddd").toLowerCase() as "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday"
+      let time = getPassedTime(Object.keys(data[day]), data.timezone ?? moment.tz.guess())
       if (!time) {
-          let currentDay = moment().tz(data.schedule.timezone ?? moment.tz.guess())
+          let currentDay = moment().tz(data.timezone ?? moment.tz.guess())
           // go back a day and try again
           let maxiumumDaysToGoBack = 7
           while (!time) {
               currentDay.subtract(1, "days")
               day = currentDay.format("dddd").toLowerCase() as "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday"
-              time = getPassedTime(Object.keys(data.schedule[day] as any), data.schedule.timezone ?? moment.tz.guess())
+              time = getPassedTime(Object.keys(data[day] as any), data.timezone ?? moment.tz.guess())
   
               maxiumumDaysToGoBack--
               if (maxiumumDaysToGoBack == 0) {
@@ -57,9 +59,16 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
               }
           }
       } 
-      currentAction = data.schedule[day][time]
-    } else {
+      currentAction = data[day][time]
+    } else if (type == "redirect") {
+      const data = global.QRCodeTable[id].data as RedirectQRCodeData
       currentAction = data;
+    } else if (type == "location") {
+      // Not implemented yet
+      return new NextResponse(JSON.stringify({
+        error: "NOT_IMPLEMENTED",
+        message: "Location-based QR-codes are not implemented yet.",
+      }), { status: 500 });
     }
     if (!global.QRCodeTable[id].settings.getScanData) {
         global.QRCodeTable[id].scanCount++; //! Only add to scanCount if we are not getting scan data
@@ -94,7 +103,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
         }
         if (global.QRCodeTable[id].settings.getScanData) {
           // if only timestamp or user-agent is requested, we can get it using express and redirect them normally
-          if (Object.keys(global.QRCodeTable[id].settings.scanData).filter((key) => !["timestamp", "user-agent"].includes(key) && global.QRCodeTable[id].settings.scanData[key as "timestamp"|"user-agent"|"fingerprint"|"ip"|"location"]).length == 0) {
+          if (Object.keys(global.QRCodeTable[id].settings.scanData.information).filter((key) => !["timestamp", "user-agent"].includes(key) && global.QRCodeTable[id].settings.scanData.information[key as "timestamp"|"user-agent"|"fingerprint"|"ip"|"location"]).length == 0) {
   
             let finalScanData: Partial<{
                 fingerprint: string,
@@ -107,10 +116,10 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                     accuracy: number
                 }
             }> = {}
-            if (global.QRCodeTable[id].settings.scanData.timestamp) {
+            if (global.QRCodeTable[id].settings.scanData.information.timestamp) {
                 finalScanData.timestamp = new Date()
             }
-            if (global.QRCodeTable[id].settings.scanData["user-agent"]) {
+            if (global.QRCodeTable[id].settings.scanData.information["user-agent"]) {
                 finalScanData["user-agent"] = request.headers.get("user-agent")
             }
   
@@ -124,6 +133,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
           }
         if (currentAction.redirect_to.toLowerCase().startsWith("begin:vcard") && currentAction.redirect_to.toLowerCase().endsWith("end:vcard")){
               console.log("[QRCode] Redirecting to vCard: " + currentAction.redirect_to.replace(/\n/g,"%0A"));
+              // TODO: Add track support for vCards
               return new NextResponse(
                   `
                   <!DOCTYPE html>

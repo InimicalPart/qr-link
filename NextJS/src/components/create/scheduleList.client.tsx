@@ -1,6 +1,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
+
+
 export default function ScheduleList({
     currentScheduleActions,
     setCurrentScheduleActions
@@ -36,6 +38,9 @@ export default function ScheduleList({
         }
     } = currentScheduleActions
 
+
+        useEffect(() => {},
+        [schedule]);
 
         useEffect(() => {
             function handleChange() {            

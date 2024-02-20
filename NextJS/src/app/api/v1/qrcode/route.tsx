@@ -29,6 +29,57 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const { type, data, expires, name, description, settings } = body;
     const token = request.headers.get("Authorization");
     
+
+    // Check if ID is valid
+    if (!(typeof (id as any) == "string")) {
+        return new NextResponse(JSON.stringify({
+            error: "INVALID_ID",
+            message: "ID needs to be a string.",
+        }), {status:400});
+    }
+    
+    if (!/^[a-zA-Z0-9_.-]*$/.test(id)) return new NextResponse(JSON.stringify({error: "INVALID_ID", message: "'id' can only contain alphanumeric characters, underscores and dashes and periods."}), {status:400});
+
+    // Check if ID is already in use, as well as if it's user-specified, if both are true, return an error, otherwise, if it's only in use, generate a new ID until it is not in use
+    while (global.QRCodeTable[id]) {
+        if ((await request.json()).id) {
+            return new NextResponse(JSON.stringify({
+                error: "ID_IN_USE",
+                message: "ID already in use.",
+            }), {status:400});
+        }
+        id = crypto.randomUUID();
+    }
+
+
+    // Check if update key is valid
+    if (!(typeof (update_key as any) == "string")) {
+        return new NextResponse(JSON.stringify({
+            error: "INVALID_UPDATE_KEY",
+            message: "update_key needs to be a string.",
+        }), {status:400});
+    }
+
+    let identifier = undefined
+    if (token) {
+        // check if token is valid
+        if (!(typeof (token as any) == "string")) {
+            return new NextResponse(JSON.stringify({
+                error: "INVALID_TOKEN",
+                message: "Token needs to be a string.",
+            }), {status:400});
+        }
+        let tokenVerificationResult = await getUser(token)
+        if (!tokenVerificationResult.isAuthenticated) {
+            return new NextResponse(JSON.stringify({
+                error: "INVALID_TOKEN",
+                message: "Invalid token.",
+            }), {status:400});
+        }
+        
+        identifier = tokenVerificationResult.user.id
+    }
+
     // Check if type is valid
     if (!type) {
         return new NextResponse(JSON.stringify({
@@ -95,44 +146,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }), {status:400});
     }
     
-    if (data.redirect_to) {
-        data.redirect_to = data.redirect_to.trim();
-    }
-    
-    // Check if ID is valid
-    if (!(typeof (id as any) == "string")) {
-        return new NextResponse(JSON.stringify({
-            error: "INVALID_ID",
-            message: "ID needs to be a string.",
-        }), {status:400});
-    }
-    
-    // Check if update key is valid
-    if (!(typeof (update_key as any) == "string")) {
-        return new NextResponse(JSON.stringify({
-            error: "INVALID_UPDATE_KEY",
-            message: "update_key needs to be a string.",
-        }), {status:400});
-    }
-    let identifier = undefined
-    if (token) {
-        // check if identifier is valid (it is already hashed)
-        if (!(typeof (token as any) == "string")) {
-            return new NextResponse(JSON.stringify({
-                error: "INVALID_TOKEN",
-                message: "Token needs to be a string.",
-            }), {status:400});
-        }
-        let tokenVerificationResult = await getUser(token)
-        if (!tokenVerificationResult.isAuthenticated) {
-            return new NextResponse(JSON.stringify({
-                error: "INVALID_TOKEN",
-                message: "Invalid token.",
-            }), {status:400});
-        }
-        
-        identifier = tokenVerificationResult.user.id
-    }
+
+
     if (expires) {
         // needs to be a date or null
         if (
@@ -155,20 +170,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 message: "settings needs to be an object.",
             }), {status:400});
         }
+        // if settings.scanData.sendScanDataToURL is true, settings.scanData.JWTEncryptionKey needs to be a string and not empty
+        if (settings.scanData.sendScanDataToURL) {
+            if (
+                !(typeof (settings.scanData.JWTEncryptionKey as any) == "string") ||
+                settings.scanData.JWTEncryptionKey == ""
+                ) {
+                    return new NextResponse(JSON.stringify({
+                        error: "INVALID_JWT_ENCRYPTION_KEY",
+                        message: "JWTEncryptionKey needs to be a string and not empty.",
+                    }), {status:400});
+                }
+        }
+        
     }
         
-    if (!/^[a-zA-Z0-9_.-]*$/.test(id)) return new NextResponse(JSON.stringify({error: "INVALID_ID", message: "'id' can only contain alphanumeric characters, underscores and dashes and periods."}), {status:400});
     
-    // Check if ID is already in use, as well as if it's user-specified, if both are true, return an error, otherwise, if it's only in use, generate a new ID until it is not in use
-    while (global.QRCodeTable[id]) {
-        if ((await request.json()).id) {
-            return new NextResponse(JSON.stringify({
-                error: "ID_IN_USE",
-                message: "ID already in use.",
-            }), {status:400});
-        }
-        id = crypto.randomUUID();
-    }
+
     
     global.QRCodeTable[id] = {
         type,
@@ -185,14 +203,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         settings: {
             getScanData: settings?.getScanData ?? true,
             scanData: {
-                fingerprint: settings?.scanData?.fingerprint ?? false,
-                "user-agent": settings?.scanData?.["user-agent"] ?? false,
-                timestamp: settings?.scanData?.timestamp ?? true,
-                ip: settings?.scanData?.ip ?? false,
-                location: settings?.scanData?.location ?? false,
+                information: {
+                    fingerprint: settings?.scanData?.information?.fingerprint ?? false,
+                    "user-agent": settings?.scanData?.information?.["user-agent"] ?? false,
+                    timestamp: settings?.scanData?.information?.timestamp ?? true,
+                    ip: settings?.scanData?.information?.ip ?? false,
+                    location: settings?.scanData?.information?.location ?? false,
+                },
+                sendScanDataToURL: settings?.scanData?.sendScanDataToURL ?? false,
+                JWTEncryptionKey: settings?.scanData?.JWTEncryptionKey ?? "",
             },
             requirements: {
-                location: settings?.requirements?.location ?? false, //! Warning, this currently does not work on iOS, as it does not like to share location data with http:// websites, will be fixed when we move to https://
+                location: settings?.requirements?.location ?? false, //! Warning, this does not work on iOS when running on localhost, because it's a http:// request, and iOS does not allow sending location data over http:// 
             }
         }
     };

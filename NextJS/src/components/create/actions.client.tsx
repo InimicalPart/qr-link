@@ -15,13 +15,14 @@ interface ScheduleAction {
         }
     }
 }
+
 export default function Actions({
-    token,
-    apiURL
-}: {
-        token: string,
-        apiURL: string
+    state
+}:{
+    state:any
 }) {
+    let [action, setAction] = useState("");
+
     function getPassedTime(times: string[], currentTime: string) {
         let diffs: number[] = []
         for (let time of times) {
@@ -42,36 +43,38 @@ export default function Actions({
 
 
     let [currentScheduleActions, setCurrentScheduleActions] = useState<ScheduleAction>({});
-    let action = ""
     console.log("RELOAD")
     const [allDay, setAllDay] = useState(false);
 
     const handleCheckboxChange = (event: { target: { checked: boolean | ((prevState: boolean) => boolean); }; }) => {
       setAllDay(event.target.checked);
     };
-    function onActionChange() {
-        console.log("Action changed", (document.getElementById("qr-action") as HTMLSelectElement).value)
-        action = (document.getElementById("qr-action") as HTMLSelectElement).value
-        if (action === "redirect") {
-            document.getElementById("redirectContainer").style.display = "block"
-            document.getElementById("scheduleContainer").style.display = "none"
-            document.getElementById("locationContainer").style.display = "none"
-        } else if (action === "schedule") {
-            document.getElementById("redirectContainer").style.display = "none"
-            document.getElementById("scheduleContainer").style.display = "block"
-            document.getElementById("locationContainer").style.display = "none"
-        } else if (action === "location") {
-            document.getElementById("redirectContainer").style.display = "none"
-            document.getElementById("scheduleContainer").style.display = "none"
-            document.getElementById("locationContainer").style.display = "block"
-        } else {
-            document.getElementById("redirectContainer").style.display = "none"
-            document.getElementById("scheduleContainer").style.display = "none"
-            document.getElementById("locationContainer").style.display = "none"
-        }
 
-        window.dispatchEvent(new CustomEvent('typeChange', { detail: action }));
-    }
+    useEffect(() => {
+      console.log("Action changed", (document.getElementById("qr-action") as HTMLSelectElement).value)
+      setAction((document.getElementById("qr-action") as HTMLSelectElement).value)
+      if (action === "redirect") {
+          document.getElementById("redirectContainer").style.display = "block"
+          document.getElementById("scheduleContainer").style.display = "none"
+          document.getElementById("locationContainer").style.display = "none"
+      } else if (action === "schedule") {
+          document.getElementById("redirectContainer").style.display = "none"
+          document.getElementById("scheduleContainer").style.display = "block"
+          document.getElementById("locationContainer").style.display = "none"
+      } else if (action === "location") {
+          document.getElementById("redirectContainer").style.display = "none"
+          document.getElementById("scheduleContainer").style.display = "none"
+          document.getElementById("locationContainer").style.display = "block"
+      } else {
+          document.getElementById("redirectContainer").style.display = "none"
+          document.getElementById("scheduleContainer").style.display = "none"
+          document.getElementById("locationContainer").style.display = "none"
+      }
+
+      window.dispatchEvent(new CustomEvent('typeChange', { detail: action }));
+
+    }, [action]);
+
     useEffect(() => {
         function getData() {
             if (action == "schedule") {
@@ -97,15 +100,17 @@ export default function Actions({
           </p>
           <select
             id="qr-action"
-            onChange={onActionChange}
+            onChange={()=>setAction((document.getElementById("qr-action") as HTMLSelectElement).value)}
             className="disabled:bg-neutral-400"
             style={{
-              border: "1px black solid",
+              border: state?.type ? "1px red solid" : "1px black solid",	
+              color: state?.type ? "red" : "black",
               borderRadius: 8,
               textAlign: "center",
               width: 300,
             }}
             defaultValue=""
+            name="type"
           >
             <option value="">
               --Please choose an option--
@@ -114,6 +119,11 @@ export default function Actions({
             <option value="schedule">Schedule</option>
             <option value="location">Location</option>
           </select>
+          <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
+                fontSize: "9pt",
+                color: "red",
+                display: state?.type ? "block" : "none",
+            }}>{state?.type}</p>
           <div
             id="actionContainer"
             style={{
@@ -134,8 +144,10 @@ export default function Actions({
                   autoCapitalize="none"
                   autoCorrect="none"
                   spellCheck="false"
+                  name="redirect_redirect_to"
+                  disabled={action !== "redirect"}
                   style={{
-                    border: "1px black solid",
+                    border: state?.redirect_redirect_to ? "1px red solid" : "1px black solid",
                     borderRadius: 8,
                     textAlign: "center",
                     maxHeight: 250,
@@ -143,6 +155,13 @@ export default function Actions({
                     height: 30
                   }}
                 ></textarea>
+                <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
+                  fontSize: "9pt",
+                  color: "red",
+                  display: state?.redirect_redirect_to ? "block" : "none",
+                  marginTop: -5,
+                  marginBottom: -5
+                }}>{state?.redirect_redirect_to}</p>
                 <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10}} title="Where to navigate once the QR-code has expired"><b>After Expiry</b> <span style={{
                         fontSize: '8pt',
                         flexBasis: '100%',
@@ -156,18 +175,34 @@ export default function Actions({
                   autoCorrect="none"
                   spellCheck="false"
                   style={{
-                    border: "1px black solid",
+                    border: state?.redirect_after_expiry ? "1px red solid" : "1px black solid",
                     borderRadius: 8,
                     textAlign: "center",
                     maxHeight: 250,
                     minHeight: 30,
                     height: 30
                   }}
+                  disabled={action !== "redirect"}
+                  name="redirect_after_expiry"
                 ></textarea>
+                <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
+                  fontSize: "9pt",
+                  color: "red",
+                  display: state?.redirect_after_expiry ? "block" : "none",
+                  marginTop: -5,
+                }}>{state?.redirect_after_expiry}</p>
             </div>
             <div id="scheduleContainer" style={{ display: "none" }}>
+              <input type="hidden" disabled={action !== "schedule"} id="scheduleCompacted" name="schedule" value={JSON.stringify(currentScheduleActions)}/>
               <div id="currentActions">
                 <ScheduleList currentScheduleActions={currentScheduleActions} setCurrentScheduleActions={setCurrentScheduleActions}/>
+                <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
+                  fontSize: "9pt",
+                  color: "red",
+                  display: state?.schedule ? "block" : "none",
+                  marginBottom: 10,
+                  marginTop: -10
+                }}>{state?.schedule}</p>
               </div>
               <div id="newAction" style={{
                 border: "1px solid black",
@@ -355,6 +390,8 @@ export default function Actions({
                     textAlign: "center",
                     width: 300,
                 }}
+                name="schedule_timezone"
+                disabled={action !== "schedule"}
                 defaultValue={moment.tz.guess()}
                 >
                     {
@@ -367,7 +404,7 @@ export default function Actions({
             </div>
             </div>
             <div id="locationContainer" style={{ display: "none",  }}>
-                <Location/>
+                <Location state={state}/>
             </div>
           </div>
         </div>

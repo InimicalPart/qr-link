@@ -1,5 +1,5 @@
 {
-  "name": "qrlink-frontend",
+  "name": "qrlink-nextjs",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -29,7 +29,8 @@
     "react-dom": "^18",
     "react-leaflet": "^4.2.1",
     "sharp": "^0.33.2",
-    "yaml": "^2.3.4"
+    "yaml": "^2.3.4",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",

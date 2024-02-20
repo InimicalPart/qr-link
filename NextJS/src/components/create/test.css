@@ -11,10 +11,10 @@ button {
     cursor: pointer;
 }
 
-button:hover:not([disabled]) {
+button:hover:not([disabled]):not([type="submit"]) {
     background-color: rgb(210, 218, 225);
 }
-button:disabled {
+button:disabled:not([type="submit"]) {
     background-color: rgb(178, 185, 190);
     cursor: not-allowed;
     color: rgb(50, 50, 50);
@@ -43,4 +43,10 @@ input[type='number']::-webkit-inner-spin-button,
 input[type='number']::-webkit-outer-spin-button { 
     -webkit-appearance: none;
     margin: 0;
+}
+.extended {
+    margin-left:30px
+}
+#jwt-signing-key:disabled {
+    background-color: lightgray;
 }

@@ -26,7 +26,7 @@ export async function register(){
             "name",
             "settings"
         ]
-        global.supportedTypes = ["redirect"];
+        global.supportedTypes = ["redirect", "schedule", "location"]
         global.storageMethod = "file";
         global.QRBackupFilePath = process.platform == "win32" ? process.env.USERPROFILE + "\\Documents\\QRLink\\qrcodes.jsonc" : "/srv/QRLink/qrcodes.jsonc";
         // create the backup file/folders if they don't exist
