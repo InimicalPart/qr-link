@@ -60,5 +60,5 @@ ENV DISPLAY=:99
 
 USER root
 
-CMD ["xvfb-run", "-a", "/usr/bin/npm", "run", "start"]
+CMD ["xvfb-run", "-a", "/usr/bin/npm", "run", "qrlink"]
 HEALTHCHECK --interval=1s --timeout=1s --start-period=1m --retries=10 CMD if [ $(lsof -i :8080 | (grep -E "*:(8080) \(LISTEN\)"||echo 0)|wc -l) -eq 1 ]; then exit 0; else exit 1; fi

@@ -5,7 +5,11 @@ import { useLeafletContext } from '@react-leaflet/core'
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents, Tooltip, CircleMarker, Polyline, Polygon } from 'react-leaflet'
 import "./test.css"
 import crypto from 'crypto'
-export default function Location() {
+export default function Location({
+    state
+}: {
+    state: any
+}) {
     const [zones, setZones] = useState([] as any[]);
     const [type, setType] = useState("")
     const [selectedZoneIndex, setSelectedZoneIndex] = useState(0);
@@ -28,11 +32,23 @@ export default function Location() {
         return ()=>{
             window.removeEventListener("getData", getData)
         }
-        
     },[zones,type])
+    useEffect(()=>{
+        function onSubmit(e: Event) {
+            if (type == "location") {
+                if (!validateLocation(zones)) {
+                    console.log("Cancelling form submission due to invalid location zones being present")
+                    e.preventDefault()
+                }
+            }
+        }
+        document.getElementById("create-form")?.addEventListener("submit", onSubmit)
+        return ()=>{
+            document.getElementById("create-form")?.removeEventListener("submit", onSubmit)
+        }
+    })
 
     function convertToBeautiful(zones: any, includeFunctions = false) {
-        console.log(zones)
         const res = zones.map((zone: any) => {
             const newZone: {
                 type: 'circle' | 'polygon';
@@ -87,7 +103,6 @@ export default function Location() {
             }
             return newZone;
         })
-        console.log("RES",res)
         return includeFunctions ? res : JSON.stringify(res)
     }
 
@@ -253,8 +268,6 @@ export default function Location() {
         afterExpiry: string;
         bounds: L.LatLngBounds
     }[]) {
-            console.log("Z",zones)
-
             if (zones.length < 1) {
                 alert("You need at least 1 zone")
                 return false
@@ -392,14 +405,22 @@ export default function Location() {
     }
     function LayerOrganizer({zones}: {zones: any[]}) {
         const context = useLeafletContext();
-        setMap(context.map)
+        const [leafletMap, setMap] = useState(null);
+
         useEffect(()=>{
-            const copy = [...zones];
-            for (let zone of copy.sort((a,b)=>a.priority - b.priority)) { 
-                zone.L.bringToFront();
+            setMap(context.map);
+        }, [context.map]);
+
+        useEffect(()=>{
+            if (leafletMap) {
+                const copy = [...zones];
+                for (let zone of copy.sort((a,b)=>a.priority - b.priority)) { 
+                    zone.L.bringToFront();
+                }
             }
-        },[zones])
-        return <></>
+        }, [leafletMap, zones]);
+
+        return <></>;
     }
 
     useEffect(()=>{
@@ -412,6 +433,7 @@ export default function Location() {
     },[selectedZoneIndex, zones])
     return (
         <div>
+        <input type="hidden" id="location" name="location_zones" disabled={type !== "location"} value={convertToBeautiful(zones)} />
             <MapContainer maxBounds={[[-85.05115, -180], [85, 180]]} maxBoundsViscosity={1.0} style={{ width: "90vw", maxWidth: 600, height: 400, left:"50%", transform:"translateX(-50%)" }} center={zones.length > 0 && selectedZoneIndex >= 0 && selectedZoneIndex < zones.length ? zones[selectedZoneIndex].position : [51.505, -0.09]} zoom={2} minZoom={2} >
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -435,7 +457,9 @@ export default function Location() {
                 width: "100%"
             }} hidden={!isCreatingZone}>{zoneType == "circle" ? "Click/Tap on the map to create a circle zone" : zoneType == "polygon" ? "Click/Tap on the map to place your first polygon point" : "Click/Tap on the map to create a zone for the entire world"}</p>
             <br/>
-        <button style={{
+        <button 
+        type="button"
+        style={{
             marginBottom:20,
             width: 250
         }} onClick={() => {
@@ -696,66 +720,68 @@ export default function Location() {
 
     
 
-    function ZoneController({ zones, selectedZoneIndex }: { zones: {
-        L: L.Circle<any> | L.Polygon<any>;
-        bounds: L.LatLngBounds;
-        hidden: boolean;
-        isEntireWorld: any; type: 'circle' | 'polygon', positions: LatLngTuple[], radius?: number 
-}[], selectedZoneIndex: number }) {
-        const context = useLeafletContext();
-        const container = context.map
-        useMapEvents({
-            click: handleMapClick,
-        });
+        function ZoneController({ zones, selectedZoneIndex }: { zones: {
+            L: L.Circle<any> | L.Polygon<any>;
+            bounds: L.LatLngBounds;
+            hidden: boolean;
+            isEntireWorld: any; type: 'circle' | 'polygon', positions: LatLngTuple[], radius?: number 
+    }[], selectedZoneIndex: number }) {
+            const context = useLeafletContext();
+            const container = context.map
+            useMapEvents({
+                click: handleMapClick,
+            });
 
-        let [elements, setElements] = useState([] as any[]);
+            let [elements, setElements] = useState([] as any[]);
 
-        useEffect(() => {
-            for (let zone of zones) {
-                if (zone.L)
-                zone.L.remove()
-            }
-            setElements([]);
-            zones.forEach((zone, index) => {
-                if (zone.type === 'circle') {
-                    const circle = L.circle(zone.positions[0], {
-                        radius: zone.radius!,
-                        color: index === selectedZoneIndex ? "black" : colors[index % colors.length],
-                        weight: index === selectedZoneIndex ? 7 : 3,
-                        fillColor: colors[index % colors.length],
-                        interactive: !(isCreatingZone || selectedZoneIndex != -1)
-                    });
-
-                    // make it follow the circle
-                    // attach popup
-                    circle.bindPopup(`Zone ${index + 1}`);
-                    zone.L = circle;
-                    if (!zone.hidden) {
-                        circle.addTo(container);
-                        zone.bounds = circle.getBounds();
-                    }
-                    setElements([...elements, circle]);
-                } else {
-                    console.log("Edited entire world? ", zone.isEntireWorld)
-                    const polygon = L.polygon(zone.positions, {
-                        color: index === selectedZoneIndex ? "black" : colors[index % colors.length],
-                        weight: index === selectedZoneIndex ? 7 : 3,
-                        fillColor: colors[index % colors.length],
-                        interactive: !(isCreatingZone || selectedZoneIndex != -1),
-                    })
-
-                    // attach popup
-                    polygon.bindPopup(`Zone ${index + 1}`);
-                    zone.L = polygon;
-                    if (!zone.hidden) {
-                        polygon.addTo(container);
-                        zone.bounds = polygon.getBounds();
-                    }
-                    setElements([...elements, polygon]);
+            useEffect(() => {
+                for (let zone of zones) {
+                    if (zone.L)
+                    zone.L.remove()
                 }
-            })
-        }, [zones, selectedZoneIndex, container, elements]);
+                if (elements.length > 0) {
+                    setElements([]);
+                }
+                zones.forEach((zone, index) => {
+                    if (zone.type === 'circle') {
+                        const circle = L.circle(zone.positions[0], {
+                            radius: zone.radius!,
+                            color: index === selectedZoneIndex ? "black" : colors[index % colors.length],
+                            weight: index === selectedZoneIndex ? 7 : 3,
+                            fillColor: colors[index % colors.length],
+                            interactive: !(isCreatingZone || selectedZoneIndex != -1)
+                        });
 
-        return <></>
-    }
+                        // make it follow the circle
+                        // attach popup
+                        circle.bindPopup(`Zone ${index + 1}`);
+                        zone.L = circle;
+                        if (!zone.hidden) {
+                            circle.addTo(container);
+                            zone.bounds = circle.getBounds();
+                        }
+                        setElements(prevElements => [...prevElements, circle]);
+                    } else {
+                        console.log("Edited entire world? ", zone.isEntireWorld)
+                        const polygon = L.polygon(zone.positions, {
+                            color: index === selectedZoneIndex ? "black" : colors[index % colors.length],
+                            weight: index === selectedZoneIndex ? 7 : 3,
+                            fillColor: colors[index % colors.length],
+                            interactive: !(isCreatingZone || selectedZoneIndex != -1),
+                        })
+
+                        // attach popup
+                        polygon.bindPopup(`Zone ${index + 1}`);
+                        zone.L = polygon;
+                        if (!zone.hidden) {
+                            polygon.addTo(container);
+                            zone.bounds = polygon.getBounds();
+                        }
+                        setElements(prevElements => [...prevElements, polygon]);
+                    }
+                })
+            }, [zones, selectedZoneIndex, container, elements]);
+
+            return <></>
+        }
 }

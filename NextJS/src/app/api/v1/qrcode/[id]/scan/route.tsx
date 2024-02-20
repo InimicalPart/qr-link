@@ -81,11 +81,11 @@ export async function POST(request: NextRequest, {params}:{params:{id:string}}):
         }
     } = {}
 
-    if (global.QRCodeTable[id].settings.scanData.fingerprint) scanData["fingerprint"] = requestBody.fingerprint
-    if (global.QRCodeTable[id].settings.scanData["user-agent"]) scanData["user-agent"] = request.headers.get("user-agent")
-    if (global.QRCodeTable[id].settings.scanData.timestamp) scanData["timestamp"] = new Date()
-    if (global.QRCodeTable[id].settings.scanData.ip) scanData["ip"] = requestBody.ip ?? request.ip
-    if (global.QRCodeTable[id].settings.scanData.location) scanData["location"] = requestBody.location
+    if (global.QRCodeTable[id].settings.scanData.information.fingerprint) scanData["fingerprint"] = requestBody.fingerprint
+    if (global.QRCodeTable[id].settings.scanData.information["user-agent"]) scanData["user-agent"] = request.headers.get("user-agent")
+    if (global.QRCodeTable[id].settings.scanData.information.timestamp) scanData["timestamp"] = new Date()
+    if (global.QRCodeTable[id].settings.scanData.information.ip) scanData["ip"] = requestBody.ip ?? request.ip
+    if (global.QRCodeTable[id].settings.scanData.information.location) scanData["location"] = requestBody.location
 
 
     global.QRCodeTable[id].scanCount++;

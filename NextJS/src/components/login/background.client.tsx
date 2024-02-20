@@ -152,9 +152,18 @@ export default function Background({color="#000000"}: {color?: string}) {
             mouse.y = e.clientY;
         });
 
+        let lastFrameTime = 0;
+        const frameRate = 30;  // 30 FPS
         function tick() {
-            draw();
-            update();
+            const currentFrameTime = Date.now();
+            const timeSinceLastFrame = currentFrameTime - lastFrameTime;
+        
+            if (timeSinceLastFrame >= 1000 / frameRate) {
+                draw();
+                update();
+                lastFrameTime = currentFrameTime;
+            }
+        
             requestAnimationFrame(tick);
         }
 
@@ -167,5 +176,5 @@ export default function Background({color="#000000"}: {color?: string}) {
         top: 0,
         left: 0,
         background: color
-    }} width={9999} height={9999} id="QRLBackground"></canvas>
+    }}  id="QRLBackground"></canvas>
 }

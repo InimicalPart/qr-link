@@ -97,10 +97,10 @@ export default function CreateQR({
 
 
             if (type == "schedule") {
-                if (Object.keys(typeData.data).length === 0) {
-                    reject({message:"You must have at least one day specified."});
-                    return;
-                }
+                // if (Object.keys(typeData.data).length === 0) {
+                //     reject({message:"You must have at least one day specified."});
+                //     return;
+                // }
                 // if typeData.data[day] is of length 1 or less, reject, if it's allday and has more than 1, reject
                 for (let day in typeData.data) {
                     if (day == "timezone") continue;
@@ -401,9 +401,7 @@ export default function CreateQR({
 
     return (
       <>
-        <div id="qr-submit-cntr" className="QRL-container QRL-create">
-        <button type="button" id="qr-submit" disabled={buttonDisabled} onClick={submit} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 disabled:text-white disabled:bg-blue-300 disabled:hover:bg-blue-300">Create</button>
-        </div>
+
       </>
     );
 }

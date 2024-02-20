@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { QRCodeData } from "@/types/api/v1/QRCode";
+import { QRCodeData, QRCodeInformation } from "@/types/api/v1/QRCode";
 import { resolveID } from "./authentication";
 import QRCodeGenerator from "qrcode";
 import path from "path";
@@ -31,19 +31,19 @@ export async function generateTrackingCode(id: string | number, options:Partial<
     let body = '<script src="https://cdnjs.cloudflare.com/ajax/libs/ClientJS/0.2.1/client.min.js" integrity="sha512-2WLGNBqBSz+HMXWugyIdkJNr6fPanvXsjj5ivuMzmztNgKVaJHJIcn6tkqmVoV4EKJYdzlLfNi0O1K3e1EtWAQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>\n'
     let javascriptCode = `(async()=>{let client = new ClientJS();\nconst finalData = {};\nasync function getPos(){return new Promise((resolve,reject)=>{navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy: true})})};\n`
 
-    if (global.QRCodeTable[id].settings.scanData.fingerprint) {
+    if (global.QRCodeTable[id].settings.scanData.information.fingerprint) {
         javascriptCode += `finalData.fingerprint = client.getCustomFingerprint(client.getBrowserData().ua,client.getCanvasPrint())\n`
     }
-    if (global.QRCodeTable[id].settings.scanData["user-agent"]) {
+    if (global.QRCodeTable[id].settings.scanData.information["user-agent"]) {
         javascriptCode += `finalData["user-agent"] = client.getBrowserData().ua ?? "${options.request.headers.get("user-agent")}"\n`
     }
-    if (global.QRCodeTable[id].settings.scanData.timestamp) {
+    if (global.QRCodeTable[id].settings.scanData.information.timestamp) {
         javascriptCode += `finalData.timestamp = ${new Date().getTime()}\n`
     }
-    if (global.QRCodeTable[id].settings.scanData.ip) {
+    if (global.QRCodeTable[id].settings.scanData.information.ip) {
         javascriptCode += `finalData.ip = (await (await fetch("https://api.ipify.org/?format=json")).json()).ip\n`
     }
-    if (global.QRCodeTable[id].settings.scanData.location) {
+    if (global.QRCodeTable[id].settings.scanData.information.location) {
         javascriptCode += `
         if (navigator.geolocation) {
             getPos().then((pos)=>{
@@ -97,18 +97,25 @@ export async function generateTrackingCode(id: string | number, options:Partial<
 
 
 
-export async function QRCode2PDF(qrcode: { linked_to: string; update_key: any; name: any; description: any; created: string | number | Date; expires: string | number | Date; scanCount: number; settings: { getScanData: any; scanData: { [x: string]: any; fingerprint: any; timestamp: any; ip: any; location: any; }; requirements: { location: any; }; }; }, id: string) {
-    function settings2HTML(settings: { getScanData: any; scanData: any; requirements: any; }) {
+export async function QRCode2PDF(qrcode: QRCodeInformation, id: string) {
+    function settings2HTML(settings: { getScanData: boolean; scanData: {information:{
+        fingerprint:boolean;
+        "user-agent":boolean;
+        timestamp:boolean;
+        ip:boolean;
+        location:boolean;
+    }; sendScanDataToURL:boolean; JWTEncryptionKey:string;
+    }; requirements: {location:boolean}; }) {
         let rtrn = []
         let template = `<span>[TXT]</span>`
 
         rtrn.push(template.replace("[TXT]", "Get scan data -> " + (settings.getScanData ? "YES" : "NO")))
         if (settings.getScanData) {
-            rtrn.push(template.replace("[TXT]", "Get Device Fingerprint -> " + (settings.scanData.fingerprint ? "YES" : "NO")))
-            rtrn.push(template.replace("[TXT]", "Get User-Agent -> " + (settings.scanData["user-agent"] ? "YES" : "NO")))
-            rtrn.push(template.replace("[TXT]", "Get Timestamp -> " + (settings.scanData.timestamp ? "YES" : "NO")))
-            rtrn.push(template.replace("[TXT]", "Get IP -> " + (settings.scanData.ip ? "YES" : "NO")))
-            rtrn.push(template.replace("[TXT]", "Get Location -> " + (settings.scanData.location ? "YES" : "NO")))
+            rtrn.push(template.replace("[TXT]", "Get Device Fingerprint -> " + (settings.scanData.information.fingerprint ? "YES" : "NO")))
+            rtrn.push(template.replace("[TXT]", "Get User-Agent -> " + (settings.scanData.information["user-agent"] ? "YES" : "NO")))
+            rtrn.push(template.replace("[TXT]", "Get Timestamp -> " + (settings.scanData.information.timestamp ? "YES" : "NO")))
+            rtrn.push(template.replace("[TXT]", "Get IP -> " + (settings.scanData.information.ip ? "YES" : "NO")))
+            rtrn.push(template.replace("[TXT]", "Get Location -> " + (settings.scanData.information.location ? "YES" : "NO")))
             rtrn.push(template.replace("[TXT]", "Require Location -> " + (settings.requirements.location ? "YES" : "NO")))
         }
         return rtrn.join("<br>")

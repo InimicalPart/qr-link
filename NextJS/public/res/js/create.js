@@ -75,10 +75,10 @@ document.getElementById("qr-id").addEventListener("input", (evt) => {
 
 document.getElementById('qr-code').ondragstart = function() { return false; };
 
-fetch(document.getElementById("apiurl").innerText+"/srvinfo").then((response) => response.json()).then((data) => {
-    serverURL = data.serverURL
-    document.getElementById("apiurl").remove()
-})
+// fetch(document.getElementById("apiurl").innerText+"/srvinfo").then((response) => response.json()).then((data) => {
+//     serverURL = data.serverURL
+//     document.getElementById("apiurl").remove()
+// })
 generate(serverURL + "/qrcode/HiFromDev/handler") // just so it doesn't look empty
 
 // function displayExpiredWarning() {

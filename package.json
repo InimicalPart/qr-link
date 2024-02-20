@@ -8,11 +8,11 @@
   },
   "engineStrict": true,
   "scripts": {
-    "NextJS": "cd NextJS && npm run start && cd ..",
-    "NextJS:dev": "cd NextJS && npm run dev && cd ..",
-    "NextJS:build": "cd NextJS && npm run build && cd ..",
+    "qrlink": "npm run qrlink:build && npm run qrlink",
+    "qrlink:start": "cd NextJS && npm run start && cd ..",
+    "qrlink:dev": "cd NextJS && npm run dev && cd ..",
+    "qrlink:build": "cd NextJS && npm run build && cd ..",
 
-    "start": "npm run NextJS",
 
     "install": "cd NextJS && npm install && cd ..",
     "docker": "node -e \"require('os').platform() === 'win32' ? require('child_process').execSync('npm run docker-windows', {stdio: 'inherit'}) : require('child_process').execSync('npm run docker-linux', {stdio: 'inherit'})\"",

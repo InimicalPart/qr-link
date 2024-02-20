@@ -36,11 +36,6 @@ export default async function Home() {
           }
         redirect(getAuthorizationUrl())
     }
-    async function setURL(form:FormData) {
-        "use server"
-        console.log("Setting URL to " + form.get("url"))
-        thisURL = (form.get("url") as string).replace("/login", "")
-    }
 
     if (cookies()?.get("token")?.value) {
         let valid = false
@@ -55,6 +50,7 @@ export default async function Home() {
 
     return (
       <>
+      <div style={{backgroundColor: "black", zIndex:-50, width:"100svw", height:"100svh"}}></div>
       <Background/>
         <div id="loginBGCover" style={{zIndex: 50 }}>
           <div

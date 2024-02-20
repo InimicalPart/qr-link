@@ -43,12 +43,12 @@ docker compose up
 To build and run the frontend and backend for QRLink, you can run this command in the project's root directory:
 ```bash
 # Compile and run the NextJS frontend (:8080)
-npm run NextJS
+npm run qrlink
 ```
 Alternatively, to run both in development mode (meaning that the files are rebuilt when changes happen), you can run the following command instead:
 ```bash
 # Watch for changes, compile the frontend, and run the frontend (:8080)
-npm run NextJS:dev
+npm run qrlink:dev
 ```
 > [!CAUTION] 
 > You should **NEVER** use the development mode when running in production. This could cause major security risks.
