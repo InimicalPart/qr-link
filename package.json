@@ -8,7 +8,7 @@
   },
   "engineStrict": true,
   "scripts": {
-    "qrlink": "npm run qrlink:build && npm run qrlink",
+    "qrlink": "npm run qrlink:build && npm run qrlink:start",
     "qrlink:start": "cd NextJS && npm run start && cd ..",
     "qrlink:dev": "cd NextJS && npm run dev && cd ..",
     "qrlink:build": "cd NextJS && npm run build && cd ..",
