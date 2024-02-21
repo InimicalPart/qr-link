@@ -27,7 +27,7 @@ export default function ScheduleList({
 }) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
-    const [translation, setTranslation] = useState("machine")
+    const [translation, setTranslation] = useState("human")
     let bottomMargin = -10
     const schedule: {
         [key: string]: {
@@ -93,7 +93,7 @@ export default function ScheduleList({
             ];
           
             return (
-              <ul style={{ listStyle: "disc",marginBottom:30 }}>
+              <ul style={{ listStyle: "disc", fontSize: "11pt" }}>
                 {orderedDays.filter(key=>Object.keys(schedule).includes(key)).map((initial) => (
                   <li key={initial} style={{marginBottom:bottomMargin}}>
                     <p style={{cursor:"pointer",marginBottom:bottomMargin/2}} data-loc={initial} onClick={deleteAction} title="Click to delete">{initial[0].toUpperCase() + initial.slice(1)}</p>
@@ -106,10 +106,10 @@ export default function ScheduleList({
                               {Object.keys(schedule[initial][internal]).map((internal2) => (
                                 <li key={internal2} style={{marginBottom:bottomMargin}}>
                                   {internal2 === "redirect_to" && (
-                                    <p onClick={deleteAction} data-loc={initial+"."+internal+"."+internal2} style={{cursor:"pointer",marginBottom:bottomMargin}} title="Click to delete">Redirect to: {schedule[initial][internal][internal2]}</p>
+                                    <p style={{marginBottom:bottomMargin}}>Redirect to: <b style={{pointerEvents: "none"}}>{schedule[initial][internal][internal2]}</b></p>
                                   )}
                                   {internal2 === "after_expiry" && (
-                                    <p onClick={deleteAction} data-loc={initial+"."+internal+"."+internal2} style={{cursor:"pointer",marginBottom:bottomMargin}} title="Click to delete">After expiry: {schedule[initial][internal][internal2]}</p>
+                                    <p onClick={deleteAction} data-loc={initial+"."+internal+"."+internal2} style={{cursor:"pointer",marginBottom:bottomMargin}} title="Click to delete">After expiry: <b style={{pointerEvents: "none"}}>{schedule[initial][internal][internal2]}</b></p>
                                   )}
                                   {internal2 !== "redirect_to" && internal2 !== "after_expiry" && (
                                     <b>Unknown action: {internal2}</b>
@@ -134,55 +134,6 @@ export default function ScheduleList({
         }
 
         function convert() {
-
-            function getNextAction(lastAction: string,schedule: {
-                [key: string]: {
-                    [key: string]: {
-                        redirect_to: string,
-                        after_expiry?: string
-                    }
-                }
-            
-            }) {
-                let orderedDays = [
-                    "monday",
-                    "tuesday",
-                    "wednesday",
-                    "thursday",
-                    "friday",
-                    "saturday",
-                    "sunday"
-                ]
-
-                // last action will look like <day>.<time/"ALL_DAY">
-                let lastActionSplit = lastAction.split(".")
-
-                let dayToCheck = lastActionSplit[0]
-                if (lastActionSplit[1] === "ALL_DAY") {
-                    dayToCheck = orderedDays[(orderedDays.indexOf(dayToCheck) + 1) % 7]
-                }
-
-                let actionFound = false
-                while (!actionFound) {
-                    if (Object.keys(schedule).includes(dayToCheck)) {
-                        let daySchedule = schedule[dayToCheck]
-                        let times = Object.keys(daySchedule)
-                        if (lastActionSplit[0] === dayToCheck) {
-                            let nextTime = times[(times.indexOf(lastActionSplit[1]) + 1) % times.length]
-                            if (times.indexOf(nextTime) === 0) {
-                                dayToCheck = orderedDays[(orderedDays.indexOf(dayToCheck) + 1) % 7]
-                            } else {
-                                actionFound = true
-                                return dayToCheck + "." + nextTime
-                            }
-                        } else {
-                            actionFound = true
-                            return dayToCheck + "." + times[0]
-                        }
-                    }
-                    dayToCheck = orderedDays[(orderedDays.indexOf(dayToCheck) + 1) % 7]
-                }
-            }
             function oneSecondBack(time: string) {
                 let date = new Date("1970-01-02T" + time)
                 date.setSeconds(date.getSeconds() - 1)
@@ -193,121 +144,85 @@ export default function ScheduleList({
                 date.setSeconds(date.getSeconds() + 1)
                 return date.toLocaleString("en-gb").replace(/.*, /,"")
             }
+            let humanReadable: Array<JSX.Element> = []
             if (translation === "human") {
  
-                
-                let orderedDays = [
-                    "monday",
-                    "tuesday",
-                    "wednesday",
-                    "thursday",
-                    "friday",
-                    "saturday",
-                    "sunday"
-                ]
+                const DaysOrdered = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
-                let scheduleCopy = JSON.parse(JSON.stringify(currentScheduleActions))
-                
-                /*
-                
-                {
-                    "monday": {
-                        "ALL_DAY": {
-                            "redirect_to": "https://somerandom.website"
+                const ScheduleDaysOrdered = Object.keys(schedule).sort((a, b) => DaysOrdered.indexOf(a) - DaysOrdered.indexOf(b))
+            
+            
+                // for each day in the schedule
+                for (let day in schedule) {
+            
+                    // for each time in the day
+                    for (let time in schedule[day]) {
+            
+                        const FROM_DAY = day
+                        const FROM_TIME = time == "ALL_DAY" ? "00:00" : time
+            
+                        const FROM_IS_LAST_TIME_IN_DAY = Object.keys(schedule[day]).length - 1 === Object.keys(schedule[day]).indexOf(time)
+            
+                        let TO_DAY = FROM_IS_LAST_TIME_IN_DAY ? ScheduleDaysOrdered[(ScheduleDaysOrdered.indexOf(day) + 1) % ScheduleDaysOrdered.length] : FROM_DAY
+                        let TO_TIME = FROM_IS_LAST_TIME_IN_DAY ? Object.keys(schedule[ScheduleDaysOrdered[(ScheduleDaysOrdered.indexOf(day) + 1) % ScheduleDaysOrdered.length]])[0] : Object.keys(schedule[day])[Object.keys(schedule[day]).indexOf(time) + 1]
+                        
+            
+                        if (TO_TIME === "ALL_DAY" || TO_TIME === "00:00") {
+                            TO_DAY = DaysOrdered[(DaysOrdered.indexOf(TO_DAY) - 1) % DaysOrdered.length] // go back one day
                         }
-                    },
-                    "tuesday": {
-                        "12:30": {
-                            "redirect_to": "https://google.com"
-                        },
-                        "13:00": {
-                            "redirect_to": "https://newseed.se"
-                        }
-                    },
-                    "thursday": {
-                        "ALL_DAY": {
-                            "redirect_to": "https://google.com"
-                        }
-                    },
-                    "friday": {
-                        "23:00": {
-                            "redirect_to": "https://inimicalpart.com"
-                        }
-                    }
-                    
-                }
-                
-                should become
-                
-                FROM MONDAY 00:00 TO TUESDAY 12:29:59, REDIRECT TO https://somerandom.website
-                FROM TUESDAY 12:30 TO TUESDAY 12:59:59, REDIRECT TO https://google.com
-                FROM TUESDAY 13:00 TO WEDNESDAY 23:59:59, REDIRECT TO https://newseed.se
-                FROM THURSDAY 00:00 TO FRIDAY 22:59:59, REDIRECT TO https://google.com
-                FROM FRIDAY 23:00 TO SUNDAY 23:59:59, REDIRECT TO https://inimicalpart.com
-                
-                */
-               
-               let humanReadable: Array<JSX.Element> = [];
-
-               let iterations = 0
-               for (let day of orderedDays) {
-                   if (Object.keys(scheduleCopy).includes(day)) {
-                        const times = Object.keys(scheduleCopy[day])
-                        for (let time of times) {
-                            let nextTime = getNextAction(day+"."+time,scheduleCopy)
-                            let NEXT_DAY = nextTime.split(".")[0]
-                            if (times.indexOf(time) === 0 && times.length > 1) { // if is first time in day
-                            humanReadable.push(<p key={iterations}>FROM <b>{day[0].toUpperCase() + day.substring(1)} {time === "ALL_DAY" ? "00:00" : time}</b> TO <b>{NEXT_DAY[0].toUpperCase() + NEXT_DAY.substring(1)} {oneSecondBack(nextTime.split(".")[1] == "ALL_DAY" ? "00:00" : nextTime.split(".")[1])}</b>, REDIRECT TO {scheduleCopy[day][time].redirect_to}</p>)
-                        } else {
-                                let sortedDays = orderedDays.filter(key=>Object.keys(scheduleCopy).includes(key))
-                                console.log(day, time, times.indexOf(time), times.length - 1, sortedDays.indexOf(day), sortedDays.length - 1)
-                                // if last time and last day
-                                if (times.indexOf(time) === times.length - 1 && sortedDays.indexOf(day) === sortedDays.length - 1) {
-                                    // get first action in schedule
-                                    let firstDay = orderedDays[0]
-                                    let firstTime = Object.keys(scheduleCopy[firstDay])[0]
-                                    // if time is ALL_DAY or 00:00, set firstDay to the day before
-                                    console.log(firstDay, firstTime)
-                                    if (firstTime === "ALL_DAY" || firstTime === "00:00") {
-                                        firstDay = sortedDays[sortedDays.indexOf(day) - 1 < 0 ? sortedDays.length - 1 : sortedDays.indexOf(day) - 1]
-                                    }
-                                    humanReadable.push(<p key={iterations}>FROM <b>{day[0].toUpperCase() + day.substring(1)} {time}</b> TO <b>{firstDay[0].toUpperCase() + firstDay.substring(1)} {oneSecondBack(firstTime === "ALL_DAY" ? "00:00" : firstTime)}</b>, REDIRECT TO {scheduleCopy[day][time].redirect_to}</p>)
-                                    continue
-                                }
-
-                                let NEXT_DAY = nextTime.split(".")[0]
-                                if (sortedDays.indexOf(day) === sortedDays.length - 1) {
-                                    // console.log(day, time)
-                                    NEXT_DAY = orderedDays[orderedDays.indexOf(NEXT_DAY) - 1 < 0 ? orderedDays.length - 1 : orderedDays.indexOf(NEXT_DAY) - 1]
-                                }
-                                // if is last day in defined schedule
-                                
-                                // if last time in day
-                                if (times.indexOf(time) === times.length - 1) {
-                                    let nextDay = orderedDays[(orderedDays.indexOf(day) + 1) % 7]
-                                    humanReadable.push(<p key={iterations}>FROM <b>{day[0].toUpperCase() + day.substring(1)} {time}</b> TO <b>{nextDay[0].toUpperCase() + nextDay.substring(1)} {oneSecondBack(nextTime.split(".")[1] == "ALL_DAY" ? "00:00" : nextTime.split(".")[1])}</b>, REDIRECT TO {scheduleCopy[day][time].redirect_to}</p>)
-                                    continue
-                                }
-                                
-                                let nextDayIndex = orderedDays.indexOf(nextTime.split(".")[0]) - 1;
-                                let nextDay = orderedDays[nextDayIndex < 0 ? orderedDays.length - 1 : nextDayIndex];
-
-                                if (nextTime.split(".")[1] == "ALL_DAY") {
-                                    humanReadable.push(<p key={iterations}>FROM <b>{day[0].toUpperCase() + day.substring(1)} {time}</b> TO <b>{nextDay[0].toUpperCase() + nextDay.substring(1)} {oneSecondBack(nextTime.split(".")[1] == "ALL_DAY" ? "00:00" : nextTime.split(".")[1])}</b>, REDIRECT TO {scheduleCopy[day][time].redirect_to}</p>)
-                                } else {
-                                    humanReadable.push(<p key={iterations}>FROM <b>{day[0].toUpperCase() + day.substring(1)} {time}</b> TO <b>{nextTime.split(".")[0][0].toUpperCase() + nextTime.split(".")[0].substring(1)} {oneSecondBack(nextTime.split(".")[1] == "ALL_DAY" ? "00:00" : nextTime.split(".")[1])}</b>, REDIRECT TO {scheduleCopy[day][time].redirect_to}</p>)
-                                }
+                        TO_TIME = oneSecondBack(TO_TIME === "ALL_DAY" ? "00:00" : TO_TIME)
+            
+            
+                        // LAST DAY AND TIME
+                        const FROM_IS_LAST_DAY = ScheduleDaysOrdered.length - 1 === ScheduleDaysOrdered.indexOf(FROM_DAY)
+                        
+                        if (FROM_IS_LAST_DAY && FROM_IS_LAST_TIME_IN_DAY) {
+                            TO_DAY = ScheduleDaysOrdered[0]
+                            TO_TIME = Object.keys(schedule[ScheduleDaysOrdered[0]])[0]
+            
+                            if (TO_TIME === "ALL_DAY" || TO_TIME === "00:00") {
+                                // SET TO_DAY TO THE DAY BEFORE THE FIRST DAY IN THE SCHEDULE
+                                const FIRST_DAY_IN_SCHEDULE = ScheduleDaysOrdered[0]
+                                TO_DAY =(DaysOrdered.indexOf(FIRST_DAY_IN_SCHEDULE) - 1) < 0 ? DaysOrdered[DaysOrdered.length - 1] : DaysOrdered[(DaysOrdered.indexOf(FIRST_DAY_IN_SCHEDULE) - 1) % DaysOrdered.length]
                             }
-                                
-
+                            TO_TIME = oneSecondBack(TO_TIME === "ALL_DAY" ? "00:00" : TO_TIME)
                         }
-                   }
-                   iterations++
+                        let redirect_to = schedule[FROM_DAY][FROM_TIME].redirect_to
+                        let after_expiry = schedule[FROM_DAY][FROM_TIME].after_expiry
+                        if (redirect_to.length > 27) {
+                            redirect_to = redirect_to.slice(0, 15) + "..." + redirect_to.slice(redirect_to.length - 12)
+                        }
+                        if (after_expiry) {
+                            if (after_expiry.length > 27) {
+                                after_expiry = after_expiry.slice(0, 15) + "..." + after_expiry.slice(after_expiry.length - 12)
+                            }
+                        }
+                        humanReadable.push(
+                            <li key={FROM_DAY + FROM_TIME + "_" + TO_DAY + TO_TIME} style={{marginBottom:bottomMargin, listStylePosition:"inside"}} >
+                                <p onClick={deleteAction} data-loc={FROM_DAY+"."+time} style={{cursor:"pointer", display:"inline",position:"relative",left:-15,}}>From <b style={{pointerEvents:"none"}}>{FROM_DAY[0].toUpperCase() + FROM_DAY.slice(1)} at {FROM_TIME}</b> to <b style={{pointerEvents:"none"}}>{TO_DAY[0].toUpperCase() + TO_DAY.slice(1)} at {TO_TIME}</b></p>
+                                <ul style={{listStyle:"circle", marginTop:bottomMargin*.75, listStylePosition:"inside"}} className="moveover">
+                                    <li style={{marginBottom:bottomMargin, listStylePosition:"inside"}}>
+                                        <p style={{display:"inline",position:"relative",left:-15,}}>Redirect to: <i style={{fontWeight: 600}} title={schedule[FROM_DAY][FROM_TIME].redirect_to}>{redirect_to}</i></p>
+                                    </li>
+                                    {after_expiry && <li style={{marginBottom:bottomMargin, listStylePosition:"inside"}}  >
+                                        <p onClick={deleteAction} data-loc={FROM_DAY+"."+time+".after_expiry"} style={{position:"relative",left:-15,cursor:"pointer", display:"inline"}}>After expiry: <i style={{fontWeight: 600,pointerEvents:"none",}} title={schedule[FROM_DAY][FROM_TIME].after_expiry}>{after_expiry}</i></p>
+                                    </li>}
+                                </ul>
+                            </li>
+                        )
+                        // humanReadable.push(
+                        //     <p key={FROM_DAY + FROM_TIME + "_" + TO_DAY + TO_TIME}>FROM <b>{FROM_DAY.toUpperCase()} {FROM_TIME}</b> TO <b>{TO_DAY.toUpperCase()} {TO_TIME}</b>, REDIRECT TO: <b title={schedule[FROM_DAY][FROM_TIME].redirect_to}>{redirect_to}</b>{after_expiry ? ". IF EXPIRED, REDIRECT TO: ":""}{after_expiry?<b title={schedule[FROM_DAY][FROM_TIME].after_expiry}>{after_expiry}</b>:<></>}</p>
+                        // )
+                    }
+            
                 }
+                
+                
+                
 
                 
 
-                return (<>{humanReadable}</>)
+                return (<ul style={{fontSize:"11pt", listStyle:"disc", marginBottom:bottomMargin}}>{humanReadable}</ul>)
             } else return generateScheduleList()
         }
         
@@ -322,7 +237,14 @@ export default function ScheduleList({
                     >(convert to {translation=="machine"?"human":"machine"})</span>
           </p>
         <div id="scheduleList" style={{
-            marginBottom:20
+            marginBottom:20,
+            fontSize: "11pt",
+            left: "50%",
+            transform: "translateX(-50%) scale(0.9)",
+            position: "relative",
+            width: 420,
+            display:"flex",
+            justifyContent:"center",
 }}>
         {Object.keys(currentScheduleActions).length > 0 ? convert() : <i style={{fontSize:14}}>No actions defined</i>}
         </div>

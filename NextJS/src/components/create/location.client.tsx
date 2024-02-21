@@ -219,9 +219,9 @@ export default function Location({
         }
     }
 
-    useEffect(() => {
-        (document.getElementById("radiusChange") as HTMLInputElement).value = zones.length > 0 && selectedZoneIndex != -1 && zones[selectedZoneIndex].radius ? zones[selectedZoneIndex].radius : 300;
-    }, [selectedZoneIndex, zones]);
+    // useEffect(() => {
+    //     (document.getElementById("radiusChange") as HTMLInputElement).value = zones.length > 0 && selectedZoneIndex != -1 && zones[selectedZoneIndex].radius ? zones[selectedZoneIndex].radius : 300;
+    // }, [selectedZoneIndex]);
 
     function flyToZone(index: number, _e: any) {
         let map = zones[index].L._map as L.Map;
@@ -361,6 +361,52 @@ export default function Location({
                 return false
             }
 
+            // for each redirect_to and after_expiry, check if its valid using: !/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(redirect_to)
+            let invalidRedirects = [];
+            let invalidAfterExpiry = [];
+            for (let zone of zones) {
+                if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(zone.redirectTo)) {
+                    invalidRedirects.push(zone);
+                }
+                if (zone.afterExpiry) {
+                    if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(zone.afterExpiry)) {
+                        invalidAfterExpiry.push(zone);
+                    }
+                }
+            }
+
+            if (invalidRedirects.length > 0) {
+                (window as unknown as any).showAlert(`     <span class="font-medium">Some zones have invalid 'redirect to' properties. Please fix the following zones:</span>
+                                <ul class="mt-1.5 ml-1.5 list-disc list-inside">
+                                    ${invalidRedirects
+                                        .map((z) => {
+                                            return [
+                                                "<li>Zone " +
+                                                (zones.indexOf(z) + 1)
+                                            +"</li>"];
+                                        })
+                                        .join("")}
+                                </ul>`
+                        ,"error")
+                return false
+            } else if (invalidAfterExpiry.length > 0) {
+                (window as unknown as any).showAlert(`     <span class="font-medium">Some zones have invalid 'after expiry' properties. Please fix the following zones:</span>
+                                <ul class="mt-1.5 ml-1.5 list-disc list-inside">
+                                    ${invalidAfterExpiry
+                                        .map((z) => {
+                                            return [
+                                                "<li>Zone " +
+                                                (zones.indexOf(z) + 1)
+                                            +"</li>"];
+                                        })
+                                        .join("")}
+                                </ul>`
+                        ,"error")
+                return false
+            }
+
+
+
             return true
         }
 
@@ -430,10 +476,10 @@ export default function Location({
             (document.getElementById("locRedirect") as HTMLInputElement).value = zones[selectedZoneIndex]?.redirectTo || "";
             (document.getElementById("locAERedirect") as HTMLInputElement).value = zones[selectedZoneIndex]?.afterExpiry || "";
         }
-    },[selectedZoneIndex, zones])
+    },[selectedZoneIndex])
     return (
         <div>
-        <input type="hidden" id="location" name="location_zones" disabled={type !== "location"} value={convertToBeautiful(zones)} />
+        <input className="create" type="hidden" name="location_zones" disabled={type !== "location"} value={convertToBeautiful(zones)} />
             <MapContainer maxBounds={[[-85.05115, -180], [85, 180]]} maxBoundsViscosity={1.0} style={{ width: "90vw", maxWidth: 600, height: 400, left:"50%", transform:"translateX(-50%)" }} center={zones.length > 0 && selectedZoneIndex >= 0 && selectedZoneIndex < zones.length ? zones[selectedZoneIndex].position : [51.505, -0.09]} zoom={2} minZoom={2} >
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -455,9 +501,9 @@ export default function Location({
                 left:"50%",
                 transform:"translateX(-50%)",
                 width: "100%"
-            }} hidden={!isCreatingZone}>{zoneType == "circle" ? "Click/Tap on the map to create a circle zone" : zoneType == "polygon" ? "Click/Tap on the map to place your first polygon point" : "Click/Tap on the map to create a zone for the entire world"}</p>
+            }} hidden={!isCreatingZone}>{zoneType == "circle" ? "Click/Tap on the map to create a circle zone" : zoneType == "polygon" ? "Click/Tap on the map to place your "+(polygonPositions.length<1?"first":"next")+" polygon point" : "Click/Tap on the map to create a zone for the entire world"}</p>
             <br/>
-        <button 
+        <button className="create" 
         type="button"
         style={{
             marginBottom:20,
@@ -486,12 +532,14 @@ export default function Location({
                 <p  style={{
                     marginBottom:5
                 }}><b>Zone Type:</b></p>
-                <select value={zoneType} style={{ width:200}} onChange={(e) => setZoneType(e.target.value)}>
-                    <option value="circle">Circle</option>
-                    <option value="polygon">Polygon</option>
-                    <option disabled={zones.some(a=>a.isEntireWorld)} hidden={zones.some(a=>a.isEntireWorld)} value="entireWorld">Entire World</option>
+                <select className="create" value={zoneType} style={{ width:200}} onChange={(e) => setZoneType(e.target.value)}>
+                    <option className="create" value="circle">Circle</option>
+                    <option className="create" value="polygon">Polygon</option>
+                    <option className="create" disabled={zones.some(a=>a.isEntireWorld)} hidden={zones.some(a=>a.isEntireWorld)} value="entireWorld">Entire World</option>
                 </select>
-                <button style={{
+                <button className="create"
+                type="button"
+                 style={{
                     fontSize: "11pt",
                     height: 30,
                     marginTop: 20,
@@ -549,7 +597,7 @@ export default function Location({
                     fontSize:14
                 }} hidden={zones.length < 1 || selectedZoneIndex == -1 || zones[selectedZoneIndex].type != "circle"}
                 title="The radius (in meters) of the zone."><b>Radius (meters)</b></p>
-                <input id="radiusChange" style={{
+                <input className="create" id="radiusChange" style={{
                     position: "relative",
                     width:"90%"
                 }} hidden={zones.length < 1 || selectedZoneIndex == -1 || zones[selectedZoneIndex].type != "circle"} type="number" min={10} max={1000000} onBlur={(e)=>{
@@ -562,7 +610,7 @@ export default function Location({
                     fontSize:14,
                     marginTop:10
                 }} title="If you are in 2 zones, the system will choose the one with the highest priority."><b>Priority</b></p>
-                <input style={{
+                <input className="create" style={{
                     position: "relative",
                     width:"90%"
                 }} type="number" id="prio" disabled={zones[selectedZoneIndex]?.isEntireWorld} min={-999} max={1000} defaultValue={zones[selectedZoneIndex]?.priority} onChange={handlePriorityChange} onBlur={(e) => {
@@ -626,21 +674,21 @@ export default function Location({
                 ></textarea>
                 
                 <br/>
-                <button hidden={!zones[selectedZoneIndex]?.isEntireWorld} style={{
+                <button className="create" type="button" hidden={!zones[selectedZoneIndex]?.isEntireWorld} style={{
                     position: "relative",
                     width:"80%",
                     height: "30px",
                     marginTop: 35,
                     borderRadius:16
                 }} onClick={!zones[selectedZoneIndex]?.isEntireWorld ? null : ()=>toggleView(selectedZoneIndex)} disabled={!zones[selectedZoneIndex]?.isEntireWorld}>Toggle View</button>
-                <button style={{
+                <button className="create" type="button" style={{
                     position: "relative",
                     width:"80%",
                     height: "30px",
                     marginTop: zones[selectedZoneIndex]?.isEntireWorld ? 10 : 35,
                     borderRadius:16
                 }} onClick={zones[selectedZoneIndex]?.isEntireWorld ? null : flyToZoneWithIndex} disabled={zones[selectedZoneIndex]?.isEntireWorld}>Fly to Zone</button>
-                <button style={{
+                <button className="create" type="button" style={{
                     position: "relative",
                     width:"80%",
                     height: "30px",
@@ -649,7 +697,7 @@ export default function Location({
                 }} hidden={zones.length < 1 || selectedZoneIndex == -1} onClick={deactivateAllZones}>
                 Deselect Zone
             </button>
-                <button style={{
+                <button className="create" type="button" style={{
                     position: "relative",
                     width:"80%",
                     height: "30px",
@@ -673,9 +721,6 @@ export default function Location({
                 )}
             </ul>
             {/* <p>If a zone is within another zone, the zone inside will take priority, unless priority for the containing zone is higher than the priority of the zone inside</p> */}
-            {/* <form action={filledSubmit}>               
-                <button type="submit">Check Zones</button>
-            </form> */}
         </div>
     );
     function PolygonPointsController({points}:{points:LatLngTuple[]}) {
@@ -780,7 +825,7 @@ export default function Location({
                         setElements(prevElements => [...prevElements, polygon]);
                     }
                 })
-            }, [zones, selectedZoneIndex, container, elements]);
+            }, [zones, selectedZoneIndex, container]);
 
             return <></>
         }

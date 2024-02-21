@@ -82,13 +82,13 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
         switch (exportType) {
             case "svg":
             exportData["svg"] = await QRCodeGenerator.toString(
-                global.serverURL + ":" + global.port  + "/qrcode/" + id + "/handler",
+                process.env.API_URL  + "/qrcode/" + id + "/handler",
                 { type: "svg", errorCorrectionLevel: "H" }
             );
             break;
             case "png":
             exportData["png"] = await QRCodeGenerator.toDataURL(
-                global.serverURL + ":" + global.port  + "/qrcode/" + id + "/handler",
+                process.env.API_URL  + "/qrcode/" + id + "/handler",
                 { errorCorrectionLevel: "H", width: 400}
             );
             break;
@@ -199,7 +199,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
     }
     const wasAnytingUpdated = await validateUpdate(id, update)
     const qrcode = await QRCodeGenerator.toString(
-      global.serverURL + ":" + global.port  + "/qrcode/" + id + "/handler",
+      process.env.API_URL  + "/qrcode/" + id + "/handler",
       { type: "svg", errorCorrectionLevel: "H" }
     );
     if (!wasAnytingUpdated) {

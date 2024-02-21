@@ -292,7 +292,7 @@ export async function saveQR(id: string = null, obj: QRCodeInformation | object 
             const {promises:fs} = await import("fs")
             await fs.writeFile(
                 global.QRBackupFilePath,
-                JSON.stringify(global.QRCodeTable, null, 2)
+                JSON.stringify(global.QRCodeTable)
                );
             resolve()
         } else {
