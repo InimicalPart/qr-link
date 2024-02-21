@@ -282,6 +282,16 @@ async function checkScheduleDataValidity(data: ScheduleQRCodeData | null, id: st
           message: "Invalid schedule parameters: " + invalid_parameters.join(", "),
         };
     }
+
+    // needs at least 1 day
+    if (Object.keys(data).length < 2) {
+        return {
+          valid: false,
+          error: "INVALID_SCHEDULE",
+          message: "At least one day is required.",
+        };
+    }
+
     //each parameter needs to be an object, and has to contain at least 2 keys in the HH:MM(:SS) format (keys result to objects), or 1 key called "ALL_DAY" (also an object)
     for (let day of (Object.keys(data) as Array<keyof typeof data>)) {
         if (day == "timezone") {
@@ -302,6 +312,8 @@ async function checkScheduleDataValidity(data: ScheduleQRCodeData | null, id: st
             };
         }
         if (Object.keys(data[day]).length == 0) {
+            console.log("TEST-A")
+            
             return {
               valid: false,
               error: "INVALID_SCHEDULE",
@@ -309,7 +321,8 @@ async function checkScheduleDataValidity(data: ScheduleQRCodeData | null, id: st
             };
         }
 
-        if (Object.keys(data[day]).length == 1 && !Object.keys(data[day]).includes("ALL_DAY")) {
+        if (Object.keys(data[day]).length == 1 && !Object.keys(data[day]).includes("ALL_DAY") && Object.keys(data).length==1) {
+            console.log("TEST-B")
             return {
               valid: false,
               error: "INVALID_SCHEDULE",
@@ -318,6 +331,7 @@ async function checkScheduleDataValidity(data: ScheduleQRCodeData | null, id: st
         }
 
         if (Object.keys(data[day]).length > 1 && Object.keys(data[day]).includes("ALL_DAY")) {
+            console.log("TEST-C")
             return {
               valid: false,
               error: "INVALID_SCHEDULE",
@@ -325,13 +339,16 @@ async function checkScheduleDataValidity(data: ScheduleQRCodeData | null, id: st
             };
         }
 
-        if (Object.keys(data[day]).filter((key)=>/[0-9]{1,2}:[0-9]{1,2}(:[0-9]{1,2}|)/g.test(key)).length < 2 && !Object.keys(data[day]).includes("ALL_DAY")) {
-            return {
-              valid: false,
-              error: "INVALID_SCHEDULE",
-              message: "'schedule." + day + "' needs to contain one 'ALL_DAY' key, or at least 2 keys in the HH:MM(:SS) format, but not both.",
-            };
-        } 
+        // if (Object.keys(data[day]).filter((key)=>/[0-9]{2}:[0-9]{2}(:[0-9]{2}|)/g.test(key)).length < 2 && !Object.keys(data[day]).includes("ALL_DAY")) {
+        //     console.log("TEST-D")
+        //     console.log(Object.keys(data[day]))
+        //     console.log(Object.keys(data[day]).filter((key)=>/[0-9]{2}:[0-9]{2}(:[0-9]{2}|)/g.test(key)))
+        //     return {
+        //       valid: false,
+        //       error: "INVALID_SCHEDULE",
+        //       message: "'schedule." + day + "' needs to contain one 'ALL_DAY' key, or at least 2 keys in the HH:MM(:SS) format, but not both.",
+        //     };
+        // } 
 
         for (let time of Object.keys(data[day])) {
             if (!(typeof (data[day][time] as any) == "object")) {

@@ -43,7 +43,6 @@ export default function Actions({
 
 
     let [currentScheduleActions, setCurrentScheduleActions] = useState<ScheduleAction>({});
-    console.log("RELOAD")
     const [allDay, setAllDay] = useState(false);
 
     const handleCheckboxChange = (event: { target: { checked: boolean | ((prevState: boolean) => boolean); }; }) => {
@@ -75,22 +74,6 @@ export default function Actions({
 
     }, [action]);
 
-    useEffect(() => {
-        function getData() {
-            if (action == "schedule") {
-                window.dispatchEvent(new CustomEvent("data", { detail: {...currentScheduleActions, timezone: (document.getElementById("scheduletimezone") as HTMLSelectElement).value}}));
-            } else if (action == "redirect") {
-                window.dispatchEvent(new CustomEvent("data", { detail: {
-                    redirect_to: (document.getElementById("redirect") as HTMLInputElement).value == "" ? undefined : (document.getElementById("redirect") as HTMLInputElement).value,
-                    after_expiry: (document.getElementById("AERedirect") as HTMLInputElement).value == "" ? undefined : (document.getElementById("AERedirect") as HTMLInputElement).value
-                }}));
-            }
-        }
-        window.addEventListener("getData", getData)
-        return () => {
-            window.removeEventListener("getData", getData)
-        }
-    }, [currentScheduleActions, action]);
 
     return (
       <>
@@ -101,7 +84,7 @@ export default function Actions({
           <select
             id="qr-action"
             onChange={()=>setAction((document.getElementById("qr-action") as HTMLSelectElement).value)}
-            className="disabled:bg-neutral-400"
+            className="create disabled:bg-neutral-400"
             style={{
               border: state?.type ? "1px red solid" : "1px black solid",	
               color: state?.type ? "red" : "black",
@@ -112,12 +95,12 @@ export default function Actions({
             defaultValue=""
             name="type"
           >
-            <option value="">
+            <option className="create" value="">
               --Please choose an option--
             </option>
-            <option value="redirect">Redirect</option>
-            <option value="schedule">Schedule</option>
-            <option value="location">Location</option>
+            <option className="create" value="redirect">Redirect</option>
+            <option className="create" value="schedule">Schedule</option>
+            <option className="create" value="location">Location</option>
           </select>
           <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
                 fontSize: "9pt",
@@ -134,7 +117,11 @@ export default function Actions({
                 border: "1px solid black",
                 paddingBottom: 10,
                 paddingTop: 10,
-                borderRadius: 8
+                borderRadius: 8,
+                width:300,
+                position: "relative",
+                left: "50%",
+                transform: "translateX(-50%)"
               }}>
             <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Redirect to</b></p>
                 <textarea
@@ -193,7 +180,7 @@ export default function Actions({
                 }}>{state?.redirect_after_expiry}</p>
             </div>
             <div id="scheduleContainer" style={{ display: "none" }}>
-              <input type="hidden" disabled={action !== "schedule"} id="scheduleCompacted" name="schedule" value={JSON.stringify(currentScheduleActions)}/>
+              <input className="create" type="hidden" disabled={action !== "schedule"} id="scheduleCompacted" name="schedule" value={JSON.stringify(currentScheduleActions)}/>
               <div id="currentActions">
                 <ScheduleList currentScheduleActions={currentScheduleActions} setCurrentScheduleActions={setCurrentScheduleActions}/>
                 <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
@@ -201,20 +188,23 @@ export default function Actions({
                   color: "red",
                   display: state?.schedule ? "block" : "none",
                   marginBottom: 10,
-                  marginTop: -10
                 }}>{state?.schedule}</p>
               </div>
               <div id="newAction" style={{
                 border: "1px solid black",
                 paddingBottom: 10,
                 paddingTop: 10,
-                borderRadius: 8
+                borderRadius: 8,
+                width:350,
+                position: "relative",
+                left: "50%",
+                transform: "translateX(-50%)"
               }}>
-                {/* Allow the user to specify a week day (Monday, Tuesday, ...), and a time in HH:MM:SS format (use <input>) or "All day", then allow the user to specify actions like redirect_to and after_expiry */}
+                {/* Allow the user to specify a week day (Monday, Tuesday, ...), and a time in HH:MM:SS format (use <input className="create">) or "All day", then allow the user to specify actions like redirect_to and after_expiry */}
                 <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Week Day</b></p>
                 <select
                   id="weekDay"
-                  className="disabled:bg-neutral-400"
+                  className="create disabled:bg-neutral-400"
                   style={{
                     border: "1px black solid",
                     borderRadius: 8,
@@ -222,20 +212,20 @@ export default function Actions({
                     paddingLeft:5
                 }}
                 >
-                  <option value="monday">Monday</option>
-                  <option value="tuesday">Tuesday</option>
-                  <option value="wednesday">Wednesday</option>
-                  <option value="thursday">Thursday</option>
-                  <option value="friday">Friday</option>
-                  <option value="saturday">Saturday</option>
-                  <option value="sunday">Sunday</option>
+                  <option className="create" value="monday">Monday</option>
+                  <option className="create" value="tuesday">Tuesday</option>
+                  <option className="create" value="wednesday">Wednesday</option>
+                  <option className="create" value="thursday">Thursday</option>
+                  <option className="create" value="friday">Friday</option>
+                  <option className="create" value="saturday">Saturday</option>
+                  <option className="create" value="sunday">Sunday</option>
                 </select>
                 <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10}}><b>Time</b></p>
                 <input
                   type="time"
                   id="time"
                   disabled={allDay}
-                  className={`disabled:bg-neutral-400 ${
+                  className={`create disabled:bg-neutral-400 ${
                     allDay ? "opacity-50" : ""
                   }`}
                   style={{
@@ -246,7 +236,7 @@ export default function Actions({
                 }}
                 />
                 <div>
-                  <input
+                  <input className="create"
                     type="checkbox"
                     id="allDay"
                     checked={allDay}
@@ -271,7 +261,8 @@ export default function Actions({
                     textAlign: "center",
                     maxHeight: 250,
                     minHeight: 30,
-                    height: 30
+                    height: 30,
+                    width:250
                 }}
                 ></textarea>
                 <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10}} title="Where to navigate once the QR-code has expired"><b>After Expiry</b> <span style={{
@@ -292,12 +283,14 @@ export default function Actions({
                     textAlign: "center",
                     maxHeight: 250,
                     minHeight: 30,
-                    height: 30
+                    height: 30,
+                    width:250
                   }}
                 ></textarea>
                 <br/>
                 <br/>
-                <button
+                <button className="create"
+                  type="button"
                   onClick={() => {
                     /* day and time is required, as well as redirect_to */
                     let day = (
@@ -355,6 +348,17 @@ export default function Actions({
                         }
                     }
 
+                    if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(redirect_to)) {
+                        alert("Redirect to must be a valid URL or VCard");
+                        return;
+                    }
+
+                    if (after_expiry.length != 0 && !/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(after_expiry)) {
+                        alert("After Expiry must be a valid URL or VCard");
+                        return;
+                    }
+
+
                     currentScheduleActions[day][time] = {
                       redirect_to,
                         ...additional
@@ -366,7 +370,7 @@ export default function Actions({
                   }}
                   style={{
                     border: '1px black solid',
-                    padding: '0px 10px',
+                    height: 30,
                     borderRadius: 8,
                     background: '#ddd'
                   }}
@@ -383,7 +387,7 @@ export default function Actions({
                 <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Timezone</b></p>
                 <select
                   id="scheduletimezone"
-                  className="disabled:bg-neutral-400"
+                  className="create disabled:bg-neutral-400"
                   style={{
                     border: "1px black solid",
                     borderRadius: 8,
@@ -396,7 +400,7 @@ export default function Actions({
                 >
                     {
                         moment.tz.names().filter((name)=>(name.includes("/") && !name.toLowerCase().startsWith("etc")) ).map((name)=>{
-                            return <option key={name.toLowerCase().replace(/\//g,"_")} value={name}>{name}</option>
+                            return <option className="create" key={name.toLowerCase().replace(/\//g,"_")} value={name}>{name}</option>
                         })
                     }
                 </select>

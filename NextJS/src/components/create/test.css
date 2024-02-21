@@ -1,4 +1,4 @@
-button {
+button.create {
     background-color: aliceblue;
     height:40px;
     font-size:12pt;
@@ -11,36 +11,36 @@ button {
     cursor: pointer;
 }
 
-button:hover:not([disabled]):not([type="submit"]) {
+button.create:hover:not([disabled]):not([type="submit"]) {
     background-color: rgb(210, 218, 225);
 }
-button:disabled:not([type="submit"]) {
+button.create:disabled:not([type="submit"]) {
     background-color: rgb(178, 185, 190);
     cursor: not-allowed;
     color: rgb(50, 50, 50);
 }
-input[type="number"] {
+input.create[type="number"] {
     border-radius:8px;
     /* padding-left:16px; */
     text-align: center;
     border: 1px black solid;
 }
-input[type="number"]:disabled {
+input.create[type="number"]:disabled {
     background-color: rgb(178, 185, 190);
     cursor: not-allowed;
     color: rgb(50, 50, 50);}
-select {
+select.create {
     border-radius:8px;
     padding-left:8px;
     text-align: center;
     border: 1px black solid;
 }
-select > option {
+select.create > option.create {
     text-align: center;
     padding-left:0px;
 }
-input[type='number']::-webkit-inner-spin-button, 
-input[type='number']::-webkit-outer-spin-button { 
+input.create[type='number']::-webkit-inner-spin-button, 
+input.create[type='number']::-webkit-outer-spin-button { 
     -webkit-appearance: none;
     margin: 0;
 }

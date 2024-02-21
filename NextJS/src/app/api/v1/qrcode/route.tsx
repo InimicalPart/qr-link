@@ -19,6 +19,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             message: "Invalid JSON provided.",
         }), {status:400});
     }
+
+    // if any property is null, delete it
+    for (const key in body) {
+        if (body[key] === null) {
+            delete body[key]
+        }
+    }
+
+
     let { id, update_key } = {
         ...{
             id: crypto.randomUUID(),

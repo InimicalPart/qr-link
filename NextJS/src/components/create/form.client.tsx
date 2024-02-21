@@ -6,6 +6,8 @@ import "./test.css"
 import Actions from './actions.client';
 import Settings from './settings.client';
 import FormSubmit from './form-submit.client';
+import { useEffect } from 'react';
+import { redirect } from 'next/navigation';
 
 
 const initialState: {
@@ -29,6 +31,7 @@ const initialState: {
     schedule: string | null,
     schedule_timezone: string | null,
     location_zones: string | null,
+    submit_button: string | null
 
 } = {
     id: null,
@@ -51,6 +54,7 @@ const initialState: {
     schedule: null,
     schedule_timezone: null,
     location_zones: null,
+    submit_button: null
 
 
 }
@@ -62,6 +66,16 @@ export default function Form({
     submit: (prevState:any,form:FormData) => any
 }) {
     const [state, formAction] = useFormState(submit, initialState)
+
+    useEffect(()=>{
+        if (state?.success) {
+            alert("Successfully created QR Code\n\nID: " + state?.success?.id + "\nUpdate Key: " + state?.success?.update_key)
+            redirect("/dashboard")
+        }
+    },[state])
+
+
+
     return (
         <form id="create-form" action={formAction}>
         <div id="qr-id-cntr" className="QRL-container">
@@ -70,7 +84,7 @@ export default function Form({
                 flexBasis: '100%',
                 marginTop: -5
             }}>(optional)</span></p>
-            <input id="qr-id" name="id" style={{
+            <input className="create" id="qr-id" name="id" style={{
                 width: 300,
                 border: state?.id ? "1px red solid" : '1px black solid',
                 borderRadius: 8,
@@ -88,7 +102,7 @@ export default function Form({
                 flexBasis: '100%',
                 marginTop: -5
             }}>(optional)</span></p>
-            <input id="qr-updatekey" name="update_key" style={{
+            <input className="create" id="qr-updatekey" name="update_key" style={{
                 width: 300,
                 border: state?.update_key ? "1px red solid" : '1px black solid',
                 borderRadius: 8,
@@ -106,7 +120,7 @@ export default function Form({
                 flexBasis: '100%',
                 marginTop: -5
             }}>(optional)</span></p>
-            <input id="qr-name" name="name" style={{
+            <input className="create" id="qr-name" name="name" style={{
                 width: 300,
                 border: state?.name ? "1px red solid" : '1px black solid',
                 borderRadius: 8,
@@ -141,12 +155,12 @@ export default function Form({
         </div>
         <div id="qr-expires-cntr" className="QRL-container">
             <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Expires</b></p>
-            <input id="qr-expires" name="expires" className="disabled:bg-neutral-400" style={{
+            <input id="qr-expires" name="expires" className="create disabled:bg-neutral-400" style={{
                 border: '1px black solid',
                 borderRadius: 8,
                 textAlign: 'center'
             }} disabled type="datetime-local"/>
-            <input name="expires_never_checkbox" style={{
+            <input className="create" name="expires_never_checkbox" style={{
                 marginLeft: 10
             }} id="qr-never-expires-checkbox" type="checkbox" defaultChecked/>
             <label style={{marginLeft:5}} htmlFor="qr-never-expires-checkbox">Never</label>
@@ -157,8 +171,7 @@ export default function Form({
 
         <Actions state={state}/>
 
-        <FormSubmit/>
-
+        <FormSubmit state={state}/>
     </form>
     )
 }

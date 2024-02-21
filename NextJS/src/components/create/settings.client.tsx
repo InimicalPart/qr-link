@@ -37,7 +37,7 @@ export default function Settings({
             fontSize:"11pt"
         }}> 
             <div style={{width:"fit-content",marginLeft:10}}>
-                <input type="checkbox" id="scanData" name="grab_scan_data" onChange={()=>setGetScanData(!getScanData)} />
+                <input className="create" type="checkbox" id="scanData" name="grab_scan_data" onChange={()=>setGetScanData(!getScanData)} />
                 <label style={{marginLeft:5}} htmlFor="scanData">Grab information from scans</label>
             </div>
             <div className="extended" hidden={!getScanData} style={{
@@ -45,7 +45,7 @@ export default function Settings({
                 fontSize:"10pt"
             }}>
                 <div>
-                    <p style={{display:"list-item",marginLeft:20}}><b>Information</b></p>
+                    <p style={{display:"list-item",marginLeft:20,marginBottom:2.5}}><b>Information</b></p>
                     <p className="extended qr-info-label flex justify-center items-center flex-wrap" style={{
                         fontSize: "9pt",
                         color: "red",
@@ -54,34 +54,34 @@ export default function Settings({
                     }}>{state?.grab_scan_data}</p>
                     <div className="extended">
                         <div>
-                            <input type="checkbox" id="device-fingerprint" name="grab_device_fingerprint" />
+                            <input className="create" type="checkbox" id="device-fingerprint" name="grab_device_fingerprint" />
                             <label style={{marginLeft:5}} htmlFor="device-fingerprint">Device Fingerprint</label>
                         </div>
                         <div>
-                            <input type="checkbox" id="timestamp" name="grab_timestamp" />
+                            <input className="create" type="checkbox" id="timestamp" name="grab_timestamp" />
                             <label style={{marginLeft:5}} htmlFor="timestamp">Timestamp</label>
                         </div>
                         <div>
-                            <input type="checkbox" id="ip-address" name="grab_ip_address" />
+                            <input className="create" type="checkbox" id="ip-address" name="grab_ip_address" />
                             <label style={{marginLeft:5}} htmlFor="ip-address">IP address</label>
                         </div>
                         <div>
-                            <input type="checkbox" id="user-agent" name="grab_user_agent" />
+                            <input className="create" type="checkbox" id="user-agent" name="grab_user_agent" />
                             <label style={{marginLeft:5}} htmlFor="user-agent">User-Agent</label>
                         </div>
                         <div>
-                            <input type="checkbox" id="location"  onChange={()=>setGetLocation(!getLocation)} name="grab_location" />
+                            <input className="create" type="checkbox" id="location"  onChange={()=>setGetLocation(!getLocation)} name="grab_location" />
                             <label style={{marginLeft:5}} htmlFor="location">Location</label>
                         </div>
                         <div className="extended">
-                            <input type="checkbox" id="req-loc" disabled={!getLocation} name="require_location" />
+                            <input className="create" type="checkbox" id="req-loc" disabled={!getLocation} name="require_location" />
                             <label style={{marginLeft:5}} htmlFor="req-loc">Require location for redirect</label>
                         </div>        
                     </div>
-                    <p style={{display:"list-item",marginLeft:20}}><b>Settings</b></p>
+                    <p style={{display:"list-item",marginLeft:20,marginBottom:2.5}}><b>Configuration</b></p>
                     <div className="extended">
-                    <div style={{width:"fit-content",marginLeft:10}} title={"A signed JWT token will be passed through 'qr_scan' on the redirect URL"}>
-                            <input type="checkbox"  id="send-to-redirect" onChange={()=>setSendToURL(!sendToURL)} name="send_to_redirect" />
+                    <div style={{width:"fit-content"}} title={"A signed JWT token will be passed through 'qr_scan' on the redirect URL"}>
+                            <input className="create" type="checkbox"  id="send-to-redirect" onChange={()=>setSendToURL(!sendToURL)} name="send_to_redirect" />
                             <label style={{marginLeft:5}}  htmlFor="send-to-redirect">Send scan info. to redirect URL</label>
                         </div>
                         <div className="extended" hidden={!getScanData} style={{
@@ -89,13 +89,12 @@ export default function Settings({
                             fontSize:"10pt"
                         }}>
                             <div>
-                                <input type="password" id="jwt-signing-key" style={{border: state?.jwt_singing_key ? "1px red solid" : '1px black solid', borderRadius:4, marginLeft:"12px", fontSize: "9pt",}} name="jwt_singing_key" disabled={!sendToURL} placeholder="&nbsp;JWT signing key" />
+                                <input className="create" type="password" id="jwt-signing-key" style={{border: state?.jwt_singing_key ? "1px red solid" : '1px black solid', borderRadius:4, fontSize: "9pt",}} name="jwt_singing_key" disabled={!sendToURL} placeholder="&nbsp;JWT signing key" />
                                 <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
                                     fontSize: "9pt",
                                     color: "red",
                                     display: state?.jwt_singing_key ? "block" : "none",
                                     textAlign: "center",
-                                    marginLeft: "12px"
                                 }}>{state?.jwt_singing_key}</p>
                             </div>
                         </div>

@@ -51,13 +51,13 @@ if (request.nextUrl.searchParams.get("export")) {
     switch (exportType) {
       case "svg":
         exportData["svg"] = await QRCodeGenerator.toString(
-          global.serverURL + ":" + global.port  + "/qrcode/" + qrcodekey + "/handler",
+          process.env.API_URL + "/qrcode/" + qrcodekey + "/handler",
           { type: "svg", errorCorrectionLevel: "H" }
         );
         break;
       case "png":
         exportData["png"] = await QRCodeGenerator.toDataURL(
-          global.serverURL + ":" + global.port  + "/qrcode/" + qrcodekey + "/handler",
+          process.env.API_URL + "/qrcode/" + qrcodekey + "/handler",
           { errorCorrectionLevel: "H", width: 400}
         );
         break;
