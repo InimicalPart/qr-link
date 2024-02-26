@@ -28,7 +28,6 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
             message: "ID needs to be a string.",
         }), { status: 400 });
     }
-    console.log(global.QRCodeTable)
     if (!Object.keys(global.QRCodeTable).includes(id)) {
         return new NextResponse(JSON.stringify({
             error: "INVALID_ID",
@@ -55,7 +54,7 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
             }
             identifier = tokenVerificationResult.user.id
         }
-        let qrcodeCopy = JSON.parse(JSON.stringify(global.QRCodeTable[id]));
+        let qrcodeCopy = JSON.parse(JSON.stringify(Object.assign({},global.QRCodeTable[id])));
         delete qrcodeCopy._id;
         if (!identifier || identifier != qrcodeCopy.linked_to) {
             delete qrcodeCopy.update_key;

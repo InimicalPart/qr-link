@@ -71,7 +71,7 @@ if (request.nextUrl.searchParams.get("export")) {
 }
     qrCodes.push({
       id: qrcodekey,
-      ...global.QRCodeTable[qrcodekey],
+      ...Object.assign({},global.QRCodeTable[qrcodekey]),
       ...exportData,
     });
   }

@@ -90,21 +90,32 @@ export async function register(){
         
         await convertFile2MongoDB()
 
-        console.log("[QL] Removing QR-codes that have a non-existing user linked to them...");
-        let allLinkedIDs = Object.values(global.QRCodeTable as QRCodeTable).map(a=>a.linked_to)
-        let uniqueLinkedIDs = allLinkedIDs.filter((a, b) => allLinkedIDs.indexOf(a) === b)
-        for (let linked_user_id of uniqueLinkedIDs) {
-            doesUserExist(linked_user_id).then((exists) => {
-                if (!exists) {
-                    for (let key of Object.keys(global.QRCodeTable)) {
-                        if (global.QRCodeTable[key].linked_to == linked_user_id) {
-                            delete global.QRCodeTable[key]
-                            console.log("[QL] Removed QR-code " + key + " as it was linked to a non-existing user. (ID: " + linked_user_id + ")")
+        if (process.env.NODE_ENV == "production") { 
+            //! Skip doing this in development, so we don't somehow overload WorkOS/AuthKit
+            console.log("[QL] Removing QR-codes that have a non-existing user linked to them... (background)");
+            let allLinkedIDs = Object.values(global.QRCodeTable as QRCodeTable).map(a=>a.linked_to)
+            let uniqueLinkedIDs = allLinkedIDs.filter((a, b) => allLinkedIDs.indexOf(a) === b)
+            for (let linked_user_id of uniqueLinkedIDs) {
+                doesUserExist(linked_user_id).then((exists) => {
+                    if (!exists) {
+                        for (let key of Object.keys(global.QRCodeTable)) {
+                            if (global.QRCodeTable[key].linked_to == linked_user_id) {
+                                delete global.QRCodeTable[key]
+                                console.log("[QL] Removed QR-code " + key + " as it was linked to a non-existing user. (ID: " + linked_user_id + ")")
+                            }
                         }
                     }
-                }
-            })
+                })
+            }
         }
+            
+        console.log("[QL] Checking validity of QR-codes...")
+        for (let qrcode of Object.values(global.QRCodeTable)) {
+            if (qrcode.hasLocationRequirement() && process.env.API_URL.startsWith("http://")) {
+                console.warn("[QL] Warning: QR-code " + qrcode.id + " has a location requirement, but the API is running on HTTP. This will not work on iOS.")
+            }
+        }
+
         console.log("[QL] QRLink is ready to accept requests.");
         process.on("beforeExit", async () => {
             if (global.mongoClient) {

@@ -1,4 +1,4 @@
-import { LocationQRCodeData, QRCodeInformation, RedirectQRCodeData, ScheduleQRCodeData } from "@/types/api/v1/QRCode";
+import { QRCode, Types } from "./qrcode";
 import { getUser } from "./authentication";
 
 import moment from "moment-timezone";
@@ -7,11 +7,8 @@ import { NextResponse } from "next/server";
 
 declare const global: QRLinkGlobal;
 
-interface UpdateInformation extends Partial<QRCodeInformation> {
-    id?: string;
-}
 
-export async function validateUpdate(id: string, update: Partial<UpdateInformation>) {
+export async function validateUpdate(id: string, update: Partial<QRCode>) {
     let wasAnytingUpdated = false;
     for (let key of Object.keys(update)) {
         switch (key) {
@@ -208,7 +205,7 @@ export async function validateUpdate(id: string, update: Partial<UpdateInformati
 }
 }
 
-async function checkRedirectDataValidity(data: RedirectQRCodeData, id: string) {
+async function checkRedirectDataValidity(data: Types.RedirectQRCodeData, id: string) {
 
     if (!data.redirect_to) {
         return {
@@ -253,7 +250,7 @@ async function checkRedirectDataValidity(data: RedirectQRCodeData, id: string) {
         }
 
         // If redirect_to is not specified in both global.QRCodeTable[id].data and update data, return an error
-        if (!data?.redirect_to && !(global.QRCodeTable[id].data as RedirectQRCodeData).redirect_to) {
+        if (!data?.redirect_to && !(global.QRCodeTable[id].data as Types.RedirectQRCodeData).redirect_to) {
             return {
                 valid: false,
                 error: "INVALID_AFTER_EXPIRY",
@@ -264,7 +261,7 @@ async function checkRedirectDataValidity(data: RedirectQRCodeData, id: string) {
     return { valid: true };
 }
 
-async function checkScheduleDataValidity(data: ScheduleQRCodeData | null, id: string) {
+async function checkScheduleDataValidity(data: Types.ScheduleQRCodeData | null, id: string) {
     
     if (!(typeof (data as any) == "object")) {
         return {
@@ -387,7 +384,7 @@ async function checkScheduleDataValidity(data: ScheduleQRCodeData | null, id: st
     return { valid: true };
 }
 
-export async function checkLocationDataValidity(data: LocationQRCodeData, id: string) {
+export async function checkLocationDataValidity(data: Types.LocationQRCodeData, id: string) {
 
     const zones = data.zones
     if (zones.length < 1) {

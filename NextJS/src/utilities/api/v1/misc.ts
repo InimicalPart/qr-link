@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { QRCodeData, QRCodeInformation } from "@/types/api/v1/QRCode";
+import { QRCode, Types } from "./qrcode";
 import { resolveID } from "./authentication";
 import QRCodeGenerator from "qrcode";
 import path from "path";
@@ -23,9 +23,7 @@ export async function randomString(length: number) {
   }
 
 export async function generateTrackingCode(id: string | number, options:Partial<{
-    serverURL: string,
-    port: number,
-    currentAction: Partial<QRCodeData>,
+    currentAction: Types.RedirectQRCodeData,
     request: NextRequest
 }>={}) {
     let body = '<script src="https://cdnjs.cloudflare.com/ajax/libs/ClientJS/0.2.1/client.min.js" integrity="sha512-2WLGNBqBSz+HMXWugyIdkJNr6fPanvXsjj5ivuMzmztNgKVaJHJIcn6tkqmVoV4EKJYdzlLfNi0O1K3e1EtWAQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>\n'
@@ -75,7 +73,7 @@ export async function generateTrackingCode(id: string | number, options:Partial<
 
     javascriptCode += `function send_and_redirect(){
         console.log("[QRCode] Sending data to server...")
-        fetch("${options.serverURL + ":" + options.port}/qrcode/${id}/scan", {
+        fetch("${process.env.API_URL}/qrcode/${id}/scan", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -97,7 +95,7 @@ export async function generateTrackingCode(id: string | number, options:Partial<
 
 
 
-export async function QRCode2PDF(qrcode: QRCodeInformation, id: string) {
+export async function QRCode2PDF(qrcode: QRCode, id: string) {
     function settings2HTML(settings: { getScanData: boolean; scanData: {information:{
         fingerprint:boolean;
         "user-agent":boolean;
@@ -217,3 +215,4 @@ export function getPassedTime(times: string[], timezone: string) {
     let shouldCurrentlyFollow = times[minDiff]
     return shouldCurrentlyFollow
 }
+

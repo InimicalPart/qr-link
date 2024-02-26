@@ -42,9 +42,9 @@ export default function Location({
                 }
             }
         }
-        document.getElementById("create-form")?.addEventListener("submit", onSubmit)
+        document.getElementById("create-form")?.addEventListener("submit", onSubmit);
         return ()=>{
-            document.getElementById("create-form")?.removeEventListener("submit", onSubmit)
+            document.getElementById("create-form")?.removeEventListener("submit", onSubmit);
         }
     })
 
@@ -222,7 +222,6 @@ export default function Location({
     // useEffect(() => {
     //     (document.getElementById("radiusChange") as HTMLInputElement).value = zones.length > 0 && selectedZoneIndex != -1 && zones[selectedZoneIndex].radius ? zones[selectedZoneIndex].radius : 300;
     // }, [selectedZoneIndex]);
-
     function flyToZone(index: number, _e: any) {
         let map = zones[index].L._map as L.Map;
         if (!zones[index].isEntireWorld) {
@@ -412,7 +411,8 @@ export default function Location({
 
         function toggleView(index: number) {
             const zone = zones[index];
-
+            console.log(leafletMap)
+            console.log(zone.L._map)
             if (zone.L._map) {
                 zone.L.removeFrom(leafletMap);
                 zones[index].hidden = true;
@@ -451,7 +451,6 @@ export default function Location({
     }
     function LayerOrganizer({zones}: {zones: any[]}) {
         const context = useLeafletContext();
-        const [leafletMap, setMap] = useState(null);
 
         useEffect(()=>{
             setMap(context.map);
@@ -549,7 +548,7 @@ export default function Location({
             } onClick={finishPolygonZone}>
                 Finish Polygon Zone
             </button>
-            <p hidden={zones.length < 1 || selectedZoneIndex == -1 || zones[selectedZoneIndex]?.type != "polygon" || zones[selectedZoneIndex]?.isEntireWorld } style={{
+            <p hidden={zones.length < 1 || selectedZoneIndex == -1 || zones[selectedZoneIndex]?.type != "polygon" || zones[selectedZoneIndex]?.isEntireWorld || !isCreatingZone } style={{
                     marginBottom:5,
                     marginTop:10
                 }}><b>Points:</b></p>
