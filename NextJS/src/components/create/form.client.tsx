@@ -165,7 +165,6 @@ export default function Form({
             }} id="qr-never-expires-checkbox" type="checkbox" defaultChecked/>
             <label style={{marginLeft:5}} htmlFor="qr-never-expires-checkbox">Never</label>
         </div>
-        {/* TODO Make it so you can choose what you want instead of only redirect */}
         
         <Settings state={state}/>
 

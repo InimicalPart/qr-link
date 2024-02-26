@@ -2,6 +2,7 @@ import { QRLinkGlobal } from "@/types/api/v1/global";
 declare const global: QRLinkGlobal
 import { getUser } from "@/utilities/api/v1/authentication";
 import { saveQR } from "@/utilities/api/v1/database";
+import { QRCode } from "@/utilities/api/v1/qrcode";
 import { checkDataValidity } from "@/utilities/api/v1/update";
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
@@ -187,7 +188,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 ) {
                     return new NextResponse(JSON.stringify({
                         error: "INVALID_JWT_ENCRYPTION_KEY",
-                        message: "JWTEncryptionKey needs to be a string and not empty.",
+                        message: "JWTEncryptionKey needs to be a s    tring and not empty.",
                     }), {status:400});
                 }
         }
@@ -195,9 +196,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
         
     
-
-    
-    global.QRCodeTable[id] = {
+    global.QRCodeTable[id] = new QRCode({
         type,
         data,
         update_key,
@@ -226,7 +225,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 location: settings?.requirements?.location ?? false, //! Warning, this does not work on iOS when running on localhost, because it's a http:// request, and iOS does not allow sending location data over http:// 
             }
         }
-    };
+    });
     
     saveQR(id, global.QRCodeTable[id])
         

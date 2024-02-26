@@ -65,8 +65,6 @@ export default function GenerateQRs({
 
         function getQRs(): Promise<object[]> {
             return new Promise((resolve, reject) => {
-              //! If someone snoops on the network, would they be able to see the identifier?
-              // TODO: Find another way to do this before production
               fetch(apiURL + "/qrcode/list?export=png",{
                     headers: {
                         Authorization: `${token}`,

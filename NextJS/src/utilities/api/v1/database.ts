@@ -4,6 +4,7 @@ import { randomString } from "./misc";
 import { MongoQRCodeInformation, QRCodeInformation, QRCodeTable } from "@/types/api/v1/QRCode";
 import { parse as parseJSONC } from "jsonc-parser"; //! JSONC to support comments in JSON files, for readability
 import { QRLinkGlobal } from "@/types/api/v1/global";
+import { QRCode } from "./qrcode";
 declare const global: QRLinkGlobal
 
 export class DatabaseError extends Error {
@@ -273,7 +274,9 @@ export async function readQRCodeTable(storage=global.storageMethod) {
             const {promises:fs} = await import("fs")
             console.log(`[QR] Reading QRCodeTable from '${global.QRBackupFilePath}'...`);
             const data = await fs.readFile(global.QRBackupFilePath, "utf8");
-          resolve(parseJSONC(data));
+            const parsed = parseJSONC(data)
+            const classed = Object.fromEntries(Object.entries(parsed).map(([key, value]) => [key, new QRCode({...(value as QRCode), id: key})])) as QRCodeTable // Convert QRCode from object to class
+            resolve(classed);
       } else {
           try {
                 console.log("[DB] Reading QRCodeTable from the database...")
@@ -285,20 +288,20 @@ export async function readQRCodeTable(storage=global.storageMethod) {
       }
     });
   }
-export async function saveQR(id: string = null, obj: QRCodeInformation | object = {}, update:boolean=false) {
+export async function saveQR(id: string = null, obj: QRCode = new QRCode(), update:boolean=false) {
     return new Promise<void>(async (resolve, reject) => {
         if (global.storageMethod == "file") {
             console.log(`[QR] Saving QRCodeTable to '${global.QRBackupFilePath}'...`);
             const {promises:fs} = await import("fs")
             await fs.writeFile(
                 global.QRBackupFilePath,
-                JSON.stringify(global.QRCodeTable)
+                JSON.stringify((Object.keys(global.QRCodeTable).map((key)=>Object.assign({}, global.QRCodeTable[key])))) // Convert QRCode from class to object
                );
             resolve()
         } else {
             if (update) {
                 console.log("[DB] Updating QR-code " + id + " in the database...")
-                global.mongoClient.db("QRLink").collection("qrcodes").updateOne({id: id}, {$set: obj}).then((status) => {
+                global.mongoClient.db("QRLink").collection("qrcodes").updateOne({id: id}, {$set: Object.assign({},obj)}).then((status) => {
                     if (status.modifiedCount == 0) {
                         console.log("[DB] Failed to update QR-code " + id + " in the database.")
                     }
@@ -307,7 +310,7 @@ export async function saveQR(id: string = null, obj: QRCodeInformation | object 
             } else {
                 console.log("[DB] Inserting QR-code " + id + " into the database...");
                 (obj as MongoQRCodeInformation).id = id 
-                global.mongoClient.db("QRLink").collection("qrcodes").insertOne(obj).then((status) => {
+                global.mongoClient.db("QRLink").collection("qrcodes").insertOne(Object.assign({},obj)).then((status) => {
                     if (!status.acknowledged) {
                         console.log("[DB] Failed to insert QR-code " + id + " into the database.")
                     }
@@ -348,10 +351,8 @@ export async function convertToQRCTFormat(data: Array<MongoQRCodeInformation>): 
     return new Promise<QRCodeTable>((resolve, reject) => {
         let result: QRCodeTable = {}
         for (let qrCode of data) {
-            let id = qrCode.id
-            delete qrCode.id
             delete qrCode._id
-            result[id] = qrCode
+            result[qrCode.id] = new QRCode(qrCode)
         }
         resolve(result)
     })

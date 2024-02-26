@@ -1,3 +1,4 @@
+require('next-ws/server').verifyPatch();
 module.exports = {
   reactStrictMode: false,
   distDir: "build",
