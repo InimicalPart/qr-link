@@ -1,4 +1,4 @@
-.button {
+.dashboard.button {
     background-color: aliceblue;
     height:40px;
     font-size:12pt;
@@ -11,7 +11,7 @@
     cursor: pointer;
 }
 
-.button:hover {
+.dashboard.button:hover {
     background-color: rgb(210, 218, 225);
 }
 #loginPage {

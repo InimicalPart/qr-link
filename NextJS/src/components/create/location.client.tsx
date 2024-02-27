@@ -3,16 +3,20 @@ import L, { DivIcon, LatLng, LatLngTuple } from "leaflet";
 import { useEffect, useState } from "react";
 import { useLeafletContext } from '@react-leaflet/core'
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents, Tooltip, CircleMarker, Polyline, Polygon } from 'react-leaflet'
-import "./test.css"
+import "./actions.css"
 import crypto from 'crypto'
+import { LocateControl } from "./locateControl.client";
+import React from "react";
 export default function Location({
-    state
+    state,
+    qrCodeInfo = {}
 }: {
-    state: any
+    state: any,
+    qrCodeInfo?: any
 }) {
     const [zones, setZones] = useState([] as any[]);
     const [type, setType] = useState("")
-    const [selectedZoneIndex, setSelectedZoneIndex] = useState(0);
+    const [selectedZoneIndex, setSelectedZoneIndex] = useState(-1);
     const [isCreatingZone, setIsCreatingZone] = useState(false);
     const [zoneType, setZoneType] = useState("circle"); // "circle" or "polygon"
     const [polygonPositions, setPolygonPositions] = useState([] as LatLngTuple[]); // The positions of the polygon's vertices [lat, lng
@@ -33,6 +37,23 @@ export default function Location({
             window.removeEventListener("getData", getData)
         }
     },[zones,type])
+
+    // process existing zones in qrCodeInfo.data.zones ([]) if qrCodeInfo.type == "location"
+    useEffect(()=>{
+        if (qrCodeInfo.type == "location") {
+            setZones([])
+            setType("location")
+            setZones(qrCodeInfo.data.zones.map((zone: any) => {
+                return {
+                    ...zone,
+                    ...(zone.center?{positions:[zone.center]}:{}),
+                    hidden: false,
+                    key: crypto.randomBytes(32).toString("hex")
+                }
+            }))
+        }
+    },[qrCodeInfo])
+
     useEffect(()=>{
         function onSubmit(e: Event) {
             if (type == "location") {
@@ -59,37 +80,12 @@ export default function Location({
                 radius?: number;
                 redirectTo: string;
                 afterExpiry: string;
-                bounds: {
-                    north: number;
-                    east: number;
-                    south: number;
-                    west: number;
-                    northEast: LatLngTuple;
-                    southWest: LatLngTuple;
-                    northWest: LatLngTuple;
-                    southEast: LatLngTuple;
-                    Bbox: string;
-                    intersects?: (bounds: any) => boolean;
-                    contains?: (bounds: any) => boolean;
-    
-                }
             } = {
                 type: zone.type,
                 priority: zone.priority,
                 isEntireWorld: zone.isEntireWorld || false,
                 redirectTo: zone.redirectTo,
-                afterExpiry: zone.afterExpiry,
-                bounds: {
-                    north: zone?.bounds?.getNorth() || 0,
-                    east: zone?.bounds?.getEast() || 0,
-                    south: zone?.bounds?.getSouth() || 0,
-                    west: zone?.bounds?.getWest() || 0,
-                    northEast: zone?.bounds?.getNorthEast() || new LatLng(0,0),
-                    southWest: zone?.bounds?.getSouthWest() || new LatLng(0,0),
-                    northWest: zone?.bounds?.getNorthWest() || new LatLng(0,0),
-                    southEast: zone?.bounds?.getSouthEast() || new LatLng(0,0),
-                    Bbox: zone?.bounds?.toBBoxString() || "0,0,0,0"
-                }
+                afterExpiry: zone.afterExpiry
             };
             if (zone.type === "circle") {
                 newZone.center = zone.positions[0];
@@ -97,10 +93,7 @@ export default function Location({
             } else {
                 newZone.positions = zone.positions;
             }
-            if (includeFunctions) {
-                newZone.bounds.intersects = zone.bounds.intersects;
-                newZone.bounds.contains = zone.bounds.contains;
-            }
+
             return newZone;
         })
         return includeFunctions ? res : JSON.stringify(res)
@@ -257,6 +250,11 @@ export default function Location({
             window.removeEventListener("verifyZones", verifyZones)
         }    
     },[zones])
+    useEffect(()=>{
+        if (qrCodeInfo.type == "location") {
+            window.dispatchEvent(new CustomEvent("typeChange", { detail: "location" }))
+        }
+    })
     function validateLocation(zones:{
         type: 'circle' | 'polygon';
         priority?: number;
@@ -449,6 +447,7 @@ export default function Location({
 
         return <></>
     }
+    
     function LayerOrganizer({zones}: {zones: any[]}) {
         const context = useLeafletContext();
 
@@ -477,250 +476,249 @@ export default function Location({
         }
     },[selectedZoneIndex])
     return (
-        <div>
-        <input className="create" type="hidden" name="location_zones" disabled={type !== "location"} value={convertToBeautiful(zones)} />
-            <MapContainer maxBounds={[[-85.05115, -180], [85, 180]]} maxBoundsViscosity={1.0} style={{ width: "90vw", maxWidth: 600, height: 400, left:"50%", transform:"translateX(-50%)" }} center={zones.length > 0 && selectedZoneIndex >= 0 && selectedZoneIndex < zones.length ? zones[selectedZoneIndex].position : [51.505, -0.09]} zoom={2} minZoom={2} >
-                <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                {/* {zones.map((zone, index) => (
-                    <Marker key={"-"+index} position={zone.position} icon={L.icon({ iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png", iconSize: [25, 41] })} />
-                ))} */}
-                <ZoneController zones={zones} selectedZoneIndex={selectedZoneIndex} />
-                <PolygonPointsController points={polygonPositions} />
-                <SizeInvalidator/>
-                <LayerOrganizer zones={zones}/>
-            </MapContainer>
-            <p style={{
-                color: "darkgray",
-                fontSize: "10pt",
-                fontWeight: 500,
-                position:"absolute",
-                left:"50%",
-                transform:"translateX(-50%)",
-                width: "100%"
-            }} hidden={!isCreatingZone}>{zoneType == "circle" ? "Click/Tap on the map to create a circle zone" : zoneType == "polygon" ? "Click/Tap on the map to place your "+(polygonPositions.length<1?"first":"next")+" polygon point" : "Click/Tap on the map to create a zone for the entire world"}</p>
-            <br/>
-        <button className="create" 
-        type="button"
-        style={{
-            marginBottom:20,
-            width: 250
-        }} onClick={() => {
-            if (isCreatingZone) {
-                setPolygonPositions([]);
-                setIsCreatingZone(false);
-            } else {
-                setIsCreatingZone(true)
-            }
-        }}>
-                {isCreatingZone ? "Cancel" : "New Zone"}
-            </button>
-            <div hidden={!isCreatingZone} style={{
-                border: "1px solid black",
-                width:250,
-                paddingTop:10,
-                paddingBottom:15,
-                left:"50%",
-                transform: "translateX(-50%)",
-                position: "relative",
-                borderRadius: 8,
-                marginBottom:15
-            }}>
-                <p  style={{
-                    marginBottom:5
-                }}><b>Zone Type:</b></p>
-                <select className="create" value={zoneType} style={{ width:200}} onChange={(e) => setZoneType(e.target.value)}>
-                    <option className="create" value="circle">Circle</option>
-                    <option className="create" value="polygon">Polygon</option>
-                    <option className="create" disabled={zones.some(a=>a.isEntireWorld)} hidden={zones.some(a=>a.isEntireWorld)} value="entireWorld">Entire World</option>
-                </select>
-                <button className="create"
-                type="button"
-                 style={{
-                    fontSize: "11pt",
-                    height: 30,
-                    marginTop: 20,
-                    width: "200px",
-                }} hidden={
-                !isCreatingZone || zoneType != "polygon"
-            } onClick={finishPolygonZone}>
-                Finish Polygon Zone
-            </button>
-            <p hidden={zones.length < 1 || selectedZoneIndex == -1 || zones[selectedZoneIndex]?.type != "polygon" || zones[selectedZoneIndex]?.isEntireWorld || !isCreatingZone } style={{
-                    marginBottom:5,
-                    marginTop:10
-                }}><b>Points:</b></p>
-            <ul style={{textAlign:"center",marginTop:10}}>
-            {polygonPositions.map((point, index) => (
-                <li key={"point-"+index} style={{cursor:"pointer", fontWeight:600, textDecoration:"underline"}} onMouseOver={()=>highlightPolygonPoint(index)} onMouseOut={()=>unHighlightPolygonPoint(index)} onClick={() => handleDeletePoint(index)}>Delete Point {index + 1}</li>
-            ))}
-            </ul>
-            </div>
-            <div hidden={selectedZoneIndex == -1 || zones.length < 1} style={{
-                border: "1px solid black",
-                borderRadius: 8,
-                paddingTop: 10,
-                paddingBottom:15,
-                width:250,
-                left: "50%",
-                position:"relative",
-                transform:"translateX(-50%)"
-            }}>
-                {/* <hr style={{
-                    height: 2,
-                    background: "black",
-                    width:400,
-                    left: "50%",
+        <React.Fragment>
+            <div>
+            <input className="create" type="hidden" name="location_zones" disabled={type !== "location"} value={convertToBeautiful(zones)} />
+                <MapContainer maxBounds={[[-85.05115, -180], [85, 180]]} maxBoundsViscosity={1.0} style={{ width: "90vw", maxWidth: 600, height: 400, left:"50%", transform:"translateX(-50%)" }} center={zones.length > 0 && selectedZoneIndex >= 0 && selectedZoneIndex < zones.length ? zones[selectedZoneIndex].position : [51.505, -0.09]} zoom={2} minZoom={2} >
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <LocateControl position="topleft" />
+                    <ZoneController zones={zones} selectedZoneIndex={selectedZoneIndex} />
+                    <PolygonPointsController points={polygonPositions} />
+                    <SizeInvalidator/>
+                    <LayerOrganizer zones={zones}/>
+                </MapContainer>
+                <p style={{
+                    color: "darkgray",
+                    fontSize: "10pt",
+                    fontWeight: 500,
+                    position:"absolute",
+                    left:"50%",
                     transform:"translateX(-50%)",
-                    position:"relative",
-                    marginBottom:20
-                }}/> */}
-                <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
-                    marginBottom:20,
-                    position:"relative"
-                }}>
-                    <b >Zone Settings</b>
-                    <span style={{
-                        fontSize:"9pt",
-                        flexBasis: "100%",
-                        marginTop: -5,
-                        fontWeight:500
-                    }}>Zone {selectedZoneIndex+1}</span>
-                </p>
-
-                
-                <p style={{
-                    position:"relative",
-                    fontSize:14
-                }} hidden={zones.length < 1 || selectedZoneIndex == -1 || zones[selectedZoneIndex].type != "circle"}
-                title="The radius (in meters) of the zone."><b>Radius (meters)</b></p>
-                <input className="create" id="radiusChange" style={{
+                    width: "100%"
+                }} hidden={!isCreatingZone}>{zoneType == "circle" ? "Click/Tap on the map to create a circle zone" : zoneType == "polygon" ? "Click/Tap on the map to place your "+(polygonPositions.length<1?"first":"next")+" polygon point" : "Click/Tap on the map to create a zone for the entire world"}</p>
+                <br/>
+            <button className="create" 
+            type="button"
+            style={{
+                marginBottom:20,
+                width: 250
+            }} onClick={() => {
+                if (isCreatingZone) {
+                    setPolygonPositions([]);
+                    setIsCreatingZone(false);
+                } else {
+                    setIsCreatingZone(true)
+                }
+            }}>
+                    {isCreatingZone ? "Cancel" : "New Zone"}
+                </button>
+                <div hidden={!isCreatingZone} style={{
+                    border: "1px solid black",
+                    width:250,
+                    paddingTop:10,
+                    paddingBottom:15,
+                    left:"50%",
+                    transform: "translateX(-50%)",
                     position: "relative",
-                    width:"90%"
-                }} hidden={zones.length < 1 || selectedZoneIndex == -1 || zones[selectedZoneIndex].type != "circle"} type="number" min={10} max={1000000} onBlur={(e)=>{
-                    if (parseInt(e.target.value) < 10) e.target.value = "10";
-                    if (parseInt(e.target.value) > 1000000) e.target.value = "1000000";
-                    handleRadiusChange(e);
-                }} defaultValue={zones.length > 0 && selectedZoneIndex != -1 && zones[selectedZoneIndex].radius ? zones[selectedZoneIndex].radius : 300} onChange={handleRadiusChange} />
-                <p style={{
-                    position:"relative",
-                    fontSize:14,
-                    marginTop:10
-                }} title="If you are in 2 zones, the system will choose the one with the highest priority."><b>Priority</b></p>
-                <input className="create" style={{
-                    position: "relative",
-                    width:"90%"
-                }} type="number" id="prio" disabled={zones[selectedZoneIndex]?.isEntireWorld} min={-999} max={1000} defaultValue={zones[selectedZoneIndex]?.priority} onChange={handlePriorityChange} onBlur={(e) => {
-                    if (parseInt(e.target.value) < -999) e.target.value = "-999";
-                    if (parseInt(e.target.value) > 1000) e.target.value = "1000";
-                    const newZones = [...zones];
-                    newZones[selectedZoneIndex].priority = parseInt(e.target.value);
-                    setZones(newZones);
-                }}/>
-                <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:30,fontSize:14}}><b>Redirect to</b></p>
-                <textarea
-                  id="locRedirect"
-                  className="disabled:bg-neutral-400"
-                  placeholder="URL / VCard / ..."
-                  autoCapitalize="none"
-                  autoCorrect="none"
-                  spellCheck="false"
-                  onChange={(e) => {
-                    // save to zones
-                    const newZones = [...zones];
-                    newZones[selectedZoneIndex].redirectTo = e.target.value || "";
-                    setZones(newZones);
-                  }}
-                  style={{
-                    border: "1px black solid",
                     borderRadius: 8,
-                    textAlign: "center",
-                    maxHeight: 250,
-                    minHeight: 30,
-                    height: 30,
-                    width: "90%"
-                }}
-                ></textarea>
-                <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:5, fontSize:14}} title="Where to navigate once the QR-code has expired"><b>After Expiry</b> <span style={{
-                        fontSize: '8pt',
-                        flexBasis: '100%',
-                        marginTop: -5
-                    }}>(optional)</span></p>
-                <textarea
-                  id="locAERedirect"
-                  className="disabled:bg-neutral-400"
-                  placeholder="URL / VCard / ..."
-                  autoCapitalize="none"
-                  autoCorrect="none"
-                  spellCheck="false"
+                    marginBottom:15
+                }}>
+                    <p  style={{
+                        marginBottom:5
+                    }}><b>Zone Type:</b></p>
+                    <select className="create" value={zoneType} style={{ width:200}} onChange={(e) => setZoneType(e.target.value)}>
+                        <option className="create" value="circle">Circle</option>
+                        <option className="create" value="polygon">Polygon</option>
+                        <option className="create" disabled={zones.some(a=>a.isEntireWorld)} hidden={zones.some(a=>a.isEntireWorld)} value="entireWorld">Entire World</option>
+                    </select>
+                    <button className="create"
+                    type="button"
+                    style={{
+                        fontSize: "11pt",
+                        height: 30,
+                        marginTop: 20,
+                        width: "200px",
+                    }} hidden={
+                    !isCreatingZone || zoneType != "polygon"
+                } onClick={finishPolygonZone}>
+                    Finish Polygon Zone
+                </button>
+                <p hidden={zones.length < 1 || selectedZoneIndex == -1 || zones[selectedZoneIndex]?.type != "polygon" || zones[selectedZoneIndex]?.isEntireWorld || !isCreatingZone } style={{
+                        marginBottom:5,
+                        marginTop:10
+                    }}><b>Points:</b></p>
+                <ul style={{textAlign:"center",marginTop:10}}>
+                {polygonPositions.map((point, index) => (
+                    <li key={"point-"+index} style={{cursor:"pointer", fontWeight:600, textDecoration:"underline"}} onMouseOver={()=>highlightPolygonPoint(index)} onMouseOut={()=>unHighlightPolygonPoint(index)} onClick={() => handleDeletePoint(index)}>Delete Point {index + 1}</li>
+                ))}
+                </ul>
+                </div>
+                <div hidden={selectedZoneIndex == -1 || zones.length < 1} style={{
+                    border: "1px solid black",
+                    borderRadius: 8,
+                    paddingTop: 10,
+                    paddingBottom:15,
+                    width:250,
+                    left: "50%",
+                    position:"relative",
+                    transform:"translateX(-50%)"
+                }}>
+                    {/* <hr style={{
+                        height: 2,
+                        background: "black",
+                        width:400,
+                        left: "50%",
+                        transform:"translateX(-50%)",
+                        position:"relative",
+                        marginBottom:20
+                    }}/> */}
+                    <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
+                        marginBottom:20,
+                        position:"relative"
+                    }}>
+                        <b >Zone Settings</b>
+                        <span style={{
+                            fontSize:"9pt",
+                            flexBasis: "100%",
+                            marginTop: -5,
+                            fontWeight:500
+                        }}>Zone {selectedZoneIndex+1} ({zones[selectedZoneIndex]?.isEntireWorld ? "World" : zones[selectedZoneIndex]?.type[0]?.toUpperCase() + zones[selectedZoneIndex]?.type?.slice(1)})</span>
+                    </p>
+
+                    
+                    <p style={{
+                        position:"relative",
+                        fontSize:14
+                    }} hidden={zones.length < 1 || selectedZoneIndex == -1 || zones[selectedZoneIndex].type != "circle"}
+                    title="The radius (in meters) of the zone."><b>Radius (meters)</b></p>
+                    <input className="create" id="radiusChange" style={{
+                        position: "relative",
+                        width:"90%"
+                    }} hidden={zones.length < 1 || selectedZoneIndex == -1 || zones[selectedZoneIndex].type != "circle"} type="number" min={10} max={1000000} onBlur={(e)=>{
+                        if (parseInt(e.target.value) < 10) e.target.value = "10";
+                        if (parseInt(e.target.value) > 1000000) e.target.value = "1000000";
+                        handleRadiusChange(e);
+                    }} defaultValue={zones.length > 0 && selectedZoneIndex != -1 && zones[selectedZoneIndex].radius ? zones[selectedZoneIndex].radius : 300} onChange={handleRadiusChange} />
+                    <p style={{
+                        position:"relative",
+                        fontSize:14,
+                        marginTop:10
+                    }} title="If you are in 2 zones, the system will choose the one with the highest priority."><b>Priority</b></p>
+                    <input className="create" style={{
+                        position: "relative",
+                        width:"90%"
+                    }} type="number" id="prio" disabled={zones[selectedZoneIndex]?.isEntireWorld} min={-999} max={1000} defaultValue={zones[selectedZoneIndex]?.priority} onChange={handlePriorityChange} onBlur={(e) => {
+                        if (parseInt(e.target.value) < -999) e.target.value = "-999";
+                        if (parseInt(e.target.value) > 1000) e.target.value = "1000";
+                        const newZones = [...zones];
+                        newZones[selectedZoneIndex].priority = parseInt(e.target.value);
+                        setZones(newZones);
+                    }}/>
+                    <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:30,fontSize:14}}><b>Redirect to</b></p>
+                    <textarea
+                    id="locRedirect"
+                    className="disabled:bg-neutral-400"
+                    placeholder="URL / VCard / ..."
+                    autoCapitalize="none"
+                    autoCorrect="none"
+                    spellCheck="false"
                     onChange={(e) => {
                         // save to zones
                         const newZones = [...zones];
-                        newZones[selectedZoneIndex].afterExpiry = e.target.value || "";
+                        newZones[selectedZoneIndex].redirectTo = e.target.value || "";
                         setZones(newZones);
                     }}
-                  style={{
-                    border: "1px black solid",
-                    borderRadius: 8,
-                    textAlign: "center",
-                    maxHeight: 250,
-                    minHeight: 30,
-                    height: 30,
-                    width: "90%"
-                  }}
-                ></textarea>
-                
+                    style={{
+                        border: "1px black solid",
+                        borderRadius: 8,
+                        textAlign: "center",
+                        maxHeight: 250,
+                        minHeight: 30,
+                        height: 30,
+                        width: "90%"
+                    }}
+                    ></textarea>
+                    <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:5, fontSize:14}} title="Where to navigate once the QR-code has expired"><b>After Expiry</b> <span style={{
+                            fontSize: '8pt',
+                            flexBasis: '100%',
+                            marginTop: -5
+                        }}>(optional)</span></p>
+                    <textarea
+                    id="locAERedirect"
+                    className="disabled:bg-neutral-400"
+                    placeholder="URL / VCard / ..."
+                    autoCapitalize="none"
+                    autoCorrect="none"
+                    spellCheck="false"
+                        onChange={(e) => {
+                            // save to zones
+                            const newZones = [...zones];
+                            newZones[selectedZoneIndex].afterExpiry = e.target.value || "";
+                            setZones(newZones);
+                        }}
+                    style={{
+                        border: "1px black solid",
+                        borderRadius: 8,
+                        textAlign: "center",
+                        maxHeight: 250,
+                        minHeight: 30,
+                        height: 30,
+                        width: "90%"
+                    }}
+                    ></textarea>
+                    
+                    <br/>
+                    {/* <button className="create" type="button" hidden={!zones[selectedZoneIndex]?.isEntireWorld} style={{
+                        position: "relative",
+                        width:"80%",
+                        height: "30px",
+                        marginTop: 35,
+                        borderRadius:16
+                    }} onClick={!zones[selectedZoneIndex]?.isEntireWorld ? null : ()=>toggleView(selectedZoneIndex)} disabled={!zones[selectedZoneIndex]?.isEntireWorld}>Toggle View</button> */}
+                    <button className="create" type="button" style={{
+                        position: "relative",
+                        width:"80%",
+                        height: "30px",
+                        marginTop: 35,
+                        borderRadius:16
+                    }} onClick={zones[selectedZoneIndex]?.isEntireWorld ? ()=>toggleView(selectedZoneIndex) : flyToZoneWithIndex}>{zones[selectedZoneIndex]?.isEntireWorld ? "Toggle View" : "Fly to Zone"}</button>
+                    <button className="create" type="button" style={{
+                        position: "relative",
+                        width:"80%",
+                        height: "30px",
+                        marginTop: 10,
+                        borderRadius:16
+                    }} hidden={zones.length < 1 || selectedZoneIndex == -1} onClick={deactivateAllZones}>
+                    Deselect Zone
+                </button>
+                    <button className="create" type="button" style={{
+                        position: "relative",
+                        width:"80%",
+                        height: "30px",
+                        marginTop: 10,
+                        borderRadius:16
+                    }} onClick={() => confirm("You are about to delete Zone "+(selectedZoneIndex+1)+" ("+(zones[selectedZoneIndex]?.isEntireWorld ? "World" : zones[selectedZoneIndex]?.type[0].toUpperCase() + zones[selectedZoneIndex]?.type.substring(1)) +"). Are you sure you want to delete this zone?") ? deleteZone(selectedZoneIndex):null}>Delete Zone {selectedZoneIndex + 1}</button>
+                </div>
                 <br/>
-                <button className="create" type="button" hidden={!zones[selectedZoneIndex]?.isEntireWorld} style={{
-                    position: "relative",
-                    width:"80%",
-                    height: "30px",
-                    marginTop: 35,
-                    borderRadius:16
-                }} onClick={!zones[selectedZoneIndex]?.isEntireWorld ? null : ()=>toggleView(selectedZoneIndex)} disabled={!zones[selectedZoneIndex]?.isEntireWorld}>Toggle View</button>
-                <button className="create" type="button" style={{
-                    position: "relative",
-                    width:"80%",
-                    height: "30px",
-                    marginTop: zones[selectedZoneIndex]?.isEntireWorld ? 10 : 35,
-                    borderRadius:16
-                }} onClick={zones[selectedZoneIndex]?.isEntireWorld ? null : flyToZoneWithIndex} disabled={zones[selectedZoneIndex]?.isEntireWorld}>Fly to Zone</button>
-                <button className="create" type="button" style={{
-                    position: "relative",
-                    width:"80%",
-                    height: "30px",
-                    marginTop: 10,
-                    borderRadius:16
-                }} hidden={zones.length < 1 || selectedZoneIndex == -1} onClick={deactivateAllZones}>
-                Deselect Zone
-            </button>
-                <button className="create" type="button" style={{
-                    position: "relative",
-                    width:"80%",
-                    height: "30px",
-                    marginTop: 10,
-                    borderRadius:16
-                }} onClick={() => confirm("You are about to delete Zone "+(selectedZoneIndex+1)+" ("+(zones[selectedZoneIndex]?.isEntireWorld ? "World" : zones[selectedZoneIndex]?.type[0].toUpperCase() + zones[selectedZoneIndex]?.type.substring(1)) +"). Are you sure you want to delete this zone?") ? deleteZone(selectedZoneIndex):null}>Delete Zone {selectedZoneIndex + 1}</button>
-            </div>
-            <br/>
 
-            <ul style={{
-                listStyle: "disc",
-                left: "50%",
-                position: "relative",
-                transform: "translateX(-50%)",
-                width: "fit-content",
-                marginLeft:7,
-                marginBottom:10,
-            }}>
-                {zones.map((zone, index) =>
-                    <li key={"SelectZoneList_"+index} style={{fontWeight:600,height:30,cursor:"pointer",textDecoration:"underline"}} onClick={() => setSelectedZoneIndex(index)}>Select Zone {index + 1} ({zone.isEntireWorld ? "World" : zone.type[0].toUpperCase() + zone.type.substring(1)})</li>
-                )}
-            </ul>
-            {/* <p>If a zone is within another zone, the zone inside will take priority, unless priority for the containing zone is higher than the priority of the zone inside</p> */}
-        </div>
+                <ul style={{
+                    listStyle: "disc",
+                    left: "50%",
+                    position: "relative",
+                    transform: "translateX(-50%)",
+                    width: "fit-content",
+                    marginLeft:7,
+                    marginBottom:10,
+                }}>
+                    {zones.map((zone, index) =>
+                        <li key={"SelectZoneList_"+index} style={{fontWeight:600,height:30,cursor:"pointer",textDecoration:"underline"}} onClick={() => setSelectedZoneIndex(index)}>Select Zone {index + 1} ({zone.isEntireWorld ? "World" : zone.type[0].toUpperCase() + zone.type.substring(1)})</li>
+                    )}
+                </ul>
+            </div>
+        </React.Fragment>
     );
     function PolygonPointsController({points}:{points:LatLngTuple[]}) {
         const pointPairs = points.map((point, index) => [point, points[(index + 1) % points.length]]);

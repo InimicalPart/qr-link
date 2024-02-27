@@ -82,7 +82,7 @@ export default async function Home() {
               }}>
                 <form action={login} id="loginForm">
               <button
-                className="button"
+                className="login button"
                 style={{
                     marginBottom: 5,
                     flexBasis: "100%",
@@ -96,6 +96,11 @@ export default async function Home() {
             </div>
           </div>
         </div>
+        <footer className="copyright-footer">
+        <p>
+            &copy; 2024 - <a className="copyright" href="https://github.com/InimicalPart" target="_blank">InimicalPart</a> & <a className="copyright" href="https://newseed.se" target="_blank">NewSeed IT Solutions AB</a> - All rights reserved.
+        </p>
+    </footer>
         <Script src="/res/js/login.js"/>
       </>
     );

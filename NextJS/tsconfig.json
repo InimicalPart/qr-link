@@ -24,6 +24,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@custom/*": [
+        "../custom-modules/*"
       ]
     },
     "strictNullChecks": false

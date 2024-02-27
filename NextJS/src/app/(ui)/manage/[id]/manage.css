@@ -1,0 +1,47 @@
+a.manage.button {
+    text-align: center;
+    width: 200px;
+    border: 1px solid black;
+    /* padding: 0px 30px; */
+    border-radius: 8px;
+}
+
+a.manage.button:hover {
+    background-color: gainsboro;
+}
+a.manage.button[aria-disabled="true"] {
+    background-color: darkgray;
+    cursor: not-allowed;
+}
+
+.QRL-container {
+    margin-top:5px;
+}
+
+.QRL-create {
+    margin-top:40px;
+}
+
+li::marker {
+    font-size: 1.5rem;
+}
+ul::marker {
+    font-size:1.5rem
+}
+ul {
+    text-align: left;
+
+}
+
+ul.moveover {
+    margin-left: 40px;
+}
+
+/* button#qr-submit:disabled {
+    background-color: rgb(149,149,149) !important;
+} */
+
+input.create:not([type="submit"]):not([type="checkbox"]) {
+    height:30px
+}
+

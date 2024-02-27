@@ -197,10 +197,9 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
       }), { status: 400 })
     }
     const wasAnytingUpdated = await validateUpdate(id, update)
-    const qrcode = await QRCodeGenerator.toString(
-      process.env.API_URL  + "/qrcode/" + id + "/handler",
-      { type: "svg", errorCorrectionLevel: "H" }
-    );
+    if (wasAnytingUpdated instanceof NextResponse) {
+        return wasAnytingUpdated
+    }
     if (!wasAnytingUpdated) {
       return new NextResponse(JSON.stringify({
           id,
@@ -208,18 +207,18 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
           data: global.QRCodeTable[id].data,
           linked_to: global.QRCodeTable[id].linked_to,
           expires: global.QRCodeTable[id].expires,
-          svg: (qrcode as string).trim(),  
       }), { status: 200 });
     }
-    global.QRCodeTable[update.id].updated = new Date();
-    saveQR(id, global.QRCodeTable[update.id], true)
-  
+    global.QRCodeTable[update.id??id].updated = new Date();
+    saveQR(id, global.QRCodeTable[update.id??id], true)
+    
     let additionalInformation = {};
     if (update.id) {
       additionalInformation = {
           ...additionalInformation,
           message: "You have changed the ID of this QR-code. Keep in mind that this means that the old ID will no longer work, and that you will have to update the QR-code everywhere you have used it.",
-          warning: "ID_CHANGE_WARNING"
+          warning: "ID_CHANGE_WARNING",
+          new_id: update.id,
       }
     }
     return new NextResponse(JSON.stringify({
@@ -229,7 +228,6 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
         data: global.QRCodeTable[id].data,
         linked_to: global.QRCodeTable[id].linked_to,
         expires: global.QRCodeTable[id].expires,
-        svg: (qrcode as string).trim(),
       },
       ...additionalInformation,
     }), { status: 200 });

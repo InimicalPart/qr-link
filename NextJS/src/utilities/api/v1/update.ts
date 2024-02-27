@@ -30,7 +30,7 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
                 wasAnytingUpdated = true;
                 break;
         case "data":
-            if (Object.keys(update).includes("type")) break; //! handled by 'case "type"'
+            if (Object.keys(update).includes("type") && global.QRCodeTable[id].type != update.type) break; //! handled by 'case "type"'
             if (JSON.stringify(global.QRCodeTable[id].data) == JSON.stringify({...global.QRCodeTable[id].data,...update.data})) break; //! no need to update if data is the same
             
             //! Needs to be an object
@@ -167,8 +167,8 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
                 if (!(typeof (update.settings.requirements.location as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.requirements.location' needs to be a boolean."}), {status:400});
             }
         }
-        if (update.settings.scanData.sendScanDataToURL == true) {
-            // needs to also contain a valid JWT encryption key if sendScanDataToURL is true
+        if (update.settings.scanData.sendToURL == true) {
+            // needs to also contain a valid JWT encryption key if sendToURL is true
             //! JWTEncryptionKey needs to be provided or already defined
             if (!update.settings.scanData.JWTEncryptionKey && !global.QRCodeTable[id].settings.scanData.JWTEncryptionKey) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.JWTEncryptionKey' needs to be provided."}), {status:400});
             //! Needs to be a string and not empty
@@ -186,7 +186,7 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
                     ip: update.settings.scanData?.information?.ip ?? global.QRCodeTable[id].settings.scanData.information.ip,
                     location: update.settings.scanData?.information?.location ?? global.QRCodeTable[id].settings.scanData.information.location,
                 },
-                sendScanDataToURL: false,
+                sendToURL: false,
                 JWTEncryptionKey: ""
             },
             requirements: {
@@ -200,8 +200,8 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
             error: "INVALID_UPDATE",
             message: "Invalid update.",
         }), {status:400});
-        
     }
+    return wasAnytingUpdated
 }
 }
 

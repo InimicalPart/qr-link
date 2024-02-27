@@ -1,15 +1,15 @@
 "use client";
 
-import Script from "next/script";
+import { notFound } from 'next/navigation'
 import Image from "next/image";
 // import { convert } from 'convert-svg-to-png';
 //@ts-expect-error
 import qz from "qz-tray"; //! Doesn't have typescript definitions, causing errors, which is why we have to use ts-expect-error
 import { useEffect } from "react";
 export default function Home() {
-    return (
-        <h1>Not Implemented</h1>
-    )
+    if (process.env.NODE_ENV !== "development") {
+        return notFound()
+    }
     useEffect(() => {
         (async ()=>{
         //    return
