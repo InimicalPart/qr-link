@@ -180,15 +180,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 message: "settings needs to be an object.",
             }), {status:400});
         }
-        // if settings.scanData.sendScanDataToURL is true, settings.scanData.JWTEncryptionKey needs to be a string and not empty
-        if (settings.scanData.sendScanDataToURL) {
+        // if settings.scanData.sendToURL is true, settings.scanData.JWTEncryptionKey needs to be a string and not empty
+        if (settings.scanData.sendToURL) {
             if (
                 !(typeof (settings.scanData.JWTEncryptionKey as any) == "string") ||
                 settings.scanData.JWTEncryptionKey == ""
                 ) {
                     return new NextResponse(JSON.stringify({
                         error: "INVALID_JWT_ENCRYPTION_KEY",
-                        message: "JWTEncryptionKey needs to be a s    tring and not empty.",
+                        message: "JWTEncryptionKey needs to be a string and not empty.",
                     }), {status:400});
                 }
         }
@@ -218,7 +218,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                     ip: settings?.scanData?.information?.ip ?? false,
                     location: settings?.scanData?.information?.location ?? false,
                 },
-                sendScanDataToURL: settings?.scanData?.sendScanDataToURL ?? false,
+                sendToURL: settings?.scanData?.sendToURL ?? false,
                 JWTEncryptionKey: settings?.scanData?.JWTEncryptionKey ?? "",
             },
             requirements: {

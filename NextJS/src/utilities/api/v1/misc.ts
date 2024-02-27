@@ -102,7 +102,7 @@ export async function QRCode2PDF(qrcode: QRCode, id: string) {
         timestamp:boolean;
         ip:boolean;
         location:boolean;
-    }; sendScanDataToURL:boolean; JWTEncryptionKey:string;
+    }; sendToURL:boolean; JWTEncryptionKey:string;
     }; requirements: {location:boolean}; }) {
         let rtrn = []
         let template = `<span>[TXT]</span>`

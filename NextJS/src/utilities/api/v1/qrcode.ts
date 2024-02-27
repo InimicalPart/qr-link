@@ -26,7 +26,7 @@ export class QRCode {
                 ip: boolean;
                 location: boolean;
             };
-            sendScanDataToURL: boolean;
+            sendToURL: boolean;
             JWTEncryptionKey: string;
         };
         getScanData: boolean;
@@ -43,7 +43,7 @@ export class QRCode {
                 ip: false,
                 location: false
             },
-            sendScanDataToURL: false,
+            sendToURL: false,
             JWTEncryptionKey: ""
         },
         getScanData: true
@@ -67,7 +67,7 @@ export class QRCode {
 
 
     async signScanData(scanData: { fingerprint: any; location: any; timestamp: Date; "user-agent": string; ip: string; }) {
-        return this.hasSendScanDataToURL() ? await new SignJWT({
+        return this.hassendToURL() ? await new SignJWT({
             scanData
           })
             .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
@@ -80,12 +80,12 @@ export class QRCode {
         return this.settings.requirements.location && this.settings.getScanData && this.settings.scanData.information.location 
     }
 
-    hasSendScanDataToURL() {
-        return this.settings.scanData.sendScanDataToURL && this.settings.scanData.JWTEncryptionKey
+    hassendToURL() {
+        return this.settings.scanData.sendToURL && this.settings.scanData.JWTEncryptionKey
     }
     
     getEncryptionKey() {
-        return this.hasSendScanDataToURL() ? this.isBase64(this.settings.scanData.JWTEncryptionKey) ? this.settings.scanData.JWTEncryptionKey : Buffer.from(this.settings.scanData.JWTEncryptionKey).toString("base64") : null
+        return this.hassendToURL() ? this.isBase64(this.settings.scanData.JWTEncryptionKey) ? this.settings.scanData.JWTEncryptionKey : Buffer.from(this.settings.scanData.JWTEncryptionKey).toString("base64") : null
     }
 
     private isBase64(str: string) {

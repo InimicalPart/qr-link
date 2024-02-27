@@ -17,11 +17,13 @@ interface ScheduleAction {
 }
 
 export default function Actions({
-    state
+    state,
+    qrCodeInfo = {}
 }:{
-    state:any
+    state:any,
+    qrCodeInfo?: any
 }) {
-    let [action, setAction] = useState("");
+    let [action, setAction] = useState(qrCodeInfo.type ?? "");
 
     function getPassedTime(times: string[], currentTime: string) {
         let diffs: number[] = []
@@ -29,7 +31,6 @@ export default function Actions({
             let nextChange = moment("1970-01-02T" + time)
             let now = moment("1970-01-02T"+currentTime)
             let diff = nextChange.diff(now, "seconds")
-            if (diff > 0) diff += 86400 //! not really needed, but eh *shrug*, cant afford for it to break, so better safe than sorry
             diffs.push(diff)
         }
         let diffsCopy = diffs.filter((x) => x <= 0)
@@ -42,7 +43,7 @@ export default function Actions({
     }
 
 
-    let [currentScheduleActions, setCurrentScheduleActions] = useState<ScheduleAction>({});
+    let [currentScheduleActions, setCurrentScheduleActions] = useState<ScheduleAction>(qrCodeInfo.type=="schedule" ? qrCodeInfo.data : {});
     const [allDay, setAllDay] = useState(false);
 
     const handleCheckboxChange = (event: { target: { checked: boolean | ((prevState: boolean) => boolean); }; }) => {
@@ -92,7 +93,7 @@ export default function Actions({
               textAlign: "center",
               width: 300,
             }}
-            defaultValue=""
+            defaultValue={qrCodeInfo.type ?? ""}
             name="type"
           >
             <option className="create" value="">
@@ -141,7 +142,7 @@ export default function Actions({
                     minHeight: 30,
                     height: 30
                   }}
-                ></textarea>
+                defaultValue={qrCodeInfo.type=="redirect" ? qrCodeInfo.data.redirect_to : ""}></textarea>
                 <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
                   fontSize: "9pt",
                   color: "red",
@@ -171,7 +172,7 @@ export default function Actions({
                   }}
                   disabled={action !== "redirect"}
                   name="redirect_after_expiry"
-                ></textarea>
+                defaultValue={qrCodeInfo.type=="redirect" ? qrCodeInfo.data.after_expiry : ""}></textarea>
                 <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
                   fontSize: "9pt",
                   color: "red",
@@ -396,7 +397,7 @@ export default function Actions({
                 }}
                 name="schedule_timezone"
                 disabled={action !== "schedule"}
-                defaultValue={moment.tz.guess()}
+                defaultValue={qrCodeInfo.type=="schedule" ? qrCodeInfo.data.timezone : moment.tz.guess()}
                 >
                     {
                         moment.tz.names().filter((name)=>(name.includes("/") && !name.toLowerCase().startsWith("etc")) ).map((name)=>{
@@ -408,7 +409,7 @@ export default function Actions({
             </div>
             </div>
             <div id="locationContainer" style={{ display: "none",  }}>
-                <Location state={state}/>
+                <Location state={state} qrCodeInfo={qrCodeInfo}/>
             </div>
           </div>
         </div>

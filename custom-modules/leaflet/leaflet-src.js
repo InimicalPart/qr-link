@@ -8,7 +8,7 @@
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.leaflet = {}));
   })(this, (function (exports) { 'use strict';
-    try {
+    try { //! Added by @InimicalPart
 
         var version = "1.9.4";
     
@@ -14508,7 +14508,7 @@
         }
         // Always export us to window global (see #2364)
         window.L = exports;
-    } catch (e) { console.log("[QL] Omitted Leaflet error - " + e)}
+    } catch (e) { console.log("[QL] Omitted Leaflet error - " + e)} //! Added by @InimicalPart
   }));
   //# sourceMappingURL=leaflet-src.js.map
   

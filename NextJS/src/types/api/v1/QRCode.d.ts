@@ -38,7 +38,7 @@ export interface QRCodeInformation {
                 ip: boolean;
                 location: boolean;
             },
-            sendScanDataToURL: boolean;
+            sendToURL: boolean;
             JWTEncryptionKey: string;
         },
         requirements: {
