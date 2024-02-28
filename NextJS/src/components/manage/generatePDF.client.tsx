@@ -23,7 +23,7 @@ export default function PDFButton({
         console.log(id)
         function clicked() {
             setDisabled(true);
-            (document.getElementById("genPDFButton") as HTMLButtonElement).innerText = "Generating PDF...";
+            document.getElementById("genPDF").innerText = "Generating PDF...";
             fetch(`${apiURL}/qrcode/${id}?export=pdf`, {
                 headers: {
                     Accept: "application/json",
@@ -31,15 +31,15 @@ export default function PDFButton({
                 },
             }).then((res) => res.json()).then((res) => {
                 document.getElementById("genPDF").setAttribute("href", res.pdf)
-                document.getElementById("genPDF").setAttribute("download", "qrcode.pdf")
-                document.getElementById("genPDF").innerHTML = `Download PDF`
+                document.getElementById("genPDF").setAttribute("download", "qrcode-"+id+".pdf")
+                document.getElementById("genPDF").innerText = `Download PDF`
                 setDisabled(false);
             })
         }
 
       return (
         <>
-        <a id="genPDF" style={style} aria-disabled={disabled} className={className}><button style={{width:"100%"}} id="genPDFButton" disabled={disabled} onClick={clicked}>Generate PDF</button></a>
+        <a id="genPDF" style={style} aria-disabled={disabled} onClick={clicked} href={"#"} className={className}>Generate PDF</a>
         </>
       );
 }

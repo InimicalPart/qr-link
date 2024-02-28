@@ -65,6 +65,9 @@ export class QRCode {
         if (newInformation) Object.assign(this, newInformation)
     }
 
+    async setData(data: RedirectQRCodeDataT|ScheduleQRCodeDataT|LocationQRCodeDataT) {
+        this.data = data
+    }
 
     async signScanData(scanData: { fingerprint: any; location: any; timestamp: Date; "user-agent": string; ip: string; }) {
         return this.hassendToURL() ? await new SignJWT({

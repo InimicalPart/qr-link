@@ -2,7 +2,7 @@ import { QRLinkGlobal } from "@/types/api/v1/global";
 declare const global: QRLinkGlobal
 import { getUser } from "@/utilities/api/v1/authentication";
 import { saveQR } from "@/utilities/api/v1/database";
-import { QRCode } from "@/utilities/api/v1/qrcode";
+import { QRCode, Types } from "@/utilities/api/v1/qrcode";
 import { checkDataValidity } from "@/utilities/api/v1/update";
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     
     global.QRCodeTable[id] = new QRCode({
         type,
-        data,
+        data: (dataValidity.newData ?? data) as unknown as Types.RedirectQRCodeData | Types.ScheduleQRCodeData | Types.LocationQRCodeData,
         update_key,
         created: new Date(),
         updated: new Date(),

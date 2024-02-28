@@ -90,7 +90,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
     const updateKey = validatedFields.data.updateKey == "" ? null : validatedFields.data.updateKey
     const name = validatedFields.data.name == "" ? null : validatedFields.data.name
     const description = validatedFields.data.description == "" ? null : validatedFields.data.description
-    const expires = validatedFields.data.expires_never_checkbox == "on" ? null : new Date(validatedFields.data.expires).toISOString().replace(/:[0-9]{2}\.[0-9]{3}Z/,"") //! Fixes timezone issue
+    const expires = validatedFields.data.expires_never_checkbox == "on" ? null : validatedFields.data.expires
     const grabScanData = validatedFields.data.grab_scan_data == "on"
     const grabDeviceFingerprint = validatedFields.data.grab_device_fingerprint == "on"
     const grabTimestamp = validatedFields.data.grab_timestamp == "on"
@@ -104,8 +104,8 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
     const data = (() => {
         if (type == "redirect") {
             return {
-                redirect_to: validatedFields.data.redirect_redirect_to,
-                after_expiry: validatedFields.data.redirect_after_expiry
+                redirect_to: validatedFields.data.redirect_redirect_to.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A"),
+                after_expiry: validatedFields.data.redirect_after_expiry.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
             }
         } else if (type == "schedule") {
             return {
@@ -197,6 +197,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
 
     console.log("validated", JSON.stringify(JSONBody, null, 2))
     // make request to process.env.API_URL + "/qrcode" (POST) with JSONBody, and if a token is available, add it to the headers under Authorization
+    console.log(`${(process.env.API_URL ?? "http://localhost:8080/api/v1")}/qrcode` + (submitType=="update"?"/"+qrCodeInfo.id:""))
     const response = await fetch(`${(process.env.API_URL ?? "http://localhost:8080/api/v1")}/qrcode` + (submitType=="update"?"/"+qrCodeInfo.id:""), {
         method: submitType=="update"?"PATCH":"POST",
         headers: {
@@ -204,7 +205,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
             "Authorization": `${cookies().get("token").value}`
         },
         body: JSON.stringify(submitType=="update"?{update_key:qrCodeInfo.update_key,update:JSONBody}:JSONBody),
-        cache: "force-cache" //! This is so that if the user spams the create button, it doesn't send multiple requests
+        cache: "no-cache" //! This is so that if the user spams the create button, it doesn't send multiple requests
     })
     const responseData = await response.json()
 
@@ -263,8 +264,8 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
     } else {
         return {
             success: {
-                id: validatedFields.data.id,
-                update_key: validatedFields.data.updateKey
+                id: validatedFields.data.id ? validatedFields.data.id : responseData.id,
+                update_key: validatedFields.data.updateKey ? validatedFields.data.updateKey : responseData.update_key
             }
         }
     }

@@ -14,21 +14,6 @@
 .dashboard.button:hover {
     background-color: rgb(210, 218, 225);
 }
-#loginPage {
-    width:400px;
-    background-color: #ddd;
-    border-radius: 16px;
-    height:350px;
-    border: 1px black solid;
-}
-#loginBGCover {
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background-color: rgba(122.5,122.5,122.5,1);
-}
 
 .information {
     margin: 0;
@@ -53,4 +38,17 @@
 .hide-scrollbar {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
+}
+.mobile-only {
+    display: none;
+}
+
+button.dashboard.main-button {
+    line-height: 1.25;
+}
+
+@media (max-width: 768px) {
+    .mobile-only {
+        display: block;
+    }
 }

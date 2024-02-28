@@ -3,6 +3,7 @@
 #! This script installs the necessary dependencies, builds the frontend and backend, and configures the server for maximum security.
 #! This script only exists at /opt/QRLink/server/resources/setup.sh.
 
+
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit
@@ -23,6 +24,8 @@ cd /opt/QRLink/NextJS
 npm run build
 if [ $? -ne 0 ]; then
   echo "[SYS] frontend build failed"
+  echo "[SYS] Cleaning up"
+  rm -rf /opt/QRLink
   exit 1
 fi
 
@@ -30,6 +33,11 @@ echo "[SYS] Running configuration.sh"
 cd /root
 bash /root/configuration.sh
 
+cd /opt/QRLink/NextJS
+echo "[SYS] Patching NextJS for WS (as appuser)"
+sudo -u appuser /usr/bin/npx next-ws-cli@latest patch --yes
+
+cd /root
 echo "[SYS] configuration.sh has finished configuring QRLink for maximum security"
 systemctl daemon-reload
 

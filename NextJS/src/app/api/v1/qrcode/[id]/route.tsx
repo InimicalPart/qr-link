@@ -213,7 +213,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
     saveQR(id, global.QRCodeTable[update.id??id], true)
     
     let additionalInformation = {};
-    if (update.id) {
+    if (update.id && update.id != id) {
       additionalInformation = {
           ...additionalInformation,
           message: "You have changed the ID of this QR-code. Keep in mind that this means that the old ID will no longer work, and that you will have to update the QR-code everywhere you have used it.",

@@ -24,9 +24,8 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
                 const dataValidity = await checkDataValidity(update.type, update.data, id);
                 //! Return error if data is invalid for specified type
                 if (!dataValidity.valid) return new NextResponse(JSON.stringify({ error: dataValidity.error, message: dataValidity.message }), {status:400});
-                
                 global.QRCodeTable[id].type = update.type;
-                global.QRCodeTable[id].data = update.data;
+                global.QRCodeTable[id].data = (dataValidity.newData??update.data) as unknown as Types.RedirectQRCodeData | Types.ScheduleQRCodeData | Types.LocationQRCodeData;
                 wasAnytingUpdated = true;
                 break;
         case "data":
@@ -38,8 +37,7 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
             //! Needs to be valid for specified type
             const dataValidity2 = await checkDataValidity(global.QRCodeTable[id].type, update.data, id);
             if (!dataValidity2.valid) return new NextResponse(JSON.stringify({error: dataValidity2.error, message: dataValidity2.message }), {status:400});
-            
-            global.QRCodeTable[id].data = update.data;
+            global.QRCodeTable[id].data = (dataValidity2.newData??update.data) as unknown as Types.RedirectQRCodeData | Types.ScheduleQRCodeData | Types.LocationQRCodeData;
             wasAnytingUpdated = true;
             break;
         case "update_key":
@@ -69,140 +67,140 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
     
             wasAnytingUpdated = true;
             break;
-    case "expires":
-        if (global.QRCodeTable[id].expires == update.expires) break; //! no need to update if expires is the same
-        
-        //! Needs to be a date or null
-        if (((new Date(update.expires) as any) == "Invalid Date" || !(typeof (update.expires as any) == "string")) && update.expires != null) return new NextResponse(JSON.stringify({error: "INVALID_EXPIRES", message: "'update.expires' needs to be a date or null."}), {status:400});
-        
-        global.QRCodeTable[id].expires = update.expires;
-        wasAnytingUpdated = true;
-        break;
-    case "id":
-        if (id == update.id) break; //! no need to update if id is the same
-        
-        //! Needs to be a string
-        if (!(typeof (update.id as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_ID", message: "'update.id' needs to be a string."}), {status:400});
-        
-        if (!/^[a-zA-Z0-9_.-]*$/.test(update.id)) return new NextResponse(JSON.stringify({error: "INVALID_ID", message: "'update.id' can only contain alphanumeric characters, underscores and dashes and periods."}), {status:400});
-        
-        
-        //! Needs to be a valid ID
-        if (global.QRCodeTable[update.id]) return new NextResponse(JSON.stringify({error: "ID_IN_USE", message: "ID already in use."}), {status:400});
-        
-        global.QRCodeTable[update.id] = global.QRCodeTable[id];
-        delete global.QRCodeTable[id];
-        id = update.id;
-        wasAnytingUpdated = true;
-        break;
-    case "description":
-        if (global.QRCodeTable[id].description == update.description) break; //! no need to update if description is the same
-        
-        //! Needs to be a string
-        if (!(typeof (update.description as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_DESCRIPTION", message: "'update.description' needs to be a string."}), {status:400});
-        
-        //! no longer than 200
-        if (update.description.length > 200) return new NextResponse(JSON.stringify({error: "INVALID_DESCRIPTION", message: "Description needs to be less than 200 characters."}), {status:400});
-        
-        global.QRCodeTable[id].description = update.description;
-        wasAnytingUpdated = true;
-        break;
-    case "name":
-        if (global.QRCodeTable[id].name == update.name) break; //! no need to update if name is the same
-        
-        //! Needs to be a string
-        if (!(typeof (update.name as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_NAME", message: "'update.name' needs to be a string."}), {status:400});
-        
-        //! no longer than 50
-        if (update.name.length > 50) return new NextResponse(JSON.stringify({error: "INVALID_NAME", message: "Name needs to be less than 50 characters."}), {status:400});
-        
-        global.QRCodeTable[id].name = update.name;
-        wasAnytingUpdated = true;
-        break;
-    case "settings":
-        //! Needs to be an object
-        if (!(typeof (update.settings as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings' needs to be an object."}), {status:400});
-        
-        if (JSON.stringify(global.QRCodeTable[id].settings) == JSON.stringify(update.settings)) break; //! no need to update if settings are the same
-        
-        //settings cannot be empty
-        if (Object.keys(update.settings).length == 0) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings' cannot be empty."}), {status:400});
-        
-        //! Needs to be a valid settings object
-        if (update.settings.getScanData) {
-            //! Needs to be a boolean
-            if (!(typeof (update.settings.getScanData as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.getScanData' needs to be a boolean."}), {status:400});
-        }
-        if (update.settings.scanData) {
+        case "expires":
+            if (global.QRCodeTable[id].expires == update.expires) break; //! no need to update if expires is the same
+            
+            //! Needs to be a date or null
+            if (((new Date(update.expires) as any) == "Invalid Date" || !(typeof (update.expires as any) == "string")) && update.expires != null) return new NextResponse(JSON.stringify({error: "INVALID_EXPIRES", message: "'update.expires' needs to be a date or null."}), {status:400});
+            
+            global.QRCodeTable[id].expires = update.expires;
+            wasAnytingUpdated = true;
+            break;
+        case "id":
+            if (id == update.id) break; //! no need to update if id is the same
+            
+            //! Needs to be a string
+            if (!(typeof (update.id as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_ID", message: "'update.id' needs to be a string."}), {status:400});
+            
+            if (!/^[a-zA-Z0-9_.-]*$/.test(update.id)) return new NextResponse(JSON.stringify({error: "INVALID_ID", message: "'update.id' can only contain alphanumeric characters, underscores and dashes and periods."}), {status:400});
+            
+            
+            //! Needs to be a valid ID
+            if (global.QRCodeTable[update.id]) return new NextResponse(JSON.stringify({error: "ID_IN_USE", message: "ID already in use."}), {status:400});
+            
+            global.QRCodeTable[update.id] = global.QRCodeTable[id];
+            delete global.QRCodeTable[id];
+            id = update.id;
+            wasAnytingUpdated = true;
+            break;
+        case "description":
+            if (global.QRCodeTable[id].description == update.description) break; //! no need to update if description is the same
+            
+            //! Needs to be a string
+            if (!(typeof (update.description as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_DESCRIPTION", message: "'update.description' needs to be a string."}), {status:400});
+            
+            //! no longer than 200
+            if (update.description.length > 200) return new NextResponse(JSON.stringify({error: "INVALID_DESCRIPTION", message: "Description needs to be less than 200 characters."}), {status:400});
+            
+            global.QRCodeTable[id].description = update.description;
+            wasAnytingUpdated = true;
+            break;
+        case "name":
+            if (global.QRCodeTable[id].name == update.name) break; //! no need to update if name is the same
+            
+            //! Needs to be a string
+            if (!(typeof (update.name as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_NAME", message: "'update.name' needs to be a string."}), {status:400});
+            
+            //! no longer than 50
+            if (update.name.length > 50) return new NextResponse(JSON.stringify({error: "INVALID_NAME", message: "Name needs to be less than 50 characters."}), {status:400});
+            
+            global.QRCodeTable[id].name = update.name;
+            wasAnytingUpdated = true;
+            break;
+        case "settings":
             //! Needs to be an object
-            if (!(typeof (update.settings.scanData as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData' needs to be an object."}), {status:400});
-            //! Needs to be a valid scanData object
-            if (update.settings.scanData.information.fingerprint) {
+            if (!(typeof (update.settings as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings' needs to be an object."}), {status:400});
+            
+            if (JSON.stringify(global.QRCodeTable[id].settings) == JSON.stringify(update.settings)) break; //! no need to update if settings are the same
+            
+            //settings cannot be empty
+            if (Object.keys(update.settings).length == 0) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings' cannot be empty."}), {status:400});
+            
+            //! Needs to be a valid settings object
+            if (update.settings.getScanData) {
                 //! Needs to be a boolean
-                if (!(typeof (update.settings.scanData.information.fingerprint as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.fingerprint' needs to be a boolean."}), {status:400});
+                if (!(typeof (update.settings.getScanData as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.getScanData' needs to be a boolean."}), {status:400});
             }
-            if (update.settings.scanData.information["user-agent"]) {
-                //! Needs to be a boolean
-                if (!(typeof (update.settings.scanData.information["user-agent"] as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.user-agent' needs to be a boolean."}), {status:400});
+            if (update.settings.scanData) {
+                //! Needs to be an object
+                if (!(typeof (update.settings.scanData as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData' needs to be an object."}), {status:400});
+                //! Needs to be a valid scanData object
+                if (update.settings.scanData.information.fingerprint) {
+                    //! Needs to be a boolean
+                    if (!(typeof (update.settings.scanData.information.fingerprint as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.fingerprint' needs to be a boolean."}), {status:400});
+                }
+                if (update.settings.scanData.information["user-agent"]) {
+                    //! Needs to be a boolean
+                    if (!(typeof (update.settings.scanData.information["user-agent"] as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.user-agent' needs to be a boolean."}), {status:400});
+                }
+                if (update.settings.scanData.information.timestamp) {
+                    //! Needs to be a boolean
+                    if (!(typeof (update.settings.scanData.information.timestamp as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.timestamp' needs to be a boolean."}), {status:400});
+                }
+                if (update.settings.scanData.information.ip) {
+                    //! Needs to be a boolean
+                    if (!(typeof (update.settings.scanData.information.ip as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.ip' needs to be a boolean."}), {status:400});
+                }
+                if (update.settings.scanData.information.location) {
+                    //! Needs to be a boolean
+                    if (!(typeof (update.settings.scanData.information.location as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.location' needs to be a boolean."}), {status:400});
+                }
             }
-            if (update.settings.scanData.information.timestamp) {
-                //! Needs to be a boolean
-                if (!(typeof (update.settings.scanData.information.timestamp as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.timestamp' needs to be a boolean."}), {status:400});
+            if (update.settings.requirements) {
+                //! Needs to be an object
+                if (!(typeof (update.settings.requirements as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.requirements' needs to be an object."}), {status:400});
+                //! Needs to be a valid requirements object
+                if (update.settings.requirements.location) {
+                    //! Needs to be a boolean
+                    if (!(typeof (update.settings.requirements.location as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.requirements.location' needs to be a boolean."}), {status:400});
+                }
             }
-            if (update.settings.scanData.information.ip) {
-                //! Needs to be a boolean
-                if (!(typeof (update.settings.scanData.information.ip as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.ip' needs to be a boolean."}), {status:400});
+            if (update.settings.scanData.sendToURL == true) {
+                // needs to also contain a valid JWT encryption key if sendToURL is true
+                //! JWTEncryptionKey needs to be provided or already defined
+                if (!update.settings.scanData.JWTEncryptionKey && !global.QRCodeTable[id].settings.scanData.JWTEncryptionKey) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.JWTEncryptionKey' needs to be provided."}), {status:400});
+                //! Needs to be a string and not empty
+                if (!(typeof (update.settings.scanData.JWTEncryptionKey as any) == "string") || update.settings.scanData.JWTEncryptionKey.trim() == "") return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.JWTEncryptionKey' needs to be a non-empty string."}), {status:400});
             }
-            if (update.settings.scanData.information.location) {
-                //! Needs to be a boolean
-                if (!(typeof (update.settings.scanData.information.location as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.location' needs to be a boolean."}), {status:400});
-            }
-        }
-        if (update.settings.requirements) {
-            //! Needs to be an object
-            if (!(typeof (update.settings.requirements as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.requirements' needs to be an object."}), {status:400});
-            //! Needs to be a valid requirements object
-            if (update.settings.requirements.location) {
-                //! Needs to be a boolean
-                if (!(typeof (update.settings.requirements.location as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.requirements.location' needs to be a boolean."}), {status:400});
-            }
-        }
-        if (update.settings.scanData.sendToURL == true) {
-            // needs to also contain a valid JWT encryption key if sendToURL is true
-            //! JWTEncryptionKey needs to be provided or already defined
-            if (!update.settings.scanData.JWTEncryptionKey && !global.QRCodeTable[id].settings.scanData.JWTEncryptionKey) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.JWTEncryptionKey' needs to be provided."}), {status:400});
-            //! Needs to be a string and not empty
-            if (!(typeof (update.settings.scanData.JWTEncryptionKey as any) == "string") || update.settings.scanData.JWTEncryptionKey.trim() == "") return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.JWTEncryptionKey' needs to be a non-empty string."}), {status:400});
-        }
 
 
-        global.QRCodeTable[id].settings = {
-            getScanData: update.settings.getScanData ?? global.QRCodeTable[id].settings.getScanData,
-            scanData: {
-                information: {
-                    fingerprint: update.settings.scanData?.information?.fingerprint ?? global.QRCodeTable[id].settings.scanData.information.fingerprint,
-                    "user-agent": update.settings.scanData?.information?.["user-agent"] ?? global.QRCodeTable[id].settings.scanData.information["user-agent"],
-                    timestamp: update.settings.scanData?.information?.timestamp ?? global.QRCodeTable[id].settings.scanData.information.timestamp,
-                    ip: update.settings.scanData?.information?.ip ?? global.QRCodeTable[id].settings.scanData.information.ip,
-                    location: update.settings.scanData?.information?.location ?? global.QRCodeTable[id].settings.scanData.information.location,
+            global.QRCodeTable[id].settings = {
+                getScanData: update.settings.getScanData ?? global.QRCodeTable[id].settings.getScanData,
+                scanData: {
+                    information: {
+                        fingerprint: update.settings.scanData?.information?.fingerprint ?? global.QRCodeTable[id].settings.scanData.information.fingerprint,
+                        "user-agent": update.settings.scanData?.information?.["user-agent"] ?? global.QRCodeTable[id].settings.scanData.information["user-agent"],
+                        timestamp: update.settings.scanData?.information?.timestamp ?? global.QRCodeTable[id].settings.scanData.information.timestamp,
+                        ip: update.settings.scanData?.information?.ip ?? global.QRCodeTable[id].settings.scanData.information.ip,
+                        location: update.settings.scanData?.information?.location ?? global.QRCodeTable[id].settings.scanData.information.location,
+                    },
+                    sendToURL: false,
+                    JWTEncryptionKey: ""
                 },
-                sendToURL: false,
-                JWTEncryptionKey: ""
-            },
-            requirements: {
-                location: update.settings.requirements?.location ?? global.QRCodeTable[id].settings.requirements.location, //! Warning, this currently does not work on iOS, as it does not like to share location data with http:// websites, will be fixed when we move to https://
+                requirements: {
+                    location: update.settings.requirements?.location ?? global.QRCodeTable[id].settings.requirements.location, //! Warning, this currently does not work on iOS, as it does not like to share location data with http:// websites, will be fixed when we move to https://
+                }
             }
+            wasAnytingUpdated = true;
+            break;
+        default:
+            return new NextResponse(JSON.stringify({
+                error: "INVALID_UPDATE",
+                message: "Invalid update.",
+            }), {status:400});
         }
-        wasAnytingUpdated = true;
-        break;
-    default:
-        return new NextResponse(JSON.stringify({
-            error: "INVALID_UPDATE",
-            message: "Invalid update.",
-        }), {status:400});
     }
     return wasAnytingUpdated
-}
 }
 
 async function checkRedirectDataValidity(data: Types.RedirectQRCodeData, id: string) {
@@ -258,7 +256,13 @@ async function checkRedirectDataValidity(data: Types.RedirectQRCodeData, id: str
             };
         }
     }
-    return { valid: true };
+
+
+    if (data.redirect_to) data.redirect_to = data.redirect_to.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
+    if (data.after_expiry) data.after_expiry = data.after_expiry.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
+
+
+    return { valid: true, newData: (data as unknown as Types.Data) };
 }
 
 async function checkScheduleDataValidity(data: Types.ScheduleQRCodeData | null, id: string) {
@@ -309,7 +313,6 @@ async function checkScheduleDataValidity(data: Types.ScheduleQRCodeData | null, 
             };
         }
         if (Object.keys(data[day]).length == 0) {
-            console.log("TEST-A")
             
             return {
               valid: false,
@@ -319,7 +322,6 @@ async function checkScheduleDataValidity(data: Types.ScheduleQRCodeData | null, 
         }
 
         if (Object.keys(data[day]).length == 1 && !Object.keys(data[day]).includes("ALL_DAY") && Object.keys(data).length==1) {
-            console.log("TEST-B")
             return {
               valid: false,
               error: "INVALID_SCHEDULE",
@@ -328,7 +330,6 @@ async function checkScheduleDataValidity(data: Types.ScheduleQRCodeData | null, 
         }
 
         if (Object.keys(data[day]).length > 1 && Object.keys(data[day]).includes("ALL_DAY")) {
-            console.log("TEST-C")
             return {
               valid: false,
               error: "INVALID_SCHEDULE",
@@ -381,7 +382,16 @@ async function checkScheduleDataValidity(data: Types.ScheduleQRCodeData | null, 
             }
         }
     }
-    return { valid: true };
+
+    for (let day of (Object.keys(data)as Array<keyof typeof data>)) {
+        if (day == "timezone") continue;
+        for (let time of Object.keys(data[day])) {
+            if (data[day][time].redirect_to) data[day][time].redirect_to = data[day][time].redirect_to.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
+            if (data[day][time].after_expiry) data[day][time].after_expiry = data[day][time].after_expiry.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
+        }
+    }
+
+    return { valid: true, newData: (data as unknown as Types.Data) };
 }
 
 export async function checkLocationDataValidity(data: Types.LocationQRCodeData, id: string) {
@@ -465,7 +475,13 @@ export async function checkLocationDataValidity(data: Types.LocationQRCodeData, 
             }
         }
     }
-    return { valid: true };
+
+    for (let zoneIndex in data.zones) {
+        if (data.zones[zoneIndex].redirectTo) data.zones[zoneIndex].redirectTo = data.zones[zoneIndex].redirectTo.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
+        if (data.zones[zoneIndex].afterExpiry) data.zones[zoneIndex].afterExpiry = data.zones[zoneIndex].afterExpiry.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
+    }
+
+    return { valid: true, newData: (data as unknown as Types.Data) };
 }
 
 
@@ -473,7 +489,7 @@ export async function checkDataValidity(
     type: string,
     data: any,
     id:string
-  ): Promise<{ valid: boolean; error?: string; message?: string }> {
+  ): Promise<{ valid: boolean; error?: string; message?: string, newData?: Types.Data }> {
     switch (type) {
         case "redirect":
             return await checkRedirectDataValidity(data, id);

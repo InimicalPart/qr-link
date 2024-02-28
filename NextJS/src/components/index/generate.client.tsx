@@ -38,7 +38,6 @@ export default function GenerateQRs({
                 <button title="Click to manage" className="qr select-none" id="sample-qr" style={{
                     paddingLeft: "25px",
                     paddingRight: "25px",
-                    paddingBottom: "10px",
                 }}>
                     <Image id="qr-img" src={qrcodeJSON.png} width={250} height={250} alt="qrcode.png" style={{
                         position: "relative",
@@ -48,8 +47,8 @@ export default function GenerateQRs({
                     }}></Image>
                     <div id="information" style={{textAlign: "center"}}>
                         <p className="information" id="qr-id-cntr">ID:<br/><b><span id="qr-id">{qrcodeJSON.id}</span></b></p>
-                        <p className="information" id="qr-name-cntr">Name:<br/><b><span id="qr-name">{escapeHtml(qrcodeJSON.name) ?? <i>-</i>}</span></b></p>
-                        <p className="information" id="qr-description-cntr">Description<br/><b><span id="qr-description">{escapeHtml(qrcodeJSON.description) ?? <i>-</i>}</span></b></p>
+                        <p className="information" id="qr-name-cntr">Name:<br/><b><span id="qr-name">{qrcodeJSON.name ?? <i>-</i>}</span></b></p>
+                        <p className="information" id="qr-description-cntr">Description<br/><b><span id="qr-description">{qrcodeJSON.description ?? <i>-</i>}</span></b></p>
                         <p className="information" id="qr-createdat-cntr">Created At:<br/><b><span id="qr-createdat">{new Date(qrcodeJSON.created).toLocaleString()}</span></b></p>
                         <p className="information" id="qr-updatedat-cntr">Last Updated:<br/><b><span id="qr-updatedat">{new Date(qrcodeJSON.updated).toLocaleString()}</span></b></p>
                         <p className="information" id="qr-scancount-cntr">Scan Count:<br/><b><span id="qr-scancount">{qrcodeJSON.scanCount}</span></b></p>

@@ -3,6 +3,7 @@ import L, { DivIcon, LatLng, LatLngTuple } from "leaflet";
 import { useEffect, useState } from "react";
 import { useLeafletContext } from '@react-leaflet/core'
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents, Tooltip, CircleMarker, Polyline, Polygon } from 'react-leaflet'
+import { intersect as intersects, contains } from "@/utilities/(ui)/create/shapeOperations.server";
 import "./actions.css"
 import crypto from 'crypto'
 import { LocateControl } from "./locateControl.client";
@@ -69,7 +70,22 @@ export default function Location({
         }
     })
 
-    function convertToBeautiful(zones: any, includeFunctions = false) {
+    function convertToBeautiful(zones: any, includeFunctions = false): {
+        type: 'polygon';
+        priority: number;
+        isEntireWorld: boolean;
+        positions: LatLngTuple[];
+        redirectTo: string;
+        afterExpiry: string;
+    }| {
+        type: 'circle';
+        priority: number;
+        isEntireWorld: boolean;
+        center: LatLngTuple;
+        radius: number;
+        redirectTo: string;
+        afterExpiry: string;
+    } | string {
         const res = zones.map((zone: any) => {
             const newZone: {
                 type: 'circle' | 'polygon';
@@ -249,7 +265,7 @@ export default function Location({
             window.removeEventListener("typeChange", onTypeChanged)
             window.removeEventListener("verifyZones", verifyZones)
         }    
-    },[zones])
+    },[zones,validateLocation])
     useEffect(()=>{
         if (qrCodeInfo.type == "location") {
             window.dispatchEvent(new CustomEvent("typeChange", { detail: "location" }))
@@ -277,39 +293,36 @@ export default function Location({
             }
 
 
-            let intersections = []
+            let intersections: [string, string][] = []
             for (let zoneIndex in zones) {
                 for (let zoneIndex2 in zones) {
-                    if (zoneIndex == zoneIndex2) continue;
-                    if (zones[zoneIndex].bounds.intersects(zones[zoneIndex2].bounds)) {
+                    if (zoneIndex == zoneIndex2 || intersections.some((val)=>val.includes(zoneIndex) && val.includes(zoneIndex2))) continue;
+                    if (intersects(JSON.parse(convertToBeautiful([zones[zoneIndex]]) as string)[0], JSON.parse(convertToBeautiful([zones[zoneIndex2]]) as string)[0])) {
                         intersections.push([zoneIndex, zoneIndex2]);
                     }
                 }
             }
-            // remove duplicates
-            let uniqueIntersections: any[][] = [];
-            for (let intersection of intersections) {
-                if (!uniqueIntersections.some(a=>a[0] == intersection[1] && a[1] == intersection[0])) {
-                    uniqueIntersections.push(intersection);
-                }
-                
-                
-            }
-            console.log("These zones are intersecting:", uniqueIntersections);
+            console.log("These zones are intersecting:", intersections);
             // find the biggest zone in each intersection
             let problemZones = [];
-            for (let intersection of uniqueIntersections) {
-                let zone1 = zones[intersection[0] as number];
-                let zone2 = zones[intersection[1] as number];
-                if (!zone1.bounds.contains(zone2.bounds) && !zone2.bounds.contains(zone1.bounds)) {
+            let insideAnother = [];
+            for (let intersection of intersections) {
+                let zone1 = zones[parseInt(intersection[0])];
+                let zone2 = zones[parseInt(intersection[1])];
+                if (
+                    contains(JSON.parse(convertToBeautiful([zone1]) as string)[0], JSON.parse(convertToBeautiful([zone2]) as string)[0])
+                ) {
+                    insideAnother.push([zone1, zone2]);
+                } else if (
+                    contains(JSON.parse(convertToBeautiful([zone2]) as string)[0], JSON.parse(convertToBeautiful([zone1]) as string)[0])
+                ) {
+                    insideAnother.push([zone2, zone1]);
+                } else {
                     problemZones.push([zone1, zone2]);
-                    
                 }
-                
             }
             console.log("Problem zones:", problemZones);
-            
-            
+
             // remove the ones that dont have the same priority
             let samePriority = [];
             for (let problemZone of problemZones) {
@@ -334,6 +347,33 @@ export default function Location({
                         ,"error")
                 return false
             }
+
+            let whatWasPlannedHere = [];
+            for (let inside of insideAnother) {
+                if (inside[0].priority > inside[1].priority) {
+                    whatWasPlannedHere.push(inside);
+                }
+            }
+
+            if (whatWasPlannedHere.length > 0) {
+                (window as unknown as any).showAlert(`     <span class="font-medium">Some zones are inside a zone with higher priority than the zone inside, the zone inside will never be triggered. Please fix the following zones:</span>
+                                <ul class="mt-1.5 ml-1.5 list-disc list-inside">
+                                    ${whatWasPlannedHere
+                                        .map((z) => {
+                                            return [
+                                                "<li>Zone " +
+                                                (zones.indexOf(z[0]) + 1) +
+                                                " is inside Zone " +
+                                                (zones.indexOf(z[1]) + 1)
+                                            +"</li>"];
+                                        })
+                                        .join("")}
+                                </ul>`
+                        ,"error")
+                return false
+            }
+
+
 
             let missingRedirects = [];
             for (let zone of zones) {
@@ -462,7 +502,7 @@ export default function Location({
                     zone.L.bringToFront();
                 }
             }
-        }, [leafletMap, zones]);
+        }, [zones]);
 
         return <></>;
     }
@@ -474,11 +514,11 @@ export default function Location({
             (document.getElementById("locRedirect") as HTMLInputElement).value = zones[selectedZoneIndex]?.redirectTo || "";
             (document.getElementById("locAERedirect") as HTMLInputElement).value = zones[selectedZoneIndex]?.afterExpiry || "";
         }
-    },[selectedZoneIndex])
+    },[selectedZoneIndex,zones])
     return (
         <React.Fragment>
             <div>
-            <input className="create" type="hidden" name="location_zones" disabled={type !== "location"} value={convertToBeautiful(zones)} />
+            <input className="create" type="hidden" name="location_zones" disabled={type !== "location"} value={convertToBeautiful(zones) as string} />
                 <MapContainer maxBounds={[[-85.05115, -180], [85, 180]]} maxBoundsViscosity={1.0} style={{ width: "90vw", maxWidth: 600, height: 400, left:"50%", transform:"translateX(-50%)" }} center={zones.length > 0 && selectedZoneIndex >= 0 && selectedZoneIndex < zones.length ? zones[selectedZoneIndex].position : [51.505, -0.09]} zoom={2} minZoom={2} >
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -822,7 +862,7 @@ export default function Location({
                         setElements(prevElements => [...prevElements, polygon]);
                     }
                 })
-            }, [zones, selectedZoneIndex, container]);
+            }, [zones, selectedZoneIndex, container, elements.length]);
 
             return <></>
         }

@@ -74,6 +74,7 @@ export default function Form({
 
     const updating = qrCodeInfo?.id ? true : false
     useEffect(()=>{
+        console.log(state)
         if (state?.success) {
             if (updating) {
                 alert("Successfully updated QR Code\n\nID: " + state?.success?.id + "\nUpdate Key: " + state?.success?.update_key)
@@ -82,7 +83,7 @@ export default function Form({
             }
             redirect("/dashboard")
         }
-    },[state])
+    },[state,updating])
 
     let lastValue: string = null
     function handleNeverExpiresChange(evt: { target: { checked: any; }; }) {
@@ -134,7 +135,9 @@ export default function Form({
         );
         }
     return (
-        <form id="create-form" action={formAction}>
+        <form id="create-form" action={formAction} style={{
+            position:"relative"
+        }}>
         <div id="qr-id-cntr" className="QRL-container">
             <p className="qr-info-label flex justify-center items-center flex-wrap"><b>ID</b> <span style={{
                 fontSize: '8pt',
