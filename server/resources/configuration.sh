@@ -26,14 +26,14 @@ echo "[CFG] Configuring /opt/QRLink/NextJS"
 setfacl -R -d -m u:appuser:r-X /opt/QRLink/NextJS
 
 setfacl -R -d -m u:appuser:r-X /opt/QRLink/package.json
+setfacl -R -m u:appuser:r-X /opt/QRLink/package.json
 
 # user 'appuser' can read, and execute files and directories in /opt/QRLink/NextJS (X = only execute if it previously had execute permissions)
 setfacl -R -m u:appuser:r-X /opt/QRLink/NextJS
 
-setfacl -R -m u:appuser:r-X /opt/QRLink/package.json
 
-setfacl -R -m u:appuser:rwX /opt/QRLink/NextJS/node_modules/next
-setfacl -R -d -m u:appuser:rwX /opt/QRLink/NextJS/node_modules/next
+# setfacl -R -m u:appuser:rwX /opt/QRLink/NextJS/node_modules/next
+# setfacl -R -d -m u:appuser:rwX /opt/QRLink/NextJS/node_modules/next
 
 
 # other shall be allowed to read /opt/QRLink/NextJS
@@ -65,9 +65,12 @@ chmod -R ug=rwX,o= /opt/QRLink/NextJS/build
 
 echo "[CFG] Configuring /opt/QRLink/NextJS/build/cache"
 # (default) user 'appuser' can write to all files and directories in /opt/QRLink/NextJS/build/cache
-setfacl -R -d -m u:appuser:rwX /opt/QRLink/NextJS/build/cache
+mkdir -p /opt/QRLink/NextJS/build/cache
+chown -R appuser:project-manager /opt/QRLink/NextJS/build/cache
+chmod ug+x,g+s /opt/QRLink/NextJS/build/cache
+setfacl -R -d -m u:appuser:rwX,u::rwX /opt/QRLink/NextJS/build/cache
 # user 'appuser' can write to all files and directories in /opt/QRLink/NextJS/build/cache
-setfacl -R -m u:appuser:rwX /opt/QRLink/NextJS/build/cache
+setfacl -R -m u:appuser:rwX,u::rwX /opt/QRLink/NextJS/build/cache
 
 echo "[CFG] Removing execute from all files in /opt/QRLink/NextJS/build that arent .sh files"
 # remove execute from all files in /opt/QRLink that arent .sh files

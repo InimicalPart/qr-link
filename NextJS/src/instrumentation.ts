@@ -34,8 +34,8 @@ export async function register(){
             fs.mkdirSync(process.platform == "win32" ? process.env.USERPROFILE + "\\Documents\\QRLink" : "/srv/QRLink", { recursive: true });
             fs.writeFileSync(global.QRBackupFilePath, JSON.stringify({}));
         }
-        global.mongoConnectionString = process.env.MONGO_URL ? `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_URL}/${process.env.MONGO_ENABLE_TLS ? "?tls=true" : ""}` : "mongodb://qrlink@unknown:localhost:27017"
-
+        global.mongoConnectionString = process.env.MONGO_URL ? `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_URL}/${process.env.MONGO_USE_TLS=="true" ? "?tls=true" : ""}` : "mongodb://qrlink:unknown@localhost:27017/"
+        console.log("[QL] Connection String: " + global.mongoConnectionString.replace(process.env.MONGO_PASSWORD, "[REDACTED]"))
         // Check if the database is accessible
         if (process.env.MONGO_URL && process.env.MONGO_USERNAME && process.env.MONGO_PASSWORD) {
             console.log("[QL] Attempting to connect to the database at " + process.env.MONGO_URL + " (barebones)...");

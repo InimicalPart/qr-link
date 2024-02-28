@@ -33,11 +33,11 @@ echo "[SYS] Running configuration.sh"
 cd /root
 bash /root/configuration.sh
 
-cd /opt/QRLink/NextJS
-echo "[SYS] Patching NextJS for WS (as appuser)"
-sudo -u appuser /usr/bin/npx next-ws-cli@latest patch --yes
+# cd /opt/QRLink/NextJS
+# echo "[SYS] Patching NextJS for WS (as appuser)"
+# sudo -u appuser /usr/bin/npx next-ws-cli@latest patch --yes
 
-cd /root
+# cd /root
 echo "[SYS] configuration.sh has finished configuring QRLink for maximum security"
 systemctl daemon-reload
 
