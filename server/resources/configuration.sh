@@ -24,8 +24,18 @@ chmod o=rX /opt/QRLink
 echo "[CFG] Configuring /opt/QRLink/NextJS"
 # (default) user 'appuser' can read, and execute files and directories in /opt/QRLink/NextJS (X = only execute if it previously had execute permissions)
 setfacl -R -d -m u:appuser:r-X /opt/QRLink/NextJS
+
+setfacl -R -d -m u:appuser:r-X /opt/QRLink/package.json
+
 # user 'appuser' can read, and execute files and directories in /opt/QRLink/NextJS (X = only execute if it previously had execute permissions)
 setfacl -R -m u:appuser:r-X /opt/QRLink/NextJS
+
+setfacl -R -m u:appuser:r-X /opt/QRLink/package.json
+
+setfacl -R -m u:appuser:rwX /opt/QRLink/NextJS/node_modules/next
+setfacl -R -d -m u:appuser:rwX /opt/QRLink/NextJS/node_modules/next
+
+
 # other shall be allowed to read /opt/QRLink/NextJS
 chmod o=rX /opt/QRLink/NextJS
 # Remove execute from all files in /opt/QRLink/NextJS that arent .sh files

@@ -114,7 +114,7 @@ export default function Settings({
             marginTop: "15px",
         }}>
             <p style={{textAlign: "center"}}>
-                Getting information from a scan may violate your country's privacy laws. Make sure you are in compliance with your local laws before enabling this feature.
+                Getting information from a scan may violate your country&apos;s privacy laws. Make sure you are in compliance with your local laws before enabling this feature.
             </p>
           </div>
       </div>

@@ -18,6 +18,8 @@ import React, { useState } from 'react'
 import Head from "next/head";
 import Alerts from "@/components/all/alerts.client";
 import QRCodeImage from "@/components/create/qrCodeImage.client";
+import PDFButton from "@/components/manage/generatePDF.client";
+import ExportButtons from "@/components/all/exportButtons.client";
 
 export default async function Update({
     params
@@ -58,8 +60,31 @@ export default async function Update({
                   transform: 'translateX(-50%)'
               }}>
                   {/* <div id="qr-code" className="select-none"></div> */}
-                  <QRCodeImage/>
-                  
+                  <QRCodeImage qrCodeDetails={qrCodeDetails}/>
+              </div>
+              <div style={{
+                    width: 250,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    position: 'relative',
+                }}>
+                <hr style={{
+                            width: 250,
+                            position: 'relative',
+                            height: 2,
+                            background: 'black',
+                            borderRadius: 5
+                    }}/>
+                    <ExportButtons qrCodeDetails={qrCodeDetails} token={cookies().get("token").value} className={"manage button"}/>
+                    <hr style={{
+                            width: 250,
+                            position: 'relative',
+                            height: 2,
+                            background: 'black',
+                            marginTop: 30,
+                            borderRadius: 5
+                    }}/>
+
               </div>
               <div id="qr-info" style={{
                   display: 'flex',
