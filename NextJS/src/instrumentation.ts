@@ -90,6 +90,7 @@ export async function register(){
         
         await convertFile2MongoDB()
 
+
         if (process.env.NODE_ENV == "production") { 
             //! Skip doing this in development, so we don't somehow overload WorkOS/AuthKit
             console.log("[QL] Removing QR-codes that have a non-existing user linked to them... (background)");

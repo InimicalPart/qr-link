@@ -498,7 +498,7 @@ export default function Location({
         useEffect(()=>{
             if (leafletMap) {
                 const copy = [...zones];
-                for (let zone of copy.sort((a,b)=>a.priority - b.priority)) { 
+                for (let zone of copy.sort((a,b)=>b.priority - a.priority)) { 
                     zone.L.bringToFront();
                 }
             }

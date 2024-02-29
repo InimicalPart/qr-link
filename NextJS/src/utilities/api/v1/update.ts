@@ -8,8 +8,8 @@ import { NextResponse } from "next/server";
 declare const global: QRLinkGlobal;
 
 
-export async function validateUpdate(id: string, update: Partial<QRCode>) {
-    let wasAnytingUpdated = false;
+export async function validateAndDoUpdate(id: string, update: Partial<QRCode>) {
+    let updated: Partial<QRCode> = {}
     for (let key of Object.keys(update)) {
         switch (key) {
             case "type":
@@ -24,9 +24,8 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
                 const dataValidity = await checkDataValidity(update.type, update.data, id);
                 //! Return error if data is invalid for specified type
                 if (!dataValidity.valid) return new NextResponse(JSON.stringify({ error: dataValidity.error, message: dataValidity.message }), {status:400});
-                global.QRCodeTable[id].type = update.type;
-                global.QRCodeTable[id].data = (dataValidity.newData??update.data) as unknown as Types.RedirectQRCodeData | Types.ScheduleQRCodeData | Types.LocationQRCodeData;
-                wasAnytingUpdated = true;
+                updated.type = update.type;
+                updated.data = (dataValidity.newData??update.data) as unknown as Types.RedirectQRCodeData | Types.ScheduleQRCodeData | Types.LocationQRCodeData;
                 break;
         case "data":
             if (Object.keys(update).includes("type") && global.QRCodeTable[id].type != update.type) break; //! handled by 'case "type"'
@@ -37,8 +36,7 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
             //! Needs to be valid for specified type
             const dataValidity2 = await checkDataValidity(global.QRCodeTable[id].type, update.data, id);
             if (!dataValidity2.valid) return new NextResponse(JSON.stringify({error: dataValidity2.error, message: dataValidity2.message }), {status:400});
-            global.QRCodeTable[id].data = (dataValidity2.newData??update.data) as unknown as Types.RedirectQRCodeData | Types.ScheduleQRCodeData | Types.LocationQRCodeData;
-            wasAnytingUpdated = true;
+            updated.data = (dataValidity2.newData??update.data) as unknown as Types.RedirectQRCodeData | Types.ScheduleQRCodeData | Types.LocationQRCodeData;
             break;
         case "update_key":
             if (global.QRCodeTable[id].update_key == update.update_key) break; //! no need to update if update_key is the same
@@ -46,8 +44,7 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
             //! Needs to be a string
             if (!(typeof (update.update_key as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_UPDATE_KEY", message: "'update.update_key' needs to be a string."}), {status:400});
             
-            global.QRCodeTable[id].update_key = update.update_key;
-            wasAnytingUpdated = true;
+            updated.update_key = update.update_key;
             break;
         case "linked_to":
             
@@ -63,9 +60,7 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
                 }), {status:400});
             }
             if (global.QRCodeTable[id].linked_to == tokenVerificationResult.user.id) break; //! no need to update if linked_to is the same
-            global.QRCodeTable[id].linked_to = tokenVerificationResult.user.id;
-    
-            wasAnytingUpdated = true;
+            updated.linked_to = tokenVerificationResult.user.id;
             break;
         case "expires":
             if (global.QRCodeTable[id].expires == update.expires) break; //! no need to update if expires is the same
@@ -73,8 +68,7 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
             //! Needs to be a date or null
             if (((new Date(update.expires) as any) == "Invalid Date" || !(typeof (update.expires as any) == "string")) && update.expires != null) return new NextResponse(JSON.stringify({error: "INVALID_EXPIRES", message: "'update.expires' needs to be a date or null."}), {status:400});
             
-            global.QRCodeTable[id].expires = update.expires;
-            wasAnytingUpdated = true;
+            updated.expires = update.expires;
             break;
         case "id":
             if (id == update.id) break; //! no need to update if id is the same
@@ -88,10 +82,7 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
             //! Needs to be a valid ID
             if (global.QRCodeTable[update.id]) return new NextResponse(JSON.stringify({error: "ID_IN_USE", message: "ID already in use."}), {status:400});
             
-            global.QRCodeTable[update.id] = global.QRCodeTable[id];
-            delete global.QRCodeTable[id];
-            id = update.id;
-            wasAnytingUpdated = true;
+            updated.id = update.id;
             break;
         case "description":
             if (global.QRCodeTable[id].description == update.description) break; //! no need to update if description is the same
@@ -102,8 +93,7 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
             //! no longer than 200
             if (update.description.length > 200) return new NextResponse(JSON.stringify({error: "INVALID_DESCRIPTION", message: "Description needs to be less than 200 characters."}), {status:400});
             
-            global.QRCodeTable[id].description = update.description;
-            wasAnytingUpdated = true;
+            updated.description = update.description;
             break;
         case "name":
             if (global.QRCodeTable[id].name == update.name) break; //! no need to update if name is the same
@@ -114,8 +104,7 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
             //! no longer than 50
             if (update.name.length > 50) return new NextResponse(JSON.stringify({error: "INVALID_NAME", message: "Name needs to be less than 50 characters."}), {status:400});
             
-            global.QRCodeTable[id].name = update.name;
-            wasAnytingUpdated = true;
+            updated.name = update.name;
             break;
         case "settings":
             //! Needs to be an object
@@ -174,33 +163,47 @@ export async function validateUpdate(id: string, update: Partial<QRCode>) {
             }
 
 
-            global.QRCodeTable[id].settings = {
-                getScanData: update.settings.getScanData ?? global.QRCodeTable[id].settings.getScanData,
+
+            // only add updated fields to the updated object and remove unchanged fields
+            updated.settings = JSON.parse(JSON.stringify({
+                getScanData: update.settings.getScanData == global.QRCodeTable[id].settings.getScanData ? undefined : update.settings.getScanData ?? undefined,
                 scanData: {
                     information: {
-                        fingerprint: update.settings.scanData?.information?.fingerprint ?? global.QRCodeTable[id].settings.scanData.information.fingerprint,
-                        "user-agent": update.settings.scanData?.information?.["user-agent"] ?? global.QRCodeTable[id].settings.scanData.information["user-agent"],
-                        timestamp: update.settings.scanData?.information?.timestamp ?? global.QRCodeTable[id].settings.scanData.information.timestamp,
-                        ip: update.settings.scanData?.information?.ip ?? global.QRCodeTable[id].settings.scanData.information.ip,
-                        location: update.settings.scanData?.information?.location ?? global.QRCodeTable[id].settings.scanData.information.location,
+                        fingerprint: update.settings.scanData?.information?.fingerprint == global.QRCodeTable[id].settings.scanData.information.fingerprint ? undefined : update.settings.scanData?.information?.fingerprint ?? undefined,
+                        "user-agent": update.settings.scanData?.information?.["user-agent"] == global.QRCodeTable[id].settings.scanData.information["user-agent"] ? undefined : update.settings.scanData?.information?.["user-agent"] ?? undefined,
+                        timestamp: update.settings.scanData?.information?.timestamp == global.QRCodeTable[id].settings.scanData.information.timestamp ? undefined : update.settings.scanData?.information?.timestamp ?? undefined,
+                        ip: update.settings.scanData?.information?.ip == global.QRCodeTable[id].settings.scanData.information.ip ? undefined : update.settings.scanData?.information?.ip ?? undefined,
+                        location: update.settings.scanData?.information?.location == global.QRCodeTable[id].settings.scanData.information.location ? undefined : update.settings.scanData?.information?.location ?? undefined,
                     },
-                    sendToURL: false,
-                    JWTEncryptionKey: ""
+                    sendToURL: update.settings.scanData?.sendToURL == global.QRCodeTable[id].settings.scanData.sendToURL ? undefined : update.settings.scanData?.sendToURL ?? undefined,
+                    JWTEncryptionKey: update.settings.scanData?.JWTEncryptionKey == global.QRCodeTable[id].settings.scanData.JWTEncryptionKey ? undefined : update.settings.scanData?.JWTEncryptionKey ?? undefined,
                 },
                 requirements: {
-                    location: update.settings.requirements?.location ?? global.QRCodeTable[id].settings.requirements.location, //! Warning, this currently does not work on iOS, as it does not like to share location data with http:// websites, will be fixed when we move to https://
+                    location: update.settings.requirements?.location == global.QRCodeTable[id].settings.requirements.location ? undefined : update.settings.requirements?.location ?? undefined,
                 }
-            }
-            wasAnytingUpdated = true;
+            }))
             break;
         default:
             return new NextResponse(JSON.stringify({
-                error: "INVALID_UPDATE",
-                message: "Invalid update.",
+                error: "INVALID_PROPERTY",
+                message: "Invalid property: " + key,
             }), {status:400});
         }
     }
-    return wasAnytingUpdated
+    if (updated.id) {
+        global.QRCodeTable[updated.id] = global.QRCodeTable[id]
+        delete global.QRCodeTable[id]
+        id = updated.id
+    }
+    if (Object.keys(updated).length > 0) {
+        Object.assign(global.QRCodeTable[id], updated)
+    }
+
+    const updateTime = new Date()
+    global.QRCodeTable[id].updated = updateTime
+    global.QRCodeTable[id].addToUpdateLog(updated, updateTime)
+
+    return Object.keys(updated).length > 0 ? updated : null
 }
 
 async function checkRedirectDataValidity(data: Types.RedirectQRCodeData, id: string) {
