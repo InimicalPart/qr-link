@@ -6,8 +6,6 @@ import path from "path";
 import moment from "moment-timezone";
 import { QRLinkGlobal } from "@/types/api/v1/global";
 import { getPage } from "./PDF";
-import { NextRequest } from "next/server";
-// import { renderToBuffer, Page, Text, View, Document, StyleSheet, Image, Font } from '@joshuajaco/react-pdf-renderer-bundled';
 declare const global: QRLinkGlobal
 
 
@@ -21,77 +19,6 @@ export async function randomString(length: number) {
       });
     });
   }
-
-export async function generateTrackingCode(id: string | number, options:Partial<{
-    currentAction: Types.RedirectQRCodeData,
-    request: NextRequest
-}>={}) {
-    let body = '<script src="https://cdnjs.cloudflare.com/ajax/libs/ClientJS/0.2.1/client.min.js" integrity="sha512-2WLGNBqBSz+HMXWugyIdkJNr6fPanvXsjj5ivuMzmztNgKVaJHJIcn6tkqmVoV4EKJYdzlLfNi0O1K3e1EtWAQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>\n'
-    let javascriptCode = `(async()=>{let client = new ClientJS();\nconst finalData = {};\nasync function getPos(){return new Promise((resolve,reject)=>{navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy: true})})};\n`
-
-    if (global.QRCodeTable[id].settings.scanData.information.fingerprint) {
-        javascriptCode += `finalData.fingerprint = client.getCustomFingerprint(client.getBrowserData().ua,client.getCanvasPrint())\n`
-    }
-    if (global.QRCodeTable[id].settings.scanData.information["user-agent"]) {
-        javascriptCode += `finalData["user-agent"] = client.getBrowserData().ua ?? "${options.request.headers.get("user-agent")}"\n`
-    }
-    if (global.QRCodeTable[id].settings.scanData.information.timestamp) {
-        javascriptCode += `finalData.timestamp = ${new Date().getTime()}\n`
-    }
-    if (global.QRCodeTable[id].settings.scanData.information.ip) {
-        javascriptCode += `finalData.ip = (await (await fetch("https://api.ipify.org/?format=json")).json()).ip\n`
-    }
-    if (global.QRCodeTable[id].settings.scanData.information.location) {
-        javascriptCode += `
-        if (navigator.geolocation) {
-            getPos().then((pos)=>{
-            finalData.location = {
-                latitude: pos.coords.latitude,
-                longitude: pos.coords.longitude,
-                accuracy: pos.coords.accuracy
-            }
-            send_and_redirect()
-        }).catch((err)=>{
-            if (${global.QRCodeTable[id].settings.requirements.location}) {
-                alert("This QR-code requires location to be sent to the server, but you have denied access to your location. Please allow access to your location and rescan the QR-code.")
-                return
-            } else {
-                finalData.location = null
-                send_and_redirect()
-            }
-        })} else {
-            if (${global.QRCodeTable[id].settings.requirements.location}) {
-                alert("This QR-code requires location to be sent to the server, but your browser does not support it. Please use a different browser.")
-                return
-            }
-            finalData.location = null
-            send_and_redirect()
-        };\n`
-    } else {
-        javascriptCode += `\nsend_and_redirect();\n`
-    }
-
-    javascriptCode += `function send_and_redirect(){
-        console.log("[QRCode] Sending data to server...")
-        fetch("${process.env.API_URL}/qrcode/${id}/scan", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(finalData)
-        }).then(()=>{
-            console.log("[QRCode] Redirecting to: " + "${options.currentAction.redirect_to}");
-            window.location.href = "${options.currentAction.redirect_to}"
-        }).catch((err)=>{
-            alert("An error occured while sending your data to the server. Please try again later.")
-        })
-    }\n})()`
-
-    return {
-        body: body,
-        javascript: javascriptCode
-    } 
-}
 
 
 

@@ -307,10 +307,10 @@ export default function Actions({
                       document.getElementById(
                         "scheduleRedirect"
                       ) as HTMLInputElement
-                    ).value.trim()?.replace(/\n/g,"%0A") ?? ""
+                    ).value.trim() ?? ""
                     let after_expiry = (
                       document.getElementById("scheduleAERedirect") as HTMLInputElement
-                    ).value.trim()?.replace(/\n/g,"%0A") ?? ""
+                    ).value.trim() ?? ""
                     if (day === "" || (time === "" && !allDay) || redirect_to === "") {
                         alert("Please fill in all required fields. [DAY, TIME, REDIRECT_TO]");
                         return;
