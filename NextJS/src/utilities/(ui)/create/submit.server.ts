@@ -195,9 +195,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
         data: data
     }
 
-    console.log("validated", JSON.stringify(JSONBody, null, 2))
     // make request to process.env.API_URL + "/qrcode" (POST) with JSONBody, and if a token is available, add it to the headers under Authorization
-    console.log(`${(process.env.API_URL ?? "http://localhost:8080/api/v1")}/qrcode` + (submitType=="update"?"/"+qrCodeInfo.id:""))
     const response = await fetch(`${(process.env.API_URL ?? "http://localhost:8080/api/v1")}/qrcode` + (submitType=="update"?"/"+qrCodeInfo.id:""), {
         method: submitType=="update"?"PATCH":"POST",
         headers: {
@@ -208,8 +206,6 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
         cache: "no-cache" //! This is so that if the user spams the create button, it doesn't send multiple requests
     })
     const responseData = await response.json()
-
-    console.log(responseData)
 
     //! Process the server response
     if (!response.ok) {

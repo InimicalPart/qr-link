@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import {QRLinkGlobal} from "@/types/api/v1/global"
-import { Types } from "@/utilities/api/v1/qrcode"
-import moment from "moment-timezone"
 import { saveQR } from "@/utilities/api/v1/database"
 import querystring from "querystring"
 declare const global: QRLinkGlobal
@@ -125,7 +123,6 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                         console.log("[QRCode] WebSocket connection established for QR-code " + "${id}");
                     }
                     ws.onmessage = (event) => {
-                        console.log(">", event.data)
                         let parsed = {}
                         try {
                             parsed = JSON.parse(event.data)
@@ -133,6 +130,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                             console.error("[QRCode] Error parsing JSON: " + e.message)
                             document.getElementById("status").innerText = "An error occurred while parsing the data from the server."
                         }
+                        console.log(">", parsed)
                         if (parsed.type == "scanData") {
                             const serverWants = {
                                 fingerprint: parsed.data.fingerprint ?? false,
@@ -179,6 +177,10 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                                     };
                                 }
                                 document.getElementById("status").innerText = "Please wait while we send the information to the server..."
+                                console.log("<", JSON.stringify({type: "scanData", data: {
+                                    fingerprint: clientHas.fingerprint,
+                                    location: clientHas.location
+                                }}))
                                 ws.send(JSON.stringify({type: "scanData", data: {
                                     fingerprint: clientHas.fingerprint,
                                     location: clientHas.location
@@ -206,7 +208,8 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                                     document.getElementById("status").innerHTML += "<br><br><b>Potential reasons:</b>"
                                     if (parsed.potential_reasons) {
                                         for (let reason of Object.keys(parsed.potential_reasons)) {
-                                        document.getElementById("status").innerHTML += "<p class='extended listitem'>"+reason+"</p>"
+                                            document.getElementById("status").innerHTML += "<p class='extended listitem'>"+reason+"</p>"
+                                        }
                                     }
                                 }
                                 document.getElementById("accept").style.display = "none"
@@ -324,16 +327,34 @@ export function SOCKET(
       console.log('[HA] The client has connected to the QR-code with ID ' + id);
 
     const scanDataSettings = global.QRCodeTable[id].getScanDataSettings()
+
+    console.log("<", JSON.stringify({type: "scanData", data: {
+            fingerprint: scanDataSettings.fingerprint ?? false,
+            location: scanDataSettings.location || global.QRCodeTable[id].type == "location",
+            location_required: scanDataSettings.location_required || global.QRCodeTable[id].type == "location"
+    }}))
     client.send(JSON.stringify({type: "scanData", data: {
             fingerprint: scanDataSettings.fingerprint ?? false,
             location: scanDataSettings.location || global.QRCodeTable[id].type == "location", 
             location_required: scanDataSettings.location_required || global.QRCodeTable[id].type == "location"
         }
     }))
+    let websocketPing = setInterval(() => {
+        client.ping()
+        console.log("[HA] Sent ping to client")
+    }, 30000)
+
+    client.on("ping", () => {
+        console.log("[HA] Received ping from client")
+        client.pong()
+    })
+    client.on("pong", () => {
+        console.log("[HA] Received pong from client")
+    })
     client.on('message', async (message) => {
         try {
             const parsed = JSON.parse(message.toString())
-            console.log(">", message)
+            console.log(">", message.toString())
             if (parsed.type == "scanData") {
                 console.log('[HA] The client has sent scan data for QR-code ' + id);
                 if (!parsed.data.location && (scanDataSettings.location_required || global.QRCodeTable[id].type == "location")) {
@@ -419,5 +440,6 @@ export function SOCKET(
     
     client.on('close', () => {
       console.log('[HA] A client has disconnected.');
+        clearInterval(websocketPing)
     });
 }

@@ -60,14 +60,39 @@ export class QRCode {
             accuracy: number;
         };
     }| object)[] = [];
+    update_log: {
+        date: Date;
+        update: string[];
+    }[] = [];
+
+
+
+    addToUpdateLog(update: Partial<QRCode>, time: Date = new Date()) {
+        let keys = this.getKeys(update)
+        this.update_log.push({
+            date: time,
+            update: keys
+        })
+    }
+
+    private getKeys(obj: object, prefix?: string): string[] {
+        let keys = Object.keys(obj) as (keyof object)[]
+        let rtrn = []
+        for (let key of keys) {
+            if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+                console.log(key)
+                rtrn.push(...this.getKeys(obj[key], prefix ? prefix + "." + key : key))
+            } else {
+                rtrn.push(prefix ? prefix + "." + key : key)
+            }
+        }
+        return rtrn
+    }
 
     constructor(newInformation?: Partial<QRCode> | undefined) {
         if (newInformation) Object.assign(this, newInformation)
     }
 
-    async setData(data: RedirectQRCodeDataT|ScheduleQRCodeDataT|LocationQRCodeDataT) {
-        this.data = data
-    }
 
     async signScanData(scanData: { fingerprint: any; location: any; timestamp: Date; "user-agent": string; ip: string; }) {
         return this.hassendToURL() ? await new SignJWT({
@@ -202,7 +227,166 @@ export class QRCode {
     }
 
 
-    
+    private getScannedLast(timeInSeconds:number) {
+        let now = new Date()
+        let timeAgo = new Date(now.getTime() - timeInSeconds*1000)
+        let scans = this.scanData.filter((a: { timestamp?: Date }) => a.timestamp > timeAgo)
+        return scans.length
+        
+    }
+
+    private getImportantMoments(from:Date, to: Date): {
+        date: Date,
+        type: string,
+    }[] {
+
+        return this.update_log.filter((a: { date: Date; update: string[]; }) => a.date > from && a.date < to).filter(a => a.update.some(b=>b.startsWith("settings.scanData.information.") || b=="settings.getScanData")).map((a) => {
+            let final = 0
+            let multiplier = 1
+            for (let update of a.update) {
+                switch (update) {
+                    case "settings.scanData.information.fingerprint":
+                        final = 1 * multiplier
+                        multiplier *= 2
+                        break;
+                    case "settings.scanData.information.user-agent":
+                        final = 2 * multiplier
+                        multiplier *= 2
+                        break;
+                    case "settings.scanData.information.timestamp":
+                        final = 3 * multiplier
+                        multiplier *= 2
+                        break;
+                    case "settings.scanData.information.ip":
+                        final = 4 * multiplier
+                        multiplier *= 2
+                        break;
+                    case "settings.scanData.information.location":
+                        final = 5 * multiplier
+                        multiplier *= 2
+                        break;
+                    case "settings.getScanData":
+                        final = 6 * multiplier
+                        multiplier *= 2
+                        break;
+                    case "id":
+                        final = 6 * multiplier
+                        multiplier *= 2
+                        break;
+                    default:
+                        break;
+                }
+        }
+
+            return {
+                date: a.date,
+                type: final.toString(2)
+            }
+        })
+        
+    }
+
+    private getWhereScanned() {
+        let rtrn = []
+        for (let scan of this.scanData as { location?: { latitude: number; longitude: number; accuracy: number; } }[]) {
+            if (scan?.location) {
+                rtrn.push([scan.location.latitude, scan.location.longitude])
+            }
+        }
+        return rtrn
+    }
+
+    private getScannedDayRank(timezone: string) {
+        // get all scans, show how many happened on each day of the week
+        const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        let rtrn = [0,0,0,0,0,0,0]
+        for (let scan of this.scanData as { timestamp?: Date }[]) {
+            if (scan.timestamp) {
+                rtrn[days.indexOf(moment(scan.timestamp).tz(timezone).format("dddd"))]++
+            }
+        }
+        return rtrn
+    }
+
+    private getScannedEach(timeInSeconds: number) {
+        let now = new Date();
+        let timeAgo = new Date(now.getTime() - timeInSeconds * 1000);
+        let scans = this.scanData.filter((a: { timestamp?: Date }) => a.timestamp > timeAgo);
+        let intervalLength = timeInSeconds * 1000; // Length of each interval in milliseconds
+        let intervalCounts = [];
+        for (let i = 0; i < timeInSeconds; i++) {
+            let intervalStart = new Date(timeAgo.getTime() + intervalLength * i);
+            let intervalEnd = new Date(timeAgo.getTime() + intervalLength * (i + 1));
+            let interval = scans.filter((a: { timestamp?: Date }) =>
+                a.timestamp > intervalStart && a.timestamp < intervalEnd
+            );
+            intervalCounts.push(interval.length);
+        }
+        let totalScans = intervalCounts.reduce((acc, count) => acc + count, 0); // Total number of scans
+        let averageScans = totalScans / intervalCounts.length; // Average number of scans
+        return averageScans;
+    }
+
+    async getStatistics(type: "ScannedEachX" | "ScannedLastX" | "ScannedWhere" | "Scanned" | "ScannedDayRank", time: "minute" | "hour" | "day" | "week" | "month" | "year", timezone: string): Promise<{
+        important_moments: {
+            date: Date;
+            type: string
+        }[],
+        info: number | number[] | number[][]
+    }> {
+        let timeInSeconds = 0
+        switch (time) {
+            case "minute":
+                timeInSeconds = 60
+                break;
+            case "hour":
+                timeInSeconds = 60*60
+                break;
+            case "day":
+                timeInSeconds = 60*60*24
+                break;
+            case "week":
+                timeInSeconds = 60*60*24*7
+                break;
+            case "month":
+                timeInSeconds = 60*60*24*30
+                break;
+            case "year":
+                timeInSeconds = 60*60*24*365
+                break;
+        }
+        switch (type) {
+            case "ScannedLastX":
+                return {
+                    info: this.getScannedLast(timeInSeconds),
+                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000), new Date())
+                }
+            case "ScannedEachX":
+                return {
+                    info: this.getScannedEach(timeInSeconds),
+                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000), new Date())
+                }
+            case "ScannedWhere":
+                return {
+                    info: this.getWhereScanned(),
+                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000), new Date())
+                }
+            case "Scanned":
+                return {
+                    info: this.scanCount,
+                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000), new Date())
+                }
+            case "ScannedDayRank":
+                return {
+                    info: this.getScannedDayRank(timezone),
+                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000), new Date())
+                }
+            default:
+                return null
+
+        }
+
+    }
 
 
 
@@ -250,7 +434,6 @@ export interface LocationQRCodeDataT {
         afterExpiry: string;
     }>
 }
-
 
 
 export type DataT = Pick<QRCode, "data">;

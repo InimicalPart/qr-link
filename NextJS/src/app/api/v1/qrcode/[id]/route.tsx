@@ -3,7 +3,7 @@ import { QRLinkGlobal } from "@/types/api/v1/global";
 import { getUser } from "@/utilities/api/v1/authentication";
 import { saveQR } from "@/utilities/api/v1/database";
 import { QRCode2PDF } from "@/utilities/api/v1/misc";
-import { validateUpdate } from "@/utilities/api/v1/update";
+import { validateAndDoUpdate } from "@/utilities/api/v1/update";
 import { NextRequest, NextResponse } from "next/server";
 import QRCodeGenerator from "qrcode";
 declare const global: QRLinkGlobal
@@ -196,7 +196,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
         message: "Invalid arguments provided: " + Object.keys(update).filter((key) => !global.supportedUpdateKeys.includes(key)).join(", "),
       }), { status: 400 })
     }
-    const wasAnytingUpdated = await validateUpdate(id, update)
+    const wasAnytingUpdated = await validateAndDoUpdate(id, update)
     if (wasAnytingUpdated instanceof NextResponse) {
         return wasAnytingUpdated
     }
@@ -209,7 +209,6 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
           expires: global.QRCodeTable[id].expires,
       }), { status: 200 });
     }
-    global.QRCodeTable[update.id??id].updated = new Date();
     saveQR(id, global.QRCodeTable[update.id??id], true)
     
     let additionalInformation = {};
