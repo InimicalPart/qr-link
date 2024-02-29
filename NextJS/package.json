@@ -17,7 +17,7 @@
     "@types/leaflet.locatecontrol": "file:../custom-modules/@types/leaflet.locatecontrol",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
-    "@workos-inc/node": "^5.1.4",
+    "@workos-inc/node": "^5.2.0",
     "dotenv": "^16.4.1",
     "jose": "^5.2.1",
     "jsonc-parser": "^3.2.1",
