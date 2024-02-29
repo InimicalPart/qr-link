@@ -115,6 +115,7 @@ export class QRCode {
             currentAction = data;
         } else if (this.type == "schedule") {
             const data = this.data as unknown as ScheduleQRCodeDataT
+            console.log(data.timezone)
 
             let day = moment().tz(data.timezone ?? moment.tz.guess()).format("dddd").toLowerCase() as "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday"
             let time = getPassedTime(Object.keys(data[day]), data.timezone ?? moment.tz.guess())
@@ -174,11 +175,18 @@ export class QRCode {
         }
 
         // if redirect_to doesnt start with http:// or https://, add http
-        if (currentAction.redirect_to && !currentAction.redirect_to.startsWith("http://") && !currentAction.redirect_to.startsWith("https://")) {
+        if (currentAction.redirect_to && !currentAction.redirect_to.startsWith("http://") && !currentAction.redirect_to.startsWith("https://") &&
+            // not a vcard
+            !(currentAction.redirect_to.startsWith("BEGIN:VCARD") && currentAction.redirect_to.endsWith("END:VCARD"))
+            
+        ) {
             currentAction.redirect_to = "http://" + currentAction.redirect_to
         }
         // if after_expiry doesnt start with http:// or https://, add http
-        if (currentAction.after_expiry && !currentAction.after_expiry.startsWith("http://") && !currentAction.after_expiry.startsWith("https://")) {
+        if (currentAction.after_expiry && !currentAction.after_expiry.startsWith("http://") && !currentAction.after_expiry.startsWith("https://")&&
+            // not a vcard
+            !(currentAction.after_expiry.startsWith("BEGIN:VCARD") && currentAction.after_expiry.endsWith("END:VCARD"))
+        ) {
             currentAction.after_expiry = "http://" + currentAction.after_expiry
         }
 
@@ -192,6 +200,13 @@ export class QRCode {
         }
 
     }
+
+
+    
+
+
+
+
     private isPointInPolygon(locationData: { latitude: number; longitude: number; accuracy: number; }, positions: number[][]): boolean {
         let x = locationData.latitude, y = locationData.longitude
         let inside = false

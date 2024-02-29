@@ -104,8 +104,8 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
     const data = (() => {
         if (type == "redirect") {
             return {
-                redirect_to: validatedFields.data.redirect_redirect_to.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A"),
-                after_expiry: validatedFields.data.redirect_after_expiry.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
+                redirect_to: validatedFields.data.redirect_redirect_to.trim(),
+                after_expiry: validatedFields.data.redirect_after_expiry.trim()
             }
         } else if (type == "schedule") {
             return {
