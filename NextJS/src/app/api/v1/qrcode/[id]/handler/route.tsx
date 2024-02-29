@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import {QRLinkGlobal} from "@/types/api/v1/global"
 import { Types } from "@/utilities/api/v1/qrcode"
 import moment from "moment-timezone"
-import { generateTrackingCode, getPassedTime } from "@/utilities/api/v1/misc"
 import { saveQR } from "@/utilities/api/v1/database"
 import querystring from "querystring"
 declare const global: QRLinkGlobal
@@ -202,7 +201,14 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                             const uri = parsed.data
                             ws.close()
                             if (uri == "nil") {
-                                document.getElementById("status").innerHTML = "This QR-code is a location-based QR-code. Based on your location, you are not in any defined zone. Therefore, you will not be redirected. If you believe this is an error, please try again or move a bit closer to the location."
+                                document.getElementById("status").innerHTML = "This QR-code is a location-based QR-code. Based on your location, you are not in any defined zone. Therefore, you will not be redirected. If you believe this is an error, please try again or move a bit closer to the location. "
+                                if (parsed.potential_reasons) {
+                                    document.getElementById("status").innerHTML += "<br><br><b>Potential reasons:</b>"
+                                    if (parsed.potential_reasons) {
+                                        for (let reason of Object.keys(parsed.potential_reasons)) {
+                                        document.getElementById("status").innerHTML += "<p class='extended listitem'>"+reason+"</p>"
+                                    }
+                                }
                                 document.getElementById("accept").style.display = "none"
                                 return
                             }
@@ -244,18 +250,24 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
     if (redirect_to) {
         //! if redirect_to is vcard
         if (redirect_to.toLowerCase().startsWith("begin:vcard") && redirect_to.toLowerCase().endsWith("end:vcard")){
-            console.log("[QRCode] Redirecting to vCard: " + redirect_to);
-            return new NextResponse(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <title>QRLink</title>
-                <meta http-equiv="refresh" content="0;url=data:text/vcard;charset=utf-8,${encodeURIComponent(redirect_to)}">
-            </head>
-            <body>
-                <p>Redirecting... If you do not get redirected: <a download="vcard_${new Date().getTime()}.vcf" href="data:text/vcard;charset=utf-8,${encodeURIComponent(redirect_to)}">click here</a></p>
-            </body>
-            </html>`, { status: 200 });
+            console.log("[QRCode] Redirecting to vCard: " + redirect_to.replace(/\n/g,"%0A"));
+            // return new NextResponse(`
+            // <!DOCTYPE html>
+            // <html lang="en">
+            // <head>
+            //     <title>QRLink</title>
+            //     <meta http-equiv="refresh" content="0;url=data:text/vcard;charset=utf-8,${encodeURIComponent(redirect_to)}">
+            // </head>
+            // <body>
+            //     <p>Redirecting... If you do not get redirected: <a download="vcard_${new Date().getTime()}.vcf" href="data:text/vcard;charset=utf-8,${encodeURIComponent(redirect_to)}">click here</a></p>
+            // </body>
+            // </html>`, { status: 200, headers:{
+            //     "Content-Type": "text/html"
+            // } });
+            return new NextResponse(redirect_to, { status: 200, headers:{
+                "Content-Type": "text/vcard",
+                "Content-Disposition": "attachment; filename=vcard_"+new Date().getTime()+".vcf"
+            } });
         } else {
             console.log("[QRCode] Redirecting to: " + redirect_to);
             return NextResponse.redirect(redirect_to)
@@ -321,10 +333,12 @@ export function SOCKET(
     client.on('message', async (message) => {
         try {
             const parsed = JSON.parse(message.toString())
+            console.log(">", message)
             if (parsed.type == "scanData") {
                 console.log('[HA] The client has sent scan data for QR-code ' + id);
                 if (!parsed.data.location && (scanDataSettings.location_required || global.QRCodeTable[id].type == "location")) {
                     console.log('[HA] The client tried to send scan data without location for a QR-code that requires it');
+                    console.log("<", JSON.stringify({error: "LOCATION_REQUIRED", message: "Location is required for this QR-code."}))
                     client.send(JSON.stringify({error: "LOCATION_REQUIRED", message: "Location is required for this QR-code."}))
                     client.close()
                     return
@@ -368,21 +382,35 @@ export function SOCKET(
                 const encryptedScanData = await global.QRCodeTable[id].signScanData(scanData) // This is to prevent the client from tampering with the scan data while it is being sent to the redirect URL
 
                 if (redirect_to == "nil" && global.QRCodeTable[id].type == "location") {
-                    client.send(JSON.stringify({type: "redirect", data: "nil"}))
+                    const potentialReason: {
+                        accuracy?: string
+                    } = {
+
+                    }
+
+                    if (scanData.location.accuracy > 100) {
+                        potentialReason["accuracy"] = "Your location accuracy is too low. (Accuracy: " + scanData.location.accuracy + "m)"
+                    }
+
+                    console.log("<", JSON.stringify({type: "redirect", data: "nil", ...(Object.keys(potentialReason).length > 0 ? {potential_reasons:potentialReason} : {}) }))
+                    client.send(JSON.stringify({type: "redirect", data: "nil", ...(Object.keys(potentialReason).length > 0 ? {potential_reasons:potentialReason} : {}) }))
                 }
 
 
                 if (redirect_to) {
                     const addition = (encryptedScanData ? "?ql_scan="+encodeURIComponent(encryptedScanData) : "")
                     const isVCard = redirect_to.toLowerCase().startsWith("begin:vcard") && redirect_to.toLowerCase().endsWith("end:vcard")
+                    console.log("<", JSON.stringify({type: "redirect", data: redirect_to + (isVCard ? "" : addition)}))
                     client.send(JSON.stringify({type: "redirect", data: redirect_to + (isVCard ? "" : addition)}))
                 } else {
+                    console.log("<", JSON.stringify({error: "NO_REDIRECT", message: "No redirect URL provided."}))
                     client.send(JSON.stringify({error: "NO_REDIRECT", message: "No redirect URL provided."}))
                 }
                 
             }
         } catch (e) {
             console.log('[HA] The client tried to send invalid JSON');
+            console.log("<", JSON.stringify({error: "INVALID_JSON", message: "Invalid JSON."}))
             client.send(JSON.stringify({error: "INVALID_JSON", message: "Invalid JSON."}))
             client.close()
         }

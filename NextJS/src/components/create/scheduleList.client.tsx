@@ -154,6 +154,7 @@ export default function ScheduleList({
             
                 // for each day in the schedule
                 for (let day in schedule) {
+                    if (day == "timezone") continue
             
                     // for each time in the day
                     for (let time in schedule[day]) {

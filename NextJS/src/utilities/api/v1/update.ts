@@ -258,8 +258,8 @@ async function checkRedirectDataValidity(data: Types.RedirectQRCodeData, id: str
     }
 
 
-    if (data.redirect_to) data.redirect_to = data.redirect_to.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
-    if (data.after_expiry) data.after_expiry = data.after_expiry.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
+    if (data.redirect_to) data.redirect_to = data.redirect_to.trim()
+    if (data.after_expiry) data.after_expiry = data.after_expiry.trim()
 
 
     return { valid: true, newData: (data as unknown as Types.Data) };
@@ -386,8 +386,8 @@ async function checkScheduleDataValidity(data: Types.ScheduleQRCodeData | null, 
     for (let day of (Object.keys(data)as Array<keyof typeof data>)) {
         if (day == "timezone") continue;
         for (let time of Object.keys(data[day])) {
-            if (data[day][time].redirect_to) data[day][time].redirect_to = data[day][time].redirect_to.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
-            if (data[day][time].after_expiry) data[day][time].after_expiry = data[day][time].after_expiry.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
+            if (data[day][time].redirect_to) data[day][time].redirect_to = data[day][time].redirect_to.trim()
+            if (data[day][time].after_expiry) data[day][time].after_expiry = data[day][time].after_expiry.trim()
         }
     }
 
@@ -477,8 +477,8 @@ export async function checkLocationDataValidity(data: Types.LocationQRCodeData, 
     }
 
     for (let zoneIndex in data.zones) {
-        if (data.zones[zoneIndex].redirectTo) data.zones[zoneIndex].redirectTo = data.zones[zoneIndex].redirectTo.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
-        if (data.zones[zoneIndex].afterExpiry) data.zones[zoneIndex].afterExpiry = data.zones[zoneIndex].afterExpiry.trim().replace(/\r\n/gm, "%0A").replace(/\n/gm, "%0A")
+        if (data.zones[zoneIndex].redirectTo) data.zones[zoneIndex].redirectTo = data.zones[zoneIndex].redirectTo.trim()
+        if (data.zones[zoneIndex].afterExpiry) data.zones[zoneIndex].afterExpiry = data.zones[zoneIndex].afterExpiry.trim()
     }
 
     return { valid: true, newData: (data as unknown as Types.Data) };
