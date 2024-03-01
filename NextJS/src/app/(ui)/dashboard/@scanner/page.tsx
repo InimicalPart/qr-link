@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -126,7 +126,9 @@ export default function QRScannerModal({
             }
         })
       })
-
+      const isQRLink = useCallback((text: string) =>{
+        return text.match(API_URL + "/qrcode/.{1,50}/handler")
+    },[API_URL])
 
     useEffect(() => {
         const scannedPoints = document.getElementById("scannedPoints")
@@ -199,9 +201,9 @@ export default function QRScannerModal({
         }
     }, [result, alreadySeen, callback,isQRLink])
     
-    function isQRLink(text: string) {
-        return text.match(API_URL + "/qrcode/.{1,50}/handler")
-    }
+
+
+
 
     return(
         <div style={{position:"relative"}}>
