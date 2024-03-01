@@ -177,7 +177,6 @@ export default function QRScannerModal({
                 console.log(response)
 
                 if (response.valid) {
-                    document.getElementById("closeModal")?.click()
                     if (response.redirect_to) {
                         setErrored(false)
                         setStatus("Redirecting...")
@@ -229,7 +228,9 @@ export default function QRScannerModal({
               id="qr-scanner"
               onError={handleError}
               onScan={handleScan}
-              constraints={{facingMode: "environment", audio:false, video:true}}
+              constraints={{audio:false, video:{
+                facingMode: { exact: "environment" }
+              }}}
               />
               :
               <Image id="scanned" src={scannedImage} alt=""/>
