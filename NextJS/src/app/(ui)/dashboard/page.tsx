@@ -9,9 +9,17 @@ const secret = new Uint8Array(
 );
 
 import GenerateQRs from '@/components/index/generate.client';
+import { Modal } from '@/components/all/modal';
+import QRScannerModal from './@scanner/page';
 const API_URL = process.env.API_URL ?? "http://localhost:8080/api/v1"
-export default async function Home() {
-    console.log(API_URL)
+type SearchParamProps = {
+    searchParams: Record<string, string> | null | undefined
+}
+
+export default async function Home({
+    searchParams
+}:SearchParamProps) {
+    let show = searchParams.scan === "true"
     async function logout() {
         "use server";
         cookies().delete("token")
@@ -33,10 +41,51 @@ export default async function Home() {
 
     async function scanQR() {
         "use server";
+        redirect("/dashboard?scan=true")
     }
 
     async function linkQR() {
         "use server";
+    }
+
+    async function scanResult(RES:string) {
+        "use server";
+        try {
+            const ID = (RES.match(API_URL + "/qrcode/(.{1,50})/handler"))[1]
+            // id is valid
+            const res = await fetch(`${API_URL}/qrcode/${ID}`, {
+                headers: {
+                    Authorization: cookies().get("token").value
+                }
+            }).then((res) => res.json())
+
+            if (res.error) {
+                return {
+                    valid: false,
+                    message: res.error == "INVALID_ID" ? "The scanned QRLink code has a non-existant ID. Please try again..." : "Your session has expired. Please log in again."
+                }
+            } else {
+                // if we can see the update key (meaning we have the authorization to manage)
+                if (res.update_key) {
+                    return {
+                        valid: true,
+                        redirect_to: `/manage/${ID}`
+                    }
+                } else {
+                    return {
+                        valid: false,
+                        message: "You do not have the authorization to manage this QR code."
+                    }
+                }
+            }
+
+        } catch(e) {
+            return {
+                valid: false,
+                message: "The scanned code is not a valid QRLink code. Please try again..."
+            }
+        }
+        
     }
 
 
@@ -53,7 +102,11 @@ export default async function Home() {
     }
     return (
       <div>
-        {/* <span id="apiurl" style={{ display: "none" }}>{process.env.API_URL ?? "http://localhost:8080/api/v1"}</span> */}
+        {show &&
+            <Modal backURL='/dashboard'>
+                <QRScannerModal callback={scanResult} API_URL={API_URL}/>
+            </Modal>
+        }
         <div id="buttons" className="w-[calc(302px*1)] sm:w-[calc(302px*2)] md:w-[calc(302px*3)] lg:w-[calc(302px*4)] xl:w-[calc(302px*5)]" style={{
                 position: "relative",
                 left: "50%",
@@ -88,7 +141,7 @@ export default async function Home() {
                 borderRadius: "12px",
                 marginRight: 1,
                 border: "2px solid black",        
-            }}>Scan QR <br className="mobile-only"/><span style={{fontSize:10, verticalAlign:"middle"}}>(not implemented yet)</span></button>
+            }}>Scan QR</button>
             </form>
             <form action={linkQR} className="w-[calc(151px*1)] sm:w-[calc(151px*2)] md:w-[calc(151px*3)] lg:w-[calc(151px*4)] xl:w-[calc(151px*5)]" id="linkQR">
             <button type="submit" id="linkQRButton" className="w-[calc(100%-1px)] dashboard main-button" style={{

@@ -240,7 +240,7 @@ export class QRCode {
         type: string,
     }[] {
 
-        return this.update_log.filter((a: { date: Date; update: string[]; }) => a.date > from && a.date < to).filter(a => a.update.some(b=>b.startsWith("settings.scanData.information.") || b=="settings.getScanData")).map((a) => {
+        return this.update_log.filter((a: { date: Date; update: string[]; }) => a.date > from && a.date < to).filter(a => a.update.some(b=>b.startsWith("settings.scanData") || b=="id")).map((a) => {
             let final = 0
             let multiplier = 1
             for (let update of a.update) {
@@ -290,7 +290,7 @@ export class QRCode {
         let rtrn = []
         for (let scan of this.scanData as { location?: { latitude: number; longitude: number; accuracy: number; } }[]) {
             if (scan?.location) {
-                rtrn.push([scan.location.latitude, scan.location.longitude])
+                rtrn.push([scan.location.latitude, scan.location.longitude, scan.location.accuracy])
             }
         }
         return rtrn
@@ -298,11 +298,18 @@ export class QRCode {
 
     private getScannedDayRank(timezone: string) {
         // get all scans, show how many happened on each day of the week
-        const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-        let rtrn = [0,0,0,0,0,0,0]
+        let rtrn = {
+            monday: 0,
+            tuesday: 0,
+            wednesday: 0,
+            thursday: 0,
+            friday: 0,
+            saturday: 0,
+            sunday: 0
+        }
         for (let scan of this.scanData as { timestamp?: Date }[]) {
             if (scan.timestamp) {
-                rtrn[days.indexOf(moment(scan.timestamp).tz(timezone).format("dddd"))]++
+                rtrn[moment(scan.timestamp).tz(timezone).format("dddd") as "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday"]++
             }
         }
         return rtrn
@@ -332,7 +339,15 @@ export class QRCode {
             date: Date;
             type: string
         }[],
-        info: number | number[] | number[][]
+        info: number | number[] | number[][] | {
+            monday: number;
+            tuesday: number;
+            wednesday: number;
+            thursday: number;
+            friday: number;
+            saturday: number;
+            sunday: number;
+        }
     }> {
         let timeInSeconds = 0
         switch (time) {

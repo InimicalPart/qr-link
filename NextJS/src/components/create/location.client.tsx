@@ -1,6 +1,6 @@
 "use client";
 import L, { DivIcon, LatLng, LatLngTuple } from "leaflet";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLeafletContext } from '@react-leaflet/core'
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents, Tooltip, CircleMarker, Polyline, Polygon } from 'react-leaflet'
 import { intersect as intersects, contains } from "@/utilities/(ui)/create/shapeOperations.server";
@@ -24,6 +24,8 @@ export default function Location({
     const colors = ["blue", "red", "green", "yellow", "purple", "orange"]; // Add more colors if needed
     const [verifiying, setVerifying] = useState(false)
     const [leafletMap, setMap] = useState(null)
+
+    const wrappedValidateLocation = useCallback(validateLocation, [])
 
     
     useEffect(()=>{
@@ -249,7 +251,7 @@ export default function Location({
         function verifyZones() {
             setVerifying(true)
             console.log("Verifying")
-            if (validateLocation(zones)) {
+            if (wrappedValidateLocation(zones)) {
                 window.dispatchEvent(new CustomEvent("verifyResults", { detail: {
                     status: "success",
                 } }))
@@ -265,7 +267,7 @@ export default function Location({
             window.removeEventListener("typeChange", onTypeChanged)
             window.removeEventListener("verifyZones", verifyZones)
         }    
-    },[zones,validateLocation])
+    },[zones,wrappedValidateLocation])
     useEffect(()=>{
         if (qrCodeInfo.type == "location") {
             window.dispatchEvent(new CustomEvent("typeChange", { detail: "location" }))
@@ -458,13 +460,6 @@ export default function Location({
             } else {
                 zone.L.addTo(leafletMap);
                 zones[index].hidden = false;
-            }
-        }
-        function isVisible(index: number) {
-            console.log(index, zones, !!zones[index]?.L?._map)
-            if (!zones[index]?.L) return true; // the zone controller hasnt had time to add the layer to the map
-            if (zones.length > 0 && index != -1) {
-                return !!zones[index].L._map
             }
         }
 
