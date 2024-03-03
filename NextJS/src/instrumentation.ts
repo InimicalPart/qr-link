@@ -6,11 +6,10 @@ import { QRCodeTable } from "@/types/api/v1/QRCode"
 declare const global: QRLinkGlobal
 
 export async function register(){
-    console.log(process.env.NEXT_RUNTIME)
     if (process.env.NEXT_RUNTIME === 'nodejs') {
         const { bareBonesConnection, convertFile2MongoDB, ensureDBSetup, readQRCodeTable } = await import("./utilities/api/v1/database");
         const { saveQR } = await import("./utilities/api/v1/database");
-        const { doesUserExist } = await import("./utilities/api/v1/authentication");
+        const { doesUserExist, fetchUsersCache } = await import("./utilities/api/v1/authentication");
 
         const { MongoClient, MongoError } = await import("mongodb");
         const fs = await import("fs");
@@ -96,16 +95,21 @@ export async function register(){
             console.log("[QL] Removing QR-codes that have a non-existing user linked to them... (background)");
             let allLinkedIDs = Object.values(global.QRCodeTable as QRCodeTable).map(a=>a.linked_to)
             let uniqueLinkedIDs = allLinkedIDs.filter((a, b) => allLinkedIDs.indexOf(a) === b)
+            //! Cache all users, so that we don't call AuthKit for every single user
+            await fetchUsersCache().then((amountOfUsers)=>{
+                console.log("[JWT] Cached " + amountOfUsers + " users.")
+            })
             for (let linked_user_id of uniqueLinkedIDs) {
                 doesUserExist(linked_user_id).then((exists) => {
                     if (!exists) {
+                        console.log("[JWT] User with ID '"+linked_user_id+"' does not exist.")
                         for (let key of Object.keys(global.QRCodeTable)) {
                             if (global.QRCodeTable[key].linked_to == linked_user_id) {
                                 delete global.QRCodeTable[key]
                                 console.log("[QL] Removed QR-code " + key + " as it was linked to a non-existing user. (ID: " + linked_user_id + ")")
                             }
                         }
-                    }
+                    } else console.log("[JWT] User with ID '"+linked_user_id+"' does not exist.")
                 })
             }
         }

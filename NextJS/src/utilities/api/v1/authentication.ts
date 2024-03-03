@@ -40,6 +40,8 @@ export async function getUser(token: string): Promise<{isAuthenticated: boolean,
     };
   }
 
+
+
 export async function getUsers() {
     let list = await workos.userManagement.listUsers({ limit: 100 });
     let users = list.data;
@@ -55,6 +57,7 @@ export async function getUsers() {
     }
     return users;
 }
+
 const cached: {
     users: {
         object:string,
@@ -74,6 +77,14 @@ const cached: {
     timestamp: 0,
     invalidAt: 0,
 }
+export async function fetchUsersCache() {
+    console.log("[JWT] Fetching users...")
+    cached.users = await getUsers()
+    cached.timestamp = Date.now()
+    cached.invalidAt = Date.now() + cacheValidity
+    return cached.users.length
+}
+
 export async function clearCache() {
     cached.invalidAt = Date.now()
 }
@@ -90,11 +101,5 @@ export async function doesUserExist(id: string): Promise<boolean> {
         cached.invalidAt = Date.now() + cacheValidity
     }
     const res = cached.users.find((user) => user.id === id)
-    // For debugging reasons
-    if (!res) {
-        console.log("[JWT] User does not exist.")
-    } else {
-        console.log("[JWT] User exists.")
-    }
     return !!res
 }

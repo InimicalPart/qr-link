@@ -38,7 +38,6 @@ export default async function Home() {
     return (
       <div>
         <Alerts/>
-        <span id="apiurl" style={{ display: "none" }}>{process.env.API_URL ?? "http://localhost:8080/api/v1"}</span>
         <div id="create-new">
             <div style={{
                 width: 250,
@@ -49,7 +48,7 @@ export default async function Home() {
                 transform: 'translateX(-50%)'
             }}>
                 {/* <div id="qr-code" className="select-none"></div> */}
-                <QRCodeImage/>
+                <QRCodeImage API_URL={API_URL}/>
 
             </div>
             <div id="qr-info" style={{
