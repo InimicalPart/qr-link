@@ -5,14 +5,15 @@ import Image from "next/image";
 import QRCode from "qrcode";
 
 export default function QRCodeImage({
-    qrCodeDetails
+    qrCodeDetails,
+    API_URL
 }:{
     qrCodeDetails?: any,
+    API_URL: string
 }) {
     const templateDataURL = `data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7`
     const [id, setId] = useState(qrCodeDetails?.id ?? "HelloFromQRLDeveloper");
     const [dataURL, setDataURL] = useState(templateDataURL);
-    const API_URL = (process.env.API_URL ?? "http://localhost:8080/api/v1")
     useEffect(() => {
         function setState(e: any) {
             setId((e.target as HTMLInputElement).value.substring(0, 50)) // Limit to 50 characters
