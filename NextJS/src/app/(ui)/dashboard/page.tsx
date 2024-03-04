@@ -107,7 +107,7 @@ export default async function Home({
                 <QRScannerModal callback={scanResult} API_URL={API_URL}/>
             </Modal>
         }
-        <div id="buttons" className="w-[calc(302px*1)] sm:w-[calc(302px*2)] md:w-[calc(302px*3)] lg:w-[calc(302px*4)] xl:w-[calc(302px*5)]" style={{
+        <div id="buttons" className="w-[calc(302px*1)] md:w-[calc(302px*2)] lg:w-[calc(302px*3)] xl:w-[calc(302px*4)] 2xl:w-[calc(302px*5)]" style={{
                 position: "relative",
                 left: "50%",
                 top: "20px",
@@ -119,7 +119,7 @@ export default async function Home({
                 
         }}>
 
-        <form action={logout} className="w-[calc(302px*1)] sm:w-[calc(302px*2)] md:w-[calc(302px*3)] lg:w-[calc(302px*4)] xl:w-[calc(302px*5)]" id="logOut">
+        <form action={logout} className="w-[calc(302px*1)] md:w-[calc(302px*2)] lg:w-[calc(302px*3)] xl:w-[calc(302px*4)] 2xl:w-[calc(302px*5)]" id="logOut">
             <button type="submit" id="logOutButton" className="w-[100%] dashboard main-button" style={{
 
                 padding: "0.75vh 0px",
@@ -132,7 +132,7 @@ export default async function Home({
                 lineHeight: 1.5  
             }}>Log out</button>
             </form>
-        <form action={scanQR} className="w-[calc(151px*1)] sm:w-[calc(151px*2)] md:w-[calc(151px*3)] lg:w-[calc(151px*4)] xl:w-[calc(151px*5)]" id="scanQR">
+        <form action={scanQR} className="w-[calc(151px*1)] md:w-[calc(151px*2)] lg:w-[calc(151px*3)] xl:w-[calc(151px*4)] 2xl:w-[calc(151px*5)]" id="scanQR">
             <button type="submit" id="scanQRButton" className="w-[calc(100%-1px)] dashboard main-button" style={{
                 padding: "0.75vh 0px",
                 color: "white",
@@ -143,7 +143,7 @@ export default async function Home({
                 border: "2px solid black",        
             }}>Scan QR</button>
             </form>
-            <form action={linkQR} className="w-[calc(151px*1)] sm:w-[calc(151px*2)] md:w-[calc(151px*3)] lg:w-[calc(151px*4)] xl:w-[calc(151px*5)]" id="linkQR">
+            <form action={linkQR} className="w-[calc(151px*1)] md:w-[calc(151px*2)] lg:w-[calc(151px*3)] xl:w-[calc(151px*4)] 2xl:w-[calc(151px*5)]" id="linkQR">
             <button type="submit" id="linkQRButton" className="w-[calc(100%-1px)] dashboard main-button" style={{
                 padding: "0.75vh 0px",
                 color: "white",
@@ -156,7 +156,7 @@ export default async function Home({
             </form>
             
             </div>
-    <div id="qr-container" className="left-[50%] w-[calc(302px*1)] sm:w-[calc(302px*2)] md:w-[calc(302px*3)] lg:w-[calc(302px*4)] xl:w-[calc(302px*5)]" style={{
+    <div id="qr-container" className="left-[50%] w-[calc(302px*1)] md:w-[calc(302px*2)] lg:w-[calc(302px*3)] xl:w-[calc(302px*4)] 2xl:w-[calc(302px*5)]" style={{
         transform: "translateX(-50%)",
         display: "flex",
         flexWrap: "wrap",
