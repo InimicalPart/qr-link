@@ -1,0 +1,9 @@
+{
+    "name": "leaflet",
+    "version": "1.9.4",
+    "homepage": "https://leafletjs.com/",
+    "description": "JavaScript library for mobile-friendly interactive maps",
+    "main": "leaflet-src.js",
+    "style": "leaflet.css",
+    "license": "BSD-2-Clause"
+}

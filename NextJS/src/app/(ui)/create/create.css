@@ -1,0 +1,83 @@
+.QRL-container {
+    margin-top:5px;
+}
+
+.QRL-create {
+    margin-top:40px;
+}
+
+li::marker {
+    font-size: 1.5rem;
+}
+ul::marker {
+    font-size:1.5rem
+}
+ul {
+    text-align: left;
+
+}
+
+ul.moveover {
+    margin-left: 40px;
+}
+
+/* button#qr-submit:disabled {
+    background-color: rgb(149,149,149) !important;
+} */
+
+input.create:not([type="submit"]):not([type="checkbox"]) {
+    height:30px
+}
+
+button.create {
+    background-color: aliceblue;
+    height:40px;
+    font-size:12pt;
+    border-radius: 10px;
+    /* position:relative; */
+    /* left:50%; */
+    /* transform: translateX(-50%); */
+    padding: 0 20px;
+    border: 1px black solid;
+    cursor: pointer;
+}
+
+button.create:hover:not([disabled]):not([type="submit"]) {
+    background-color: rgb(210, 218, 225);
+}
+button.create:disabled:not([type="submit"]) {
+    background-color: rgb(178, 185, 190);
+    cursor: not-allowed;
+    color: rgb(50, 50, 50);
+}
+input.create[type="number"] {
+    border-radius:8px;
+    /* padding-left:16px; */
+    text-align: center;
+    border: 1px black solid;
+}
+input.create[type="number"]:disabled {
+    background-color: rgb(178, 185, 190);
+    cursor: not-allowed;
+    color: rgb(50, 50, 50);}
+select.create {
+    border-radius:8px;
+    padding-left:8px;
+    text-align: center;
+    border: 1px black solid;
+}
+select.create > option.create {
+    text-align: center;
+    padding-left:0px;
+}
+input.create[type='number']::-webkit-inner-spin-button, 
+input.create[type='number']::-webkit-outer-spin-button { 
+    -webkit-appearance: none;
+    margin: 0;
+}
+.extended {
+    margin-left:30px
+}
+#jwt-signing-key:disabled {
+    background-color: lightgray;
+}

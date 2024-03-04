@@ -13,13 +13,13 @@ Wants=network-online.target
 
 [Service]
 User=root
-WorkingDirectory=/opt/QRLink
+WorkingDirectory=/opt/QRLink/NextJS
 # Run the "start" script specified in package.json, which starts the server. Building has to be done before this manually.
 # To build, run "npm run build" in the project directory.
-ExecStart=/usr/bin/npm run start --hostname
+ExecStart=sudo -u appuser /usr/bin/npx next start --hostname 0.0.0.0 --port 8080
 # The command to stop NextJS completely
 # This searches for processes listening on port 8080, grabs their PIDs, and kills them
-ExecStop=/bin/bash -c "for pid in $(/usr/bin/lsof -i :8080 | grep -E 'TCP .*:(8080) \(LISTEN\)' | awk '{ print $2 }'); do kill -9 $pid; done"
+ExecStop=/bin/bash -c "for pid in $(/usr/bin/lsof -i :8080 | grep -E 'TCP .*:(http-alt) \(LISTEN\)' | awk '{ print $2 }'); do kill -s SIGINT $pid; done"
 # Restart the service if it crashes
 Restart=on-failure
 # The service will only restart 5 times per day if it crashes
