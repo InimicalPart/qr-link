@@ -11,6 +11,7 @@ export default function Settings({
 }) {
     const [getScanData, setGetScanData] = useState(qrCodeInfo?.settings?.getScanData ?? false)
     const [getLocation, setGetLocation] = useState(qrCodeInfo?.settings?.scanData?.information?.location ?? false)
+    const [getUA, setGetUA] = useState(qrCodeInfo?.settings?.scanData?.information["user-agent"] ?? false)
     const [sendToURL, setSendToURL] = useState(qrCodeInfo?.settings?.scanData?.sendToURL ?? false)
     const [jwtKeyShown, setJwtKeyShown] = useState(false)
 
@@ -67,8 +68,12 @@ export default function Settings({
                             <label style={{marginLeft:5}} htmlFor="ip-address">IP address</label>
                         </div>
                         <div>
-                            <input className="create" type="checkbox" id="user-agent" name="grab_user_agent" defaultChecked={qrCodeInfo?.settings?.scanData?.information["user-agent"] ?? false} />
+                            <input className="create" type="checkbox" id="user-agent" onChange={()=>setGetUA(!getUA)} name="grab_user_agent" defaultChecked={qrCodeInfo?.settings?.scanData?.information["user-agent"] ?? false} />
                             <label style={{marginLeft:5}} htmlFor="user-agent">User-Agent</label>
+                        </div>
+                        <div className="extended">
+                            <input className="create" type="checkbox" id="req-ua" disabled={!getUA} name="require_user_agent" defaultChecked={qrCodeInfo?.settings?.requirements["user-agent"] ?? false} />
+                            <label style={{marginLeft:5}} htmlFor="req-loc">Required</label>
                         </div>
                         <div>
                             <input className="create" type="checkbox" id="location"  onChange={()=>setGetLocation(!getLocation)} name="grab_location" defaultChecked={getLocation} />
@@ -76,7 +81,7 @@ export default function Settings({
                         </div>
                         <div className="extended">
                             <input className="create" type="checkbox" id="req-loc" disabled={!getLocation} name="require_location" defaultChecked={qrCodeInfo?.settings?.requirements?.location ?? false} />
-                            <label style={{marginLeft:5}} htmlFor="req-loc">Require location for redirect</label>
+                            <label style={{marginLeft:5}} htmlFor="req-loc">Required</label>
                         </div>        
                     </div>
                     <p style={{display:"list-item",marginLeft:20,marginBottom:2.5}}><b>Configuration</b></p>

@@ -42,6 +42,11 @@ export async function QRCode2PDF(qrcode: QRCode, id: string) {
             rtrn.push(template.replace("[TXT]", "Get IP -> " + (settings.scanData.information.ip ? "YES" : "NO")))
             rtrn.push(template.replace("[TXT]", "Get Location -> " + (settings.scanData.information.location ? "YES" : "NO")))
             rtrn.push(template.replace("[TXT]", "Require Location -> " + (settings.requirements.location ? "YES" : "NO")))
+            rtrn.push(template.replace("[TXT]", "Require User-Agent -> " + (settings.scanData.information["user-agent"] ? "YES" : "NO")))
+            rtrn.push(template.replace("[TXT]", "Send to Redirect URL -> " + (settings.scanData.sendToURL ? "YES" : "NO")))
+            if (settings.scanData.sendToURL) {
+                rtrn.push(template.replace("[TXT]", "JWT Encryption Key -> " + settings.scanData.JWTEncryptionKey))
+            }
         }
         return rtrn.join("<br>")
     }
