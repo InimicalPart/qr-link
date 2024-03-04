@@ -17,6 +17,7 @@ export class QRCode {
     settings: {
         requirements: {
             location: boolean;
+            "user-agent": boolean;
         };
         scanData: {
             information: {
@@ -33,7 +34,8 @@ export class QRCode {
 
     }={
         requirements: {
-            location: false
+            location: false,
+            "user-agent": false,
         },
         scanData: {
             information: {
@@ -108,6 +110,10 @@ export class QRCode {
         return this.settings.requirements.location && this.settings.getScanData && this.settings.scanData.information.location 
     }
 
+    hasUserAgentRequirement() {
+        return this.settings.getScanData && this.settings.scanData.information["user-agent"]
+    }
+
     hassendToURL() {
         return this.settings.scanData.sendToURL && this.settings.scanData.JWTEncryptionKey
     }
@@ -121,7 +127,7 @@ export class QRCode {
     }
     
     getScanDataSettings() {
-        return {...this.settings.scanData.information,location_required: this.hasLocationRequirement()}
+        return {...this.settings.scanData.information,location_required: this.hasLocationRequirement(), user_agent_required: this.hasUserAgentRequirement()}
     }
     
     wantsScanData() {

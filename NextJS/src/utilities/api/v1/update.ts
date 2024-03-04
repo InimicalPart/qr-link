@@ -153,6 +153,10 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>) {
                     //! Needs to be a boolean
                     if (!(typeof (update.settings.requirements.location as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.requirements.location' needs to be a boolean."}), {status:400});
                 }
+                if (update.settings.requirements["user-agent"]) {
+                    //! Needs to be a boolean
+                    if (!(typeof (update.settings.requirements["user-agent"] as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.requirements.user-agent' needs to be a boolean."}), {status:400});
+                }
             }
             if (update.settings.scanData.sendToURL == true) {
                 // needs to also contain a valid JWT encryption key if sendToURL is true

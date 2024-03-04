@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
     
     if (global.QRCodeTable[id].wantsScanData() || global.QRCodeTable[id].type == "location") {
         //! if only timestamp or user-agent is requested, we can get it using NextJS and redirect them normally
-        if (global.QRCodeTable[id].wantsScanData() && global.QRCodeTable[id].type !== "location" && Object.keys(global.QRCodeTable[id].settings.scanData.information).filter((key) => !["timestamp", "user-agent","ip"].includes(key) && global.QRCodeTable[id].settings.scanData.information[key as "location"|"timestamp"|"ip"|"user-agent"|"fingerprint"] == true).length == 0) {
+        if (global.QRCodeTable[id].wantsScanData() && global.QRCodeTable[id].type !== "location" && Object.keys(global.QRCodeTable[id].settings.scanData.information).filter((key) => !["timestamp"].includes(key) && global.QRCodeTable[id].settings.scanData.information[key as "location"|"timestamp"|"ip"|"user-agent"|"fingerprint"] == true).length == 0) {
             let finalScanData: Partial<{
                 fingerprint: string,
                 "user-agent": string,
@@ -60,12 +60,6 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
 
             if (global.QRCodeTable[id].settings.scanData.information.timestamp) {
                 finalScanData.timestamp = new Date()
-            }
-            if (global.QRCodeTable[id].settings.scanData.information["user-agent"]) {
-                finalScanData["user-agent"] = request.headers.get("user-agent")
-            }
-            if (global.QRCodeTable[id].settings.scanData.information.ip) {
-                finalScanData.ip = request.headers.get("x-forwarded-for") ?? request.ip
             }
 
             global.QRCodeTable[id].scanData.push(finalScanData)
@@ -96,7 +90,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                     list-style-position: inside;
                     list-style-type: disc;
                 }
-                #accept {
+                #accept, #deny {
                     padding: 10px 20px;
                     border-radius: 8px;
                 }
@@ -107,7 +101,10 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
         </head>
         <body>
             <p id="status">Please hold on while we communicate with the server...</p>
-            <button id="accept" style="display: none;">Accept</button>
+            <div style="display:flex;flex-wrap:nowrap;gap:10px;">
+                <button id="accept" style="display: none;">Accept</button>
+                <button id="deny" style="display: none;">Deny</button>
+            </div>
             <script>
                 (async()=>{
                     let client = new ClientJS();
@@ -134,24 +131,47 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                         if (parsed.type == "scanData") {
                             const serverWants = {
                                 fingerprint: parsed.data.fingerprint ?? false,
-                                location: parsed.data.location ?? false
+                                location: parsed.data.location ?? false,
+                                "user-agent": parsed.data["user-agent"] ?? false,
+                                ip: parsed.data.ip ?? false
                             }
 
                             const isLocationRequired = parsed.data.location_required ?? false
+                            const isUserAgentRequired = parsed.data["user_agent_required"] ?? false
 
                             const clientHas = {
                                 fingerprint: null,
-                                location: null
+                                location: null,
+                                "user-agent": null,
+                                ip: null
+                            }
+
+                            if (isLocationRequired || isUserAgentRequired) {
+                                document.getElementById("deny").onclick = () => {
+                                    ws.send(JSON.stringify({type: "denied"}))
+                                    ws.close()
+                                    document.getElementById("accept").style.display = "none"
+                                    document.getElementById("deny").style.display = "none"
+                                    document.getElementById("status").innerText = "You have denied the request. None of your information has been sent to the server."
+                                }
                             }
 
                             document.getElementById("accept").onclick = async () => {
                                 document.getElementById("accept").disabled = true
+                                document.getElementById("deny").disabled = true
                                 document.getElementById("accept").innerText = "..."
+                                document.getElementById("deny").innerText = "..."
+                                const fingerprintChecked = document.getElementById("fingerprint")?.checked
+                                const locationChecked = document.getElementById("location")?.checked
+                                const userAgentChecked = document.getElementById("useragent")?.checked
+                                const ipChecked = document.getElementById("ip")?.checked
+
                                 document.getElementById("status").innerText = "Please wait while we attempt to grab the information..."
-                                if (serverWants.fingerprint) {
+
+                                if (serverWants.fingerprint && fingerprintChecked) {
                                     clientHas.fingerprint = client.getCustomFingerprint(client.getBrowserData().ua,client.getCanvasPrint())
                                 }
-                                if (serverWants.location) {
+                                if (serverWants.location && (locationChecked || isLocationRequired)) {
                                     if (navigator.geolocation) {
                                         let res = await getPos().then((pos)=>{
                                             clientHas.location = {
@@ -176,34 +196,93 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                                         }
                                     };
                                 }
+                                if (serverWants["user-agent"] && (userAgentChecked || isUserAgentRequired)) {
+                                    clientHas["user-agent"] = client.getBrowserData().ua
+                                    if (isUserAgentRequired && !clientHas["user-agent"]) {
+                                        document.getElementById("status").innerText = "This QR-code requires device and browser information to be sent to the server, but your browser does not support it. Please use a different browser."
+                                        return
+                                    }
+                                }
+                                if (serverWants.ip && ipChecked) {
+                                    // make request to ipinfo.io/json
+                                    clientHas.ip = (await fetch("https://ipinfo.io/json").then((res)=>res.json()).catch(e=>e)).ip ?? "${request.headers.get("x-forwarded-for") ?? request.ip}";
+                                }
                                 document.getElementById("status").innerText = "Please wait while we send the information to the server..."
                                 console.log("<", JSON.stringify({type: "scanData", data: {
                                     fingerprint: clientHas.fingerprint,
-                                    location: clientHas.location
+                                    location: clientHas.location,
+                                    "user-agent": clientHas["user-agent"],
+                                    ip: clientHas.ip
                                 }}))
                                 ws.send(JSON.stringify({type: "scanData", data: {
                                     fingerprint: clientHas.fingerprint,
-                                    location: clientHas.location
+                                    location: clientHas.location,
+                                    "user-agent": clientHas["user-agent"],
+                                    ip: clientHas.ip
                                 }}))
                             }
-                            document.getElementById("status").innerText = "The owner of this QR-code wants to know the following information about you:"
+                            document.getElementById("status").innerText = "The owner of this QR-code wants to know the following information about you, please uncheck the boxes for the information you do not want to send:"
                             document.getElementById("status").innerHTML += '<br>'
                             if (serverWants.fingerprint) {
-                                document.getElementById("status").innerHTML += '<p class="extended listitem">Your device\\'s unique identifier (device fingerprint)</p>'
+                                document.getElementById("status").innerHTML += '<p class="extended listitem"><input checked type="checkbox" id="fingerprint"></input> Your device\\'s unique identifier (device fingerprint)</p>'
                             }
                             if (serverWants.location) {
-                                document.getElementById("status").innerHTML += '<p class="extended listitem">Your current location</p>'
+                                document.getElementById("status").innerHTML += '<p class="extended listitem"><input checked type="checkbox" id="location"></input> Your current location</p>'
                             }
+                            if (serverWants["user-agent"]) {
+                                document.getElementById("status").innerHTML += '<p class="extended listitem"><input checked type="checkbox" id="useragent"></input> Which device and browser you\\'re using</p>'
+                            }
+                            if (serverWants.ip) {
+                                document.getElementById("status").innerHTML += '<p class="extended listitem"><input checked type="checkbox" id="ip"></input> Your IP address</p>'
+                            }
+
+                            if (isLocationRequired || isUserAgentRequired) {
+                                document.getElementById("status").innerHTML += "<br><b>Requirements: (has to be provided to continue)</b>"
+                            }
+
                             if (isLocationRequired) {
-                                document.getElementById("status").innerHTML += "<br><b>Location has been marked as required by the owner of this QR-code. You must provide your location to continue.</b>"
+                                document.getElementById("status").innerHTML += '<p class="extended listitem">Location</p>'
                             }
+                            if (isUserAgentRequired) {
+                                document.getElementById("status").innerHTML += '<p class="extended listitem">Device and Browser information</p>'
+                            }
+
+                            const disabledReasons = []
+                            if (serverWants.location && isLocationRequired) {
+                                document.getElementById("location").addEventListener("change",(e)=>{
+                                    if (e.target.checked) {
+                                        disabledReasons.splice(disabledReasons.indexOf("location"),1)
+                                        if (disabledReasons.length == 0) document.getElementById("accept").disabled = false
+                                    } else {
+                                        disabledReasons.push("location")
+                                        document.getElementById("accept").disabled = true
+                                    }
+                                })
+                            }
+                            if (serverWants["user-agent"] && isUserAgentRequired) {
+                                document.getElementById("useragent").addEventListener("change",(e)=>{
+                                    if (e.target.checked) {
+                                        disabledReasons.splice(disabledReasons.indexOf("useragent"),1)
+                                        if (disabledReasons.length == 0) document.getElementById("accept").disabled = false
+                                    } else {
+                                        disabledReasons.push("useragent")
+                                        document.getElementById("accept").disabled = true
+                                    }
+                                })
+                            }
+
+
+
                             document.getElementById("accept").style.display = "block"
+                            if (isLocationRequired || isUserAgentRequired) document.getElementById("deny").style.display = "block"
+
+
                             
                         } else if (parsed.type == "redirect") {
                             const uri = parsed.data
                             ws.close()
                             if (uri == "nil") {
-                                document.getElementById("status").innerHTML = "This QR-code is a location-based QR-code. Based on your location, you are not in any defined zone. Therefore, you will not be redirected. If you believe this is an error, please try again or move a bit closer to the location. "
+                                document.getElementById("status").innerHTML = "This QR-code is a location-based QR-code. Based on your location, you are not in any defined zone. Therefore, you will not be redirected. If you believe this is an error, please try again or move a bit closer to the location."
                                 if (parsed.potential_reasons) {
                                     document.getElementById("status").innerHTML += "<br><br><b>Potential reasons:</b>"
                                     if (parsed.potential_reasons) {
@@ -330,13 +409,19 @@ export function SOCKET(
 
     console.log("<", JSON.stringify({type: "scanData", data: {
             fingerprint: scanDataSettings.fingerprint ?? false,
+            "user-agent": scanDataSettings["user-agent"] ?? false,
+            ip: scanDataSettings.ip ?? false,
             location: scanDataSettings.location || global.QRCodeTable[id].type == "location",
-            location_required: scanDataSettings.location_required || global.QRCodeTable[id].type == "location"
+            location_required: scanDataSettings.location_required || global.QRCodeTable[id].type == "location",
+            user_agent_required: scanDataSettings.user_agent_required ?? false,
     }}))
     client.send(JSON.stringify({type: "scanData", data: {
             fingerprint: scanDataSettings.fingerprint ?? false,
-            location: scanDataSettings.location || global.QRCodeTable[id].type == "location", 
-            location_required: scanDataSettings.location_required || global.QRCodeTable[id].type == "location"
+            "user-agent": scanDataSettings["user-agent"] ?? false,
+            ip: scanDataSettings.ip ?? false,
+            location: scanDataSettings.location || global.QRCodeTable[id].type == "location",
+            location_required: scanDataSettings.location_required || global.QRCodeTable[id].type == "location",
+            user_agent_required: scanDataSettings.user_agent_required ?? false,
         }
     }))
     let websocketPing = setInterval(() => {
@@ -364,6 +449,13 @@ export function SOCKET(
                     client.close()
                     return
                 }
+                if (!parsed.data["user-agent"] && scanDataSettings.user_agent_required) {
+                    console.log('[HA] The client tried to send scan data without user-agent for a QR-code that requires it');
+                    console.log("<", JSON.stringify({error: "USER_AGENT_REQUIRED", message: "User-Agent is required for this QR-code."}))
+                    client.send(JSON.stringify({error: "USER_AGENT_REQUIRED", message: "User-Agent is required for this QR-code."}))
+                    client.close()
+                    return
+                }
                 let scanData: {
                     fingerprint: string | undefined,
                     location: {
@@ -386,8 +478,8 @@ export function SOCKET(
                         fingerprint: parsed.data.fingerprint ?? undefined,
                         location: parsed.data.location ?? undefined,
                         timestamp: scanDataSettings.timestamp ? new Date() : undefined,
-                        "user-agent": scanDataSettings["user-agent"] ? request.headers["user-agent"] : undefined,
-                        ip: scanDataSettings.ip ? request.headers["x-forwarded-for"] as string ?? request.socket.remoteAddress.replace(/^::ffff:/, "") : undefined
+                        "user-agent": parsed.data["user-agent"] ?? undefined,
+                        ip: parsed.data.ip ?? undefined
                     }
                     
                     Object.keys(scanData).forEach((key) => {
@@ -428,6 +520,9 @@ export function SOCKET(
                     client.send(JSON.stringify({error: "NO_REDIRECT", message: "No redirect URL provided."}))
                 }
                 
+            } else if (parsed.type == "denied") {
+                console.log('[HA] The client has denied the request for scan data for QR-code ' + id);
+                if (client.readyState == client.OPEN) client.close()
             }
         } catch (e) {
             console.log('[HA] The client tried to send invalid JSON');

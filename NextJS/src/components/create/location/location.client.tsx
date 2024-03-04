@@ -4,19 +4,19 @@ import { useCallback, useEffect, useState } from "react";
 import { useLeafletContext } from '@react-leaflet/core'
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents, Tooltip, CircleMarker, Polyline, Polygon } from 'react-leaflet'
 import { intersect as intersects, contains } from "@/utilities/(ui)/create/shapeOperations.server";
-import "./actions.css"
 import crypto from 'crypto'
 import { LocateControl } from "./locateControl.client";
 import React from "react";
 export default function Location({
     state,
-    qrCodeInfo = {}
+    qrCodeInfo = {},
+    action
 }: {
     state: any,
-    qrCodeInfo?: any
+    qrCodeInfo?: any,
+    action: string
 }) {
     const [zones, setZones] = useState([] as any[]);
-    const [type, setType] = useState("")
     const [selectedZoneIndex, setSelectedZoneIndex] = useState(-1);
     const [isCreatingZone, setIsCreatingZone] = useState(false);
     const [zoneType, setZoneType] = useState("circle"); // "circle" or "polygon"
@@ -30,7 +30,7 @@ export default function Location({
     
     useEffect(()=>{
         function getData() {
-            if (type == "location") {
+            if (action == "location") {
                 window.dispatchEvent(new CustomEvent("data", { detail: { zones: convertToBeautiful(zones) } }));
             }
         }
@@ -39,13 +39,11 @@ export default function Location({
         return ()=>{
             window.removeEventListener("getData", getData)
         }
-    },[zones,type])
+    },[zones,action])
 
     // process existing zones in qrCodeInfo.data.zones ([]) if qrCodeInfo.type == "location"
     useEffect(()=>{
         if (qrCodeInfo.type == "location") {
-            setZones([])
-            setType("location")
             setZones(qrCodeInfo.data.zones.map((zone: any) => {
                 return {
                     ...zone,
@@ -59,7 +57,7 @@ export default function Location({
 
     useEffect(()=>{
         function onSubmit(e: Event) {
-            if (type == "location") {
+            if (action == "location") {
                 if (!validateLocation(zones)) {
                     console.log("Cancelling form submission due to invalid location zones being present")
                     e.preventDefault()
@@ -243,11 +241,7 @@ export default function Location({
         }
     }
     useEffect(()=>{
-        window.addEventListener("typeChange", onTypeChanged)
         window.addEventListener("verifyZones", verifyZones)
-        function onTypeChanged(event: any) {
-            setType(event.detail)
-        }
         function verifyZones() {
             setVerifying(true)
             console.log("Verifying")
@@ -264,15 +258,9 @@ export default function Location({
             setVerifying(false)
         }
         return ()=>{
-            window.removeEventListener("typeChange", onTypeChanged)
             window.removeEventListener("verifyZones", verifyZones)
         }    
     },[zones,wrappedValidateLocation])
-    useEffect(()=>{
-        if (qrCodeInfo.type == "location") {
-            window.dispatchEvent(new CustomEvent("typeChange", { detail: "location" }))
-        }
-    })
     function validateLocation(zones:{
         type: 'circle' | 'polygon';
         priority?: number;
@@ -513,7 +501,7 @@ export default function Location({
     return (
         <React.Fragment>
             <div>
-            <input className="create" type="hidden" name="location_zones" disabled={type !== "location"} value={convertToBeautiful(zones) as string} />
+            <input className="create" type="hidden" name="location_zones" disabled={action !== "location"} value={convertToBeautiful(zones) as string} />
                 <MapContainer maxBounds={[[-85.05115, -180], [85, 180]]} maxBoundsViscosity={1.0} style={{ width: "90vw", maxWidth: 600, height: 400, left:"50%", transform:"translateX(-50%)" }} center={zones.length > 0 && selectedZoneIndex >= 0 && selectedZoneIndex < zones.length ? zones[selectedZoneIndex].position : [51.505, -0.09]} zoom={2} minZoom={2} >
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

@@ -29,6 +29,7 @@ const createSchema = z.object({
     grab_user_agent: z.string().nullable(),
     grab_location: z.string().nullable(),
     require_location: z.string().nullable(),
+    require_user_agent: z.string().nullable(),
     send_to_redirect: z.string().nullable(),
     jwt_singing_key: z.string().max(100, {
         message: "JWT Signing Key must be at most 100 characters"
@@ -67,6 +68,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
         grab_user_agent: form.get('grab_user_agent'),
         grab_location: form.get('grab_location'),
         require_location: form.get('require_location'),
+        require_user_agent: form.get('require_user_agent'),
         send_to_redirect: form.get('send_to_redirect'),
         jwt_singing_key: form.get('jwt_singing_key'),
         type: form.get('type'),
@@ -98,6 +100,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
     const grabUserAgent = validatedFields.data.grab_user_agent == "on"
     const grabLocation = validatedFields.data.grab_location == "on"
     const requireLocation = validatedFields.data.require_location == "on"
+    const requireUserAgent = validatedFields.data.require_user_agent == "on"
     const sendToRedirect = validatedFields.data.send_to_redirect == "on"
     const jwtSigningKey = validatedFields.data.jwt_singing_key == "" ? null : validatedFields.data.jwt_singing_key
     const type = validatedFields.data.type
@@ -140,7 +143,8 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
                 JWTEncryptionKey: string
             },
             requirements: {
-                location: boolean
+                location: boolean,
+                "user-agent": boolean
             }
         },
         type: string,
@@ -188,7 +192,8 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
                 JWTEncryptionKey: jwtSigningKey
             },
             requirements: {
-                location: requireLocation
+                location: requireLocation,
+                "user-agent": requireUserAgent
             }
         },
         type: type,

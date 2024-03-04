@@ -213,7 +213,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             scanData: {
                 information: {
                     fingerprint: settings?.scanData?.information?.fingerprint ?? false,
-                    "user-agent": settings?.scanData?.information?.["user-agent"] ?? false,
+                    "user-agent": settings?.scanData?.information["user-agent"] ?? false,
                     timestamp: settings?.scanData?.information?.timestamp ?? true,
                     ip: settings?.scanData?.information?.ip ?? false,
                     location: settings?.scanData?.information?.location ?? false,
@@ -223,6 +223,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             },
             requirements: {
                 location: settings?.requirements?.location ?? false, //! Warning, this does not work on iOS when running on localhost, because it's a http:// request, and iOS does not allow sending location data over http:// 
+                "user-agent": settings?.requirements["user-agent"] ?? false,
             }
         }
     });
