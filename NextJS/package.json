@@ -28,6 +28,7 @@
     "puppeteer": "^20.3.0",
     "qrcode": "^1.5.3",
     "qz-tray": "^2.2.3",
+    "random-seed": "^0.3.0",
     "react": "^18",
     "react-dom": "^18",
     "react-leaflet": "^4.2.1",

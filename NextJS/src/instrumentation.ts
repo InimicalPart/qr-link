@@ -25,12 +25,12 @@ export async function register(){
             "name",
             "settings"
         ]
-        global.supportedTypes = ["redirect", "schedule", "location"]
+        global.supportedTypes = ["redirect", "schedule", "location", "user-agent"]
         global.storageMethod = "file";
         global.QRBackupFilePath = process.platform == "win32" ? process.env.USERPROFILE + "\\Documents\\QRLink\\qrcodes.jsonc" : "/srv/QRLink/qrcodes.jsonc";
         // create the backup file/folders if they don't exist
         if (!fs.existsSync(global.QRBackupFilePath)) {
-            fs.mkdirSync(process.platform == "win32" ? process.env.USERPROFILE + "\\Documents\\QRLink" : "/srv/QRLink", { recursive: true });
+            fs.mkdirSync(process.platform == "win32" ? global.QRBackupFilePath.split("\\").slice(0, -1).join("\\") : global.QRBackupFilePath.split("/").slice(0, -1).join("/"), { recursive: true });
             fs.writeFileSync(global.QRBackupFilePath, JSON.stringify({}));
         }
         global.mongoConnectionString = process.env.MONGO_URL ? `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_URL}/${process.env.MONGO_USE_TLS=="true" ? "?tls=true" : ""}` : "mongodb://qrlink:unknown@localhost:27017/"
@@ -43,36 +43,36 @@ export async function register(){
                 console.log("[QL] Failed to connect to the database at " + process.env.MONGO_URL + ". Using file storage method.")
                 return false
                 } else if (information == "creds_req") {
-                try {
-        
-                    console.log("[QL] Attempting to connect to the database with credentials...");
-                    // Attempt to connect using valid credentials
-                    const client = new MongoClient(global.mongoConnectionString, {
-                        serverSelectionTimeoutMS: 1000,
-                        connectTimeoutMS: 1000
-                    });
-                    
-                    const succeeded = await client.db().admin().listDatabases().catch((a) => a).then((a) => a)
-        
-                    if (succeeded instanceof MongoError) {
-                        console.error(succeeded)
-                        console.log("[QL] Failed to connect to the database at " + process.env.MONGO_URL + ". Using file storage method.")
+                    try {
+            
+                        console.log("[QL] Attempting to connect to the database with credentials...");
+                        // Attempt to connect using valid credentials
+                        const client = new MongoClient(global.mongoConnectionString, {
+                            serverSelectionTimeoutMS: 1000,
+                            connectTimeoutMS: 1000
+                        });
+                        
+                        const succeeded = await client.db().admin().listDatabases().catch((a) => a).then((a) => a)
+            
+                        if (succeeded instanceof MongoError) {
+                            console.error(succeeded)
+                            console.log("[QL] Failed to connect to the database at " + process.env.MONGO_URL + ". Using file storage method.")
+                            return false
+                        }
+            
+                        
+                        console.log(`[DB] Successfully connected, checking if the database is set up correctly...`)
+                        await ensureDBSetup(client)
+                        console.log(`[QL] Connection to the database at ${process.env.MONGO_URL} was established. Switching storage method to 'mongo'.`)
+                        global.storageMethod = "mongo"
+                        global.mongoClient = client
+                        return true
+                    } catch (e) {
+                        console.error(e)
+                        console.log(`[QL] Failed to connect to the database at ${process.env.MONGO_URL}. Using file storage method.`)
                         return false
                     }
-        
-                    
-                    console.log(`[DB] Successfully connected, checking if the database is set up correctly...`)
-                    await ensureDBSetup(client)
-                    console.log(`[QL] Connection to the database at ${process.env.MONGO_URL} was established. Switching storage method to 'mongo'.`)
-                    global.storageMethod = "mongo"
-                    global.mongoClient = client
-                    return true
-                } catch (e) {
-                    console.error(e)
-                    console.log(`[QL] Failed to connect to the database at ${process.env.MONGO_URL}. Using file storage method.`)
-                    return false
                 }
-            }
             })
         } else {
             // if no username or password

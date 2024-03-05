@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
     }
     // Make sure request is fresh
     if (!request.nextUrl.searchParams.get("_")) {
-      let nowFlipped = new Date().getTime().toString().split("").reverse().join("") // This is to confuse potential attackers that might try to add fake scans
+      let nowFlipped = new Date().getTime().toString().split("").reverse().join("") // This is to confuse potential attackers that might try to add fake scans. Will it stop them for long? uh... no.
       return NextResponse.redirect(new URL(process.env.API_URL + "/qrcode/" + id + "/handler?_=" + Buffer.from(nowFlipped).toString("base64"))) // By doing this, /qrcode/:id/handler will not show up in the user's history, preventing them from going back to the QR-code after it has been scanned which also prevents a fake scan count
     } else {
       const then = new Date(parseInt(Buffer.from(request.nextUrl.searchParams.get("_") as string, "base64").toString("utf-8").split("").reverse().join("")))
@@ -24,12 +24,19 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
       }
     }
     console.log("[QRCode] QR-code was scanned: " + id);
-    const redirect_to = global.QRCodeTable[id].type =="location" ? null : global.QRCodeTable[id].getRedirectTo()
+    const redirectRequiresInfoFromUser = ["location", "user-agent"].includes(global.QRCodeTable[id].type)
+    const redirect_to = redirectRequiresInfoFromUser ? null : global.QRCodeTable[id].getRedirectTo()
 
     if (global.QRCodeTable[id].isExpired()) {
-        if (redirect_to) {
-            return NextResponse.redirect(redirect_to)
-        } else {
+        console.log('[HA] The client tried to connect to an expired QR-code');
+
+        if (global.QRCodeTable[id].hasAfterExpiry()) {
+            if (!redirectRequiresInfoFromUser) {
+                console.log("[WS] Sending client to after_expiry URL...")
+                const after_expiry = global.QRCodeTable[id].getRedirectTo() //! .getRedirectTo() will return the after_expiry URL if the QR-code is expired   
+                return NextResponse.redirect(after_expiry)
+            }
+        } else {   
             return new NextResponse(`
             <!DOCTYPE html>
             <html lang="en">
@@ -43,9 +50,11 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
         }
     }
     
-    if (global.QRCodeTable[id].wantsScanData() || global.QRCodeTable[id].type == "location") {
-        //! if only timestamp or user-agent is requested, we can get it using NextJS and redirect them normally
-        if (global.QRCodeTable[id].wantsScanData() && global.QRCodeTable[id].type !== "location" && Object.keys(global.QRCodeTable[id].settings.scanData.information).filter((key) => !["timestamp"].includes(key) && global.QRCodeTable[id].settings.scanData.information[key as "location"|"timestamp"|"ip"|"user-agent"|"fingerprint"] == true).length == 0) {
+    if (global.QRCodeTable[id].wantsScanData() || redirectRequiresInfoFromUser) {
+        //! if only timestamp is requested, we can get it using NextJS and redirect them normally
+        const onlyWantsTimestamp = Object.keys(global.QRCodeTable[id].settings.scanData.information).filter((key) => !["timestamp"].includes(key) && global.QRCodeTable[id].settings.scanData.information[key as "location"|"timestamp"|"ip"|"user-agent"|"fingerprint"] == true).length == 0
+        const typeRequiresInfo = redirectRequiresInfoFromUser
+        if (global.QRCodeTable[id].wantsScanData() && onlyWantsTimestamp && !typeRequiresInfo) {
             let finalScanData: Partial<{
                 fingerprint: string,
                 "user-agent": string,
@@ -58,9 +67,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                 }
             }> = {}
 
-            if (global.QRCodeTable[id].settings.scanData.information.timestamp) {
-                finalScanData.timestamp = new Date()
-            }
+            finalScanData.timestamp = new Date()
 
             global.QRCodeTable[id].scanData.push(finalScanData)
             global.QRCodeTable[id].scanCount++
@@ -71,7 +78,8 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
             throw new Error("No redirect URL provided.")
         }
 
-
+        //! Return the HTML page that will connect to this endpoint using WebSocket, get the scan data and send it back to the server
+        //! where the server will then redirect the user to the URL that the QR-code wants to redirect them to based on the scan data
         return new NextResponse(`
         <!DOCTYPE html>
         <html lang="en">
@@ -81,6 +89,9 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/ClientJS/0.2.1/client.min.js" integrity="sha512-2WLGNBqBSz+HMXWugyIdkJNr6fPanvXsjj5ivuMzmztNgKVaJHJIcn6tkqmVoV4EKJYdzlLfNi0O1K3e1EtWAQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
             <style>
+                * {
+                    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+                }
                 .extended {
                     margin-left:20px !important;
                 }
@@ -282,7 +293,10 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                             const uri = parsed.data
                             ws.close()
                             if (uri == "nil") {
-                                document.getElementById("status").innerHTML = "This QR-code is a location-based QR-code. Based on your location, you are not in any defined zone. Therefore, you will not be redirected. If you believe this is an error, please try again or move a bit closer to the location."
+                                const qrType = parsed.qrType
+
+                                if (qrType == "location") document.getElementById("status").innerHTML = "This QR-code is a location-based QR-code. Based on your location, you are not in any defined zone. Therefore, you will not be redirected. If you believe this is an error, please try again or move a bit closer to the location."
+                                else if (qrType == "user-agent") document.getElementById("status").innerHTML = "This QR-code is a user-agent based QR-code. Your device and browser does not match any of the defined user-agents. Therefore, you will not be redirected. Please use a different device or browser."
                                 if (parsed.potential_reasons) {
                                     document.getElementById("status").innerHTML += "<br><br><b>Potential reasons:</b>"
                                     if (parsed.potential_reasons) {
@@ -292,6 +306,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                                     }
                                 }
                                 document.getElementById("accept").style.display = "none"
+                                document.getElementById("deny").style.display = "none"
                                 return
                             }
                             // if uri is vcard
@@ -333,19 +348,6 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
         //! if redirect_to is vcard
         if (redirect_to.toLowerCase().startsWith("begin:vcard") && redirect_to.toLowerCase().endsWith("end:vcard")){
             console.log("[QRCode] Redirecting to vCard: " + redirect_to.replace(/\n/g,"%0A"));
-            // return new NextResponse(`
-            // <!DOCTYPE html>
-            // <html lang="en">
-            // <head>
-            //     <title>QRLink</title>
-            //     <meta http-equiv="refresh" content="0;url=data:text/vcard;charset=utf-8,${encodeURIComponent(redirect_to)}">
-            // </head>
-            // <body>
-            //     <p>Redirecting... If you do not get redirected: <a download="vcard_${new Date().getTime()}.vcf" href="data:text/vcard;charset=utf-8,${encodeURIComponent(redirect_to)}">click here</a></p>
-            // </body>
-            // </html>`, { status: 200, headers:{
-            //     "Content-Type": "text/html"
-            // } });
             return new NextResponse(redirect_to, { status: 200, headers:{
                 "Content-Type": "text/vcard",
                 "Content-Disposition": "attachment; filename=vcard_"+new Date().getTime()+".vcf"
@@ -354,6 +356,19 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
             console.log("[QRCode] Redirecting to: " + redirect_to);
             return NextResponse.redirect(redirect_to)
         }
+    } else {
+        console.log("[QRCode] Err! No redirect URL provided for QR-code " + id);
+        return new NextResponse(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <title>QRLink</title>
+            </head>
+            <body>
+                <p>Something went wrong when we tried to redirect you. This error has been logged.</p>
+            </body>
+            </html>`, { status: 500 });
+    
     }
 }
 
@@ -361,7 +376,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
 export function SOCKET(
     client: import('ws').WebSocket,
     request: import('http').IncomingMessage,
-    server: import('ws').WebSocketServer,
+    _server: import('ws').WebSocketServer,
 ) {
     const id = request.url.split("/")[4] //! s**t solution but i think that this is the only way to get the id
     console.log('[HA] A client is trying to connect to QR-code with ID ' + id);
@@ -373,14 +388,27 @@ export function SOCKET(
       return
     }
 
+    const redirectRequiresInfoFromUser = ["location", "user-agent"].includes(global.QRCodeTable[id].type)
     if (global.QRCodeTable[id].isExpired()) {
-      console.log('[HA] The client tried to connect to an expired QR-code');
-      client.send(JSON.stringify({error: "EXPIRED", message: "QR-code has expired."}))
-      client.close()
-      return
+        console.log('[HA] The client tried to connect to an expired QR-code');
+
+        if (global.QRCodeTable[id].hasAfterExpiry()) {
+            if (!redirectRequiresInfoFromUser) {
+                console.log("[WS] Sending client to after_expiry URL...")
+                const after_expiry = global.QRCodeTable[id].getRedirectTo() //! .getRedirectTo() will return the after_expiry URL if the QR-code is expired   
+                console.log("<", JSON.stringify({type: "redirect", data: after_expiry}))
+                client.send(JSON.stringify({type: "redirect", data: after_expiry}))
+                client.close()
+                return
+            }
+        } else {   
+            client.send(JSON.stringify({error: "EXPIRED", message: "QR-code has expired."}))
+            client.close()
+            return
+        }
     }
 
-    if (!global.QRCodeTable[id].wantsScanData() && global.QRCodeTable[id].type != "location") {
+    if (!global.QRCodeTable[id].wantsScanData() && !redirectRequiresInfoFromUser) {
         console.log('[HA] The client tried to connect to a QR-code that does not want scan data');
         client.send(JSON.stringify({error: "SCAN_DATA_NOT_ENABLED", message: "Scan data is not enabled for this QR-code."}))
         client.close()
@@ -405,23 +433,41 @@ export function SOCKET(
 
       console.log('[HA] The client has connected to the QR-code with ID ' + id);
 
-    const scanDataSettings = global.QRCodeTable[id].getScanDataSettings()
+    const scanDataSettings = global.QRCodeTable[id].isExpired() ? {
+        timestamp: false,
+        fingerprint: false,
+        ip: false,
+        location: global.QRCodeTable[id].type == "location",
+        location_required: global.QRCodeTable[id].type == "location",
+        "user-agent": global.QRCodeTable[id].type == "user-agent",
+        user_agent_required: global.QRCodeTable[id].type == "user-agent"
+    } : global.QRCodeTable[id].getScanDataSettings()
+    
+    if (global.QRCodeTable[id].type == "location") {
+        scanDataSettings.location = true
+        scanDataSettings.location_required = true
+    } else if (global.QRCodeTable[id].type == "user-agent") {
+        scanDataSettings["user-agent"] = true
+        scanDataSettings.user_agent_required = true
+    }
+
+
 
     console.log("<", JSON.stringify({type: "scanData", data: {
             fingerprint: scanDataSettings.fingerprint ?? false,
-            "user-agent": scanDataSettings["user-agent"] ?? false,
             ip: scanDataSettings.ip ?? false,
-            location: scanDataSettings.location || global.QRCodeTable[id].type == "location",
-            location_required: scanDataSettings.location_required || global.QRCodeTable[id].type == "location",
-            user_agent_required: scanDataSettings.user_agent_required ?? false,
+            location: scanDataSettings.location,
+            location_required: scanDataSettings.location_required,
+            "user-agent": scanDataSettings["user-agent"],
+            user_agent_required: scanDataSettings.user_agent_required,
     }}))
     client.send(JSON.stringify({type: "scanData", data: {
             fingerprint: scanDataSettings.fingerprint ?? false,
-            "user-agent": scanDataSettings["user-agent"] ?? false,
             ip: scanDataSettings.ip ?? false,
-            location: scanDataSettings.location || global.QRCodeTable[id].type == "location",
-            location_required: scanDataSettings.location_required || global.QRCodeTable[id].type == "location",
-            user_agent_required: scanDataSettings.user_agent_required ?? false,
+            location: scanDataSettings.location,
+            location_required: scanDataSettings.location_required,
+            "user-agent": scanDataSettings["user-agent"],
+            user_agent_required: scanDataSettings.user_agent_required,
         }
     }))
     let websocketPing = setInterval(() => {
@@ -442,7 +488,7 @@ export function SOCKET(
             console.log(">", message.toString())
             if (parsed.type == "scanData") {
                 console.log('[HA] The client has sent scan data for QR-code ' + id);
-                if (!parsed.data.location && (scanDataSettings.location_required || global.QRCodeTable[id].type == "location")) {
+                if (!parsed.data.location && (scanDataSettings.location_required)) {
                     console.log('[HA] The client tried to send scan data without location for a QR-code that requires it');
                     console.log("<", JSON.stringify({error: "LOCATION_REQUIRED", message: "Location is required for this QR-code."}))
                     client.send(JSON.stringify({error: "LOCATION_REQUIRED", message: "Location is required for this QR-code."}))
@@ -473,7 +519,7 @@ export function SOCKET(
                     "user-agent": undefined,
                     ip: undefined
                 }
-                if (global.QRCodeTable[id].wantsScanData()) {
+                if (global.QRCodeTable[id].wantsScanData() || redirectRequiresInfoFromUser) {
                     scanData = {
                         fingerprint: parsed.data.fingerprint ?? undefined,
                         location: parsed.data.location ?? undefined,
@@ -485,28 +531,34 @@ export function SOCKET(
                     Object.keys(scanData).forEach((key) => {
                         if (scanData[key as keyof typeof scanData] == undefined) delete scanData[key as keyof typeof scanData]
                     })
-                    global.QRCodeTable[id].scanData.push(scanData)
+                    if (!global.QRCodeTable[id].isExpired())  global.QRCodeTable[id].scanData.push(scanData)
                 }
-                global.QRCodeTable[id].scanCount++
+                if (!global.QRCodeTable[id].isExpired()) global.QRCodeTable[id].scanCount++
 
                 saveQR(id, global.QRCodeTable[id], true)
 
-                const redirect_to = global.QRCodeTable[id].getRedirectTo(global.QRCodeTable[id].type == "location" ? parsed.data.location : undefined)
+                const locationData = global.QRCodeTable[id].type == "location" ? parsed.data.location : undefined
+                const userAgentData = global.QRCodeTable[id].type == "user-agent" ? parsed.data["user-agent"] : undefined
+
+                const redirect_to = global.QRCodeTable[id].getRedirectTo(locationData ?? userAgentData)
                 const encryptedScanData = await global.QRCodeTable[id].signScanData(scanData) // This is to prevent the client from tampering with the scan data while it is being sent to the redirect URL
 
-                if (redirect_to == "nil" && global.QRCodeTable[id].type == "location") {
+                if (redirect_to == "nil") {
                     const potentialReason: {
                         accuracy?: string
-                    } = {
+                    } = {}
+                    if (global.QRCodeTable[id].type == "location") {
 
+                        
+                        if (scanData.location.accuracy > 100) {
+                            potentialReason["accuracy"] = "Your location accuracy is too low. (Accuracy: " + scanData.location.accuracy + "m)"
+                        }
                     }
-
-                    if (scanData.location.accuracy > 100) {
-                        potentialReason["accuracy"] = "Your location accuracy is too low. (Accuracy: " + scanData.location.accuracy + "m)"
-                    }
-
-                    console.log("<", JSON.stringify({type: "redirect", data: "nil", ...(Object.keys(potentialReason).length > 0 ? {potential_reasons:potentialReason} : {}) }))
-                    client.send(JSON.stringify({type: "redirect", data: "nil", ...(Object.keys(potentialReason).length > 0 ? {potential_reasons:potentialReason} : {}) }))
+                        
+                    console.log("<", JSON.stringify({type: "redirect", qrType: global.QRCodeTable[id].type, data: "nil", ...(Object.keys(potentialReason).length > 0 ? {potential_reasons:potentialReason} : {}) }))
+                    client.send(JSON.stringify({type: "redirect", qrType: global.QRCodeTable[id].type, data: "nil", ...(Object.keys(potentialReason).length > 0 ? {potential_reasons:potentialReason} : {}) }))
+                    if (client.readyState == client.OPEN) client.close()
+                    return
                 }
 
 

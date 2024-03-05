@@ -491,6 +491,61 @@ export async function checkLocationDataValidity(data: Types.LocationQRCodeData, 
     return { valid: true, newData: (data as unknown as Types.Data) };
 }
 
+export async function checkUserAgentDataValidity(data: Types.UserAgentQRCodeData, id: string) {
+    for (let userAgentInfo of data.userAgents) {
+
+        // .os, .os_name, .browser, .browser_name, are required, *_name should be less than 20 characters, .os/.browser should be less than 50 characters, everything should be a string
+        if (!userAgentInfo.os || !userAgentInfo.os_name || !userAgentInfo.browser || !userAgentInfo.browser_name) {
+            return {
+                valid: false,
+                error: "INVALID_USER_AGENT",
+                message: "User agent needs to have os, os_name, browser, and browser_name properties.",
+            }
+        }
+        if (userAgentInfo.os.length > 50 || userAgentInfo.browser.length > 50 || userAgentInfo.os_name.length > 20 || userAgentInfo.browser_name.length > 20) {
+            return {
+                valid: false,
+                error: "INVALID_USER_AGENT",
+                message: "User agent's os and browser properties need to be less than 50 characters, and os_name and browser_name properties need to be less than 20 characters.",
+            }
+        }
+        if (!(typeof (userAgentInfo.os as any) == "string") || !(typeof (userAgentInfo.os_name as any) == "string") || !(typeof (userAgentInfo.browser as any) == "string") || !(typeof (userAgentInfo.browser_name as any) == "string")) {
+            return {
+                valid: false,
+                error: "INVALID_USER_AGENT",
+                message: "User agent's os, os_name, browser, and browser_name properties need to be strings.",
+            }
+        }
+        
+
+        if (!userAgentInfo.redirect_to) {
+            return {
+                valid: false,
+                error: "INVALID_USER_AGENT",
+                message: "User agent with browser '" + userAgentInfo.browser_name + "' and OS '" + userAgentInfo.os_name + "' needs to have a redirect_to property.",
+            }
+        }
+        if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(userAgentInfo.redirect_to)) {
+            return {
+                valid: false,
+                error: "INVALID_USER_AGENT",
+                message: "User agent with browser '" + userAgentInfo.browser_name + "' and OS '" + userAgentInfo.os_name + "' needs to have a valid redirect_to property.",
+            }
+        }
+        if (userAgentInfo.after_expiry) {
+            if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(userAgentInfo.after_expiry)) {
+                return {
+                    valid: false,
+                    error: "INVALID_USER_AGENT",
+                    message: "User agent with browser '" + userAgentInfo.browser_name + "' and OS '" + userAgentInfo.os_name + "' needs to have a valid after_expiry property.",
+                }
+            }
+        }
+    }
+    return { valid: true, newData: (data as unknown as Types.Data) };
+
+}
+
 
 export async function checkDataValidity(
     type: string,
@@ -504,6 +559,8 @@ export async function checkDataValidity(
             return await checkScheduleDataValidity(data, id);
         case "location":
             return await checkLocationDataValidity(data, id);
+        case "user-agent":
+            return await checkUserAgentDataValidity(data, id);
         default:
             return { valid: false, error: "INVALID_TYPE", message: "Invalid type." };
     }

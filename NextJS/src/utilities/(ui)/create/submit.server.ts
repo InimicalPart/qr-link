@@ -47,7 +47,8 @@ const createSchema = z.object({
     schedule_timezone: z.string({
         required_error: "Timezone needs to be specified"
     }).nullable(),
-    location_zones: z.string().nullable()
+    location_zones: z.string().nullable(),
+    user_agents: z.string().nullable()
     
 })
 
@@ -76,7 +77,8 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
         redirect_after_expiry: form.get('redirect_after_expiry'),
         schedule: form.get('schedule'),
         schedule_timezone: form.get('schedule_timezone'),
-        location_zones: form.get('location_zones')
+        location_zones: form.get('location_zones'),
+        user_agents: form.get('userAgents')
     })
 
     const additionalCheck = await additionalChecks(form)
@@ -118,6 +120,10 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
         } else if (type == "location") {
             return {
                 zones: JSON.parse(validatedFields.data.location_zones)
+            }
+        } else if (type == "user-agent") {
+            return {
+                userAgents: JSON.parse(validatedFields.data.user_agents)
             }
         }
     })();
@@ -171,6 +177,12 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
                 redirectTo: string,
                 afterExpiry: string
             }>
+        } | {
+            userAgents: {
+                browser: string,
+                device: string,
+                
+            }[]
         }
     } = {
         id: ID,

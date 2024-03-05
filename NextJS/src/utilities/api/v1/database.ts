@@ -1,7 +1,7 @@
 import yaml from "yaml"
 import { MongoClient, MongoError, MongoServerError, MongoServerSelectionError } from "mongodb";
 import { randomString } from "./misc";
-import { MongoQRCodeInformation, QRCodeInformation, QRCodeTable } from "@/types/api/v1/QRCode";
+import { MongoQRCodeInformation, QRCodeTable } from "@/types/api/v1/QRCode";
 import { parse as parseJSONC } from "jsonc-parser"; //! JSONC to support comments in JSON files, for readability
 import { QRLinkGlobal } from "@/types/api/v1/global";
 import { QRCode } from "./qrcode";
@@ -333,7 +333,7 @@ export async function convertFile2MongoDB() {
     let keysNotInMongo = keysFile.filter((key) => !keysMongo.includes(key))
 
     let dataToInsert = keysNotInMongo.map((key) => {
-        let data = fileData[key] as QRCodeInformation
+        let data = fileData[key] as QRCode
         let id = key
         return {
             id: id,

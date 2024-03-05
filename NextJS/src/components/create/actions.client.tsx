@@ -47,9 +47,6 @@ export default function Actions({
             document.getElementById("locationContainer").style.display = "none"
             document.getElementById("userAgentContainer").style.display = "none"
         }
-
-      window.dispatchEvent(new CustomEvent('typeChange', { detail: action }));
-
     }, [action]);
 
 

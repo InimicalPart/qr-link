@@ -8,23 +8,27 @@ export default function UserAgentList({
     setCurrentUserAgentList
 }:{
     currentUserAgentList: {
-        browser: string
-        browser_is_regex?: boolean
-        browser_name?: string
-        device: string
-        device_is_regex?: boolean
-        device_name?: string
-        redirect_to: string
+        browser: string,
+        browser_is_regex?: boolean,
+        browser_name?: string,
+        
+        os: string,
+        os_is_regex?: boolean,
+        os_name?: string,
+        
+        redirect_to: string,
         after_expiry?: string
     }[],
     setCurrentUserAgentList: (value: {
-        browser: string
-        browser_is_regex?: boolean
-        browser_name?: string
-        device: string
-        device_is_regex?: boolean   
-        device_name?: string
-        redirect_to: string
+        browser: string,
+        browser_is_regex?: boolean,
+        browser_name?: string,
+
+        os: string,
+        os_is_regex?: boolean,
+        os_name?: string,
+        
+        redirect_to: string,
         after_expiry?: string
     }[]) => void
 
@@ -37,9 +41,11 @@ export default function UserAgentList({
         browser: string,
         browser_is_regex?: boolean,
         browser_name?: string,
-        device: string
-        device_is_regex?: boolean,
-        device_name?: string,
+
+        os: string,
+        os_is_regex?: boolean,
+        os_name?: string,
+        
         redirect_to: string,
         after_expiry?: string
     }[] = currentUserAgentList
@@ -66,22 +72,18 @@ export default function UserAgentList({
             let userAgentListCopy = [...userAgentList]
             let userAgentLocSplit = userAgentLoc.split(".")
             let browserName = userAgentLocSplit[0]
-            let deviceName = userAgentLocSplit[1]
+            let osName = userAgentLocSplit[1]
 
-            if (userAgentLocSplit.length === 3) {
-                let action = userAgentLocSplit[2]
-                if (action === "after_expiry") {
-                    userAgentListCopy.forEach((item, index) => {
-                        if (item.browser_name === browserName && item.device_name === deviceName) {
-                            delete item.after_expiry
-                        }
-                    })
-                }
-            } else {
-                userAgentListCopy = userAgentListCopy.filter((item) => {
-                    return !(item.browser_name === browserName && item.device_name === deviceName)
-                })
+
+            if (userAgentLocSplit.length === 2) {
+                // delete the entire browser/os
+                userAgentListCopy = userAgentListCopy.filter((item) => item.browser !== browserName || item.os !== osName)
+            } else if (userAgentLocSplit.length === 3) {
+                // delete the after_expiry
+                let index = userAgentListCopy.findIndex((item) => item.browser === browserName || item.os === osName)
+                delete userAgentListCopy[index].after_expiry
             }
+
             
 
             setCurrentUserAgentList(userAgentListCopy)
@@ -91,32 +93,52 @@ export default function UserAgentList({
 
         // sort the schedule by day of the week + time
         function generateScheduleList() {
-          
             return (
                 <ul style={{ listStyle: "disc", fontSize: "11pt" }}>
                     {userAgentList.map((listItem:{
                         browser: string,
                         browser_is_regex?: boolean,
                         browser_name?: string,
-                        device: string,
-                        device_is_regex?: boolean,
-                        device_name?: string,
+                        browser_name_pretty?: string,
+
+
+                        os: string,
+                        os_is_regex?: boolean,
+                        os_name?: string,
+                        os_name_pretty?: string,
+
                         redirect_to: string,
                         after_expiry?: string,
                     }) => {
                         // browser/device can be a regex string (ending in whatever), "any" (browser only) or a specific browser/device
-                        const browserName = listItem.browser_name ?? listItem.browser
-                        const deviceName = listItem.device_name ?? listItem.device
+                        let browserName = listItem.browser_name ?? listItem.browser;
+                        let osName = listItem.os_name ?? listItem.os;
 
+                        let browserNamePretty = listItem.browser_name_pretty ?? browserName;
+                        let osNamePretty = listItem.os_name_pretty ?? osName;
+
+                        let redirect_to = listItem.redirect_to;
+                        let after_expiry = listItem.after_expiry;
+
+                        const fallback = browserNamePretty == "Any Browser" && osNamePretty == "Any OS" ? "Any (fallback)" : undefined
+
+                        if (redirect_to.length > 27) {
+                            redirect_to = redirect_to.slice(0, 15) + "..." + redirect_to.slice(redirect_to.length - 12);
+                        }
+                        if (after_expiry) {
+                            if (after_expiry.length > 27) {
+                                after_expiry = after_expiry.slice(0, 15) + "..." + after_expiry.slice(after_expiry.length - 12);
+                            }
+                        }
                         return (
-                            <li key={browserName + "." + deviceName} style={{marginBottom:bottomMargin}}>
-                                <p style={{cursor:"pointer",marginBottom:bottomMargin/2}} data-loc={browserName + "." + deviceName} onClick={deleteAction} title="Click to delete">{browserName} / {deviceName}</p>
+                            <li key={browserName + "." + osName} style={{marginBottom:bottomMargin}}>
+                                <p style={{cursor:"pointer",marginBottom:bottomMargin/2}} data-loc={browserName + "." + osName} onClick={deleteAction} title="Click to delete">{fallback ? fallback : (browserNamePretty + " on " + osNamePretty)}</p>
                                 <ul className="moveover" style={{ listStyle: "disc" }}>
                                     <li style={{marginBottom:bottomMargin}}>
-                                        <p style={{display:"inline",position:"relative", verticalAlign:"text-bottom"}}>Redirect to: <i style={{fontWeight: 600}} title={listItem.redirect_to}>{listItem.redirect_to}</i></p>
+                                        <p style={{display:"inline",position:"relative", verticalAlign:"text-bottom"}}>Redirect to: <i style={{fontWeight: 600}} title={listItem.redirect_to}>{redirect_to}</i></p>
                                     </li>
-                                    {listItem.after_expiry && <li style={{marginBottom:bottomMargin}}  >
-                                        <p onClick={deleteAction} data-loc={browserName + "." + deviceName + ".after_expiry"} style={{position:"relative",verticalAlign:"text-bottom",cursor:"pointer", display:"inline"}}>After expiry: <i style={{fontWeight: 600,pointerEvents:"none",}} title={listItem.after_expiry}>{listItem.after_expiry}</i></p>
+                                    {after_expiry && <li style={{marginBottom:bottomMargin}}  >
+                                        <p onClick={deleteAction} data-loc={browserName + "." + osName + ".after_expiry"} style={{position:"relative",verticalAlign:"text-bottom",cursor:"pointer", display:"inline"}}>After expiry: <i style={{fontWeight: 600,pointerEvents:"none",}} title={listItem.after_expiry}>{after_expiry}</i></p>
                                     </li>}
                                 </ul>
                             </li>
@@ -264,18 +286,12 @@ export default function UserAgentList({
 
             //     return (<ul style={{fontSize:"11pt", listStyle:"disc", marginBottom:bottomMargin}}>{humanReadable}</ul>)
             // } else 
-            return generateScheduleList()
+            return 
         }
         
     return <>
         <p className="qr-info-label flex justify-center items-center flex-wrap">
             <b>Current List:</b>
-            <span id="convert" hidden={currentUserAgentList.length < 1} style={{
-                        fontSize: '8pt',
-                        flexBasis: '100%',
-                        marginTop: -5
-                    }} onClick={changeCurrentTranslation}
-                    >(convert to {translation=="machine"?"human":"machine"})</span>
           </p>
         <div id="scheduleList" style={{
             marginBottom:20,
@@ -287,7 +303,7 @@ export default function UserAgentList({
             display:"flex",
             justifyContent:"center",
 }}>
-        {currentUserAgentList.length > 0 ? convert() : <i style={{fontSize:14}}>No user-agents defined</i>}
+        {currentUserAgentList.length > 0 ? generateScheduleList() : <i style={{fontSize:14}}>No user-agents defined</i>}
         </div>
     </>
 }
