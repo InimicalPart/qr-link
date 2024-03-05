@@ -13,9 +13,7 @@
     "qrlink:dev": "cd NextJS && npm run dev && cd ..",
     "qrlink:build": "cd NextJS && npm run build && cd ..",
     "install": "cd NextJS && npm install && npx next-ws-cli@latest patch --yes && cd ..",
-    "docker": "node -e \"require('os').platform() === 'win32' ? require('child_process').execSync('npm run docker-windows', {stdio: 'inherit'}) : require('child_process').execSync('npm run docker-linux', {stdio: 'inherit'})\"",
-    "docker-linux": "DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose up",
-    "docker-windows": "docker compose up"
+    "docker": "docker compose up"
   },
   "author": "Inimi",
   "license": "MIT"

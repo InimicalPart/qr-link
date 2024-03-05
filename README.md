@@ -17,10 +17,11 @@ You can find the OpenAPI specification file for QRLink [here](https://github.com
 
 ## Usage
 ### Install NPM Dependencies
-To install the NPM dependencies for both the QRLink API and the frontend, you can run the following command in the project's root directory:
+To install the NPM dependencies and patch NextJS for next-ws, you can run the following command in the project's root directory:
 ```bash
 # Install the dependencies for the API and the frontend
-# A "postinstall" script is configured (in package.json) to also install the required dependencies in the `frontend/` folder.
+# A "postinstall" script is configured (in package.json) to install the required dependencies that are located in the `NextJS/` folder as well as patch NextJS.
+# This has to be run in the root directory, otherwise NextJS will not be patched!
 npm install
 ```
 
@@ -31,23 +32,18 @@ QRLink's frontend and backend can be ran via Docker.
 #### Usage
 To create and launch both MongoQRL (a MongoDB instance with a custom made API) and QRLink's API and frontend, you can run the following command in the root of the project's directory:
 ```bash
-# Create and launch Docker containers, you may also use docker-compose instead of 'docker compose' if you wish to do so.
-# Linux (best storage optimizations)
-DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose up
-
-# Windows
 docker compose up
 ```
 
 ### NextJS frontend & backend (:8080)
 To build and run the frontend and backend for QRLink, you can run this command in the project's root directory:
 ```bash
-# Compile and run the NextJS frontend (:8080)
+# Compile and run the NextJS website (:8080)
 npm run qrlink
 ```
 Alternatively, to run both in development mode (meaning that the files are rebuilt when changes happen), you can run the following command instead:
 ```bash
-# Watch for changes, compile the frontend, and run the frontend (:8080)
+# Watch for changes, compile the website, and run the website (:8080)
 npm run qrlink:dev
 ```
 > [!CAUTION] 
