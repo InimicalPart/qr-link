@@ -120,11 +120,11 @@ export default function UserAgent({
             let browser = Object.keys(browserRegexMap).find((b) => browserRegexMap[b as "any" | "safari" | "chrome" | "firefox" | "opera" | "edge" | "samsungInternet"].toString() == a.browser);
             let os = Object.keys(osRegexMap).find((b) => osRegexMap[b as "any" | "apple" | "android" | "windows" | "linux"].toString() == a.os);
             return {
-                browser: browser ?? "custom",
+                browser: browser ?? a.browser,
                 browser_is_regex: !browser,
                 browser_name: a.browser_name,
                 browser_name_pretty: makePretty(a.browser_name,"browser"),
-                os: os ?? "custom",
+                os: os ?? a.os,
                 os_is_regex: !os,
                 os_name: a.os_name,
                 os_name_pretty: makePretty(a.os_name,"os"),
