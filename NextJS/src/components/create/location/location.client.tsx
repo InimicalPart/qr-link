@@ -468,6 +468,13 @@ export default function Location({
             }
         },[map])
 
+        useEffect(()=>{
+            if (action == "location") {
+                console.log("Invalidating size")
+                map.invalidateSize()
+            }
+        },[map])
+
         return <></>
     }
     

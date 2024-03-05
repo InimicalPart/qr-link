@@ -229,7 +229,7 @@ export default function QRScannerModal({
               onError={handleError}
               onScan={handleScan}
               constraints={{audio:false, video:{
-                facingMode: { exact: "environment" }
+                facingMode: "environment"
               }}}
               />
               :

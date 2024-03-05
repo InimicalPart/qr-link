@@ -3,6 +3,52 @@
 import { useState } from "react";
 import UserAgentList from "./userAgentList.client";
 
+const browserRegexMap = {
+    "opera": /(?:Opera|OPR)\/([0-9]+\.[0-9]+)/,
+    "chrome": /(?:Chrome|CriOS)\/([0-9]+\.[0-9]+)/,
+    "firefox": /(?:Firefox)\/([0-9]+\.[0-9]+)/,
+    "edge": /(?:Edge)\/([0-9]+\.[0-9]+)/,
+    "safari": /(?:Safari)\/([0-9]+\.[0-9]+)/,
+    "samsungInternet": /(?:SamsungBrowser)\/([0-9]+\.[0-9]+)/,
+    "ie": /(?:Trident)\/([0-9]+\.[0-9]+)/,
+    "any": /.*/
+}
+
+const osRegexMap = {
+    "apple": /(?:Macintosh|Mac OS X)/,
+    "android": /(?:Android|Android [0-9]+\.[0-9]+)/,
+    "windows": /(?:Windows|Win[0-9]+)/,
+    "linux": /(?:Linux|X11)/,
+    "any": /.*/
+}
+
+function makePretty(data: any, type: any) {
+
+    if (type == "browser") {
+        switch (data) {
+            case "samsungInternet":
+                data = "Samsung Internet";
+                break;
+            case "any":
+                data = "Any Browser";
+                break;
+            default:
+                data = data[0].toUpperCase() + data.slice(1);
+                break;
+        }
+    } else {
+        switch (data) {
+            case "any":
+                data = "Any OS";
+                break;
+            default:
+                data = data[0].toUpperCase() + data.slice(1);
+                break;
+        }
+    }
+    return data;
+}
+
 export default function UserAgent({
     state,
     qrCodeInfo = {},
@@ -14,15 +60,79 @@ export default function UserAgent({
 }) {
 
     const [browser, setBrowser] = useState("any")
-    const [device, setDevice] = useState(null)
+    const [os, setOS] = useState("any")
     const [currentUserAgentList, setCurrentUserAgentList] = useState<{
         browser: string,
-        browser_name?: string
-        device: string,
-        device_name?: string
+        browser_is_regex?: boolean,
+        browser_name?: string,
+
+        os: string,
+        os_is_regex?: boolean,
+        os_name?: string,
+        
         redirect_to: string,
         after_expiry?: string
-    }[]>([])
+    }[]>(convertFromServerFormat(qrCodeInfo?.data?.userAgents ?? []))
+
+
+    function convertToServerFormat(list: typeof currentUserAgentList): {
+        browser: string, // regex
+        browser_name: string, // regex
+        os: string, // regex
+        os_name: string, // regex
+        redirect_to: string,
+        after_expiry?: string
+    }[] {
+        return list.map((a) => {
+            return {
+                browser: a.browser_is_regex ? a.browser : browserRegexMap[a.browser as "any" | "safari" | "chrome" | "firefox" | "opera" | "edge" | "samsungInternet"].toString(),
+                browser_name: a.browser_name,
+                os: a.os_is_regex ? a.os : osRegexMap[a.os as "any" | "apple" | "android" | "windows" | "linux"].toString(),
+                os_name: a.os_name,
+                redirect_to: a.redirect_to,
+                after_expiry: a.after_expiry
+            }
+        })
+    }
+
+    function convertFromServerFormat(list: {
+        browser: string, // regex
+        browser_name: string,
+        os: string, // regex
+        os_name: string, 
+        redirect_to: string,
+        after_expiry?: string
+    }[]): {
+        browser: string,
+        browser_is_regex?: boolean,
+        browser_name?: string,
+        browser_name_pretty?: string,
+
+        os: string,
+        os_is_regex?: boolean,
+        os_name?: string,
+        os_name_pretty?: string,
+        
+        redirect_to: string,
+        after_expiry?: string
+    }[] {
+        return list.map((a) => {
+            let browser = Object.keys(browserRegexMap).find((b) => browserRegexMap[b as "any" | "safari" | "chrome" | "firefox" | "opera" | "edge" | "samsungInternet"].toString() == a.browser);
+            let os = Object.keys(osRegexMap).find((b) => osRegexMap[b as "any" | "apple" | "android" | "windows" | "linux"].toString() == a.os);
+            return {
+                browser: browser ?? "custom",
+                browser_is_regex: !browser,
+                browser_name: a.browser_name,
+                browser_name_pretty: makePretty(a.browser_name,"browser"),
+                os: os ?? "custom",
+                os_is_regex: !os,
+                os_name: a.os_name,
+                os_name_pretty: makePretty(a.os_name,"os"),
+                redirect_to: a.redirect_to,
+                after_expiry: a.after_expiry
+            }
+        })
+    }
 
     function validateRegex(pattern: string) {
         try {
@@ -36,15 +146,15 @@ export default function UserAgent({
 
     return (
         <>
-        {/* <input className="create" type="hidden" disabled={action !== "schedule"} id="scheduleCompacted" name="schedule" value={JSON.stringify(currentScheduleActions)}/> */}
+        <input className="create" type="hidden" disabled={action !== "user-agent"} id="userAgentCompacted" name="userAgents" value={JSON.stringify(convertToServerFormat(currentUserAgentList))}/>
  <div id="currentActions">
      <UserAgentList currentUserAgentList={currentUserAgentList} setCurrentUserAgentList={setCurrentUserAgentList}/>
      <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
      fontSize: "9pt",
      color: "red",
-     display: state?.schedule ? "block" : "none",
+     display: state?.userAgents ? "block" : "none",
      marginBottom: 10,
-     }}>{state?.schedule}</p>
+     }}>{state?.userAgents}</p>
  </div>
  <div id="newAction" style={{
      border: "1px solid black",
@@ -68,32 +178,49 @@ export default function UserAgent({
          paddingLeft:5
      }}
      onChange={(e) => {
-        setBrowser((document.getElementById("browser") as HTMLSelectElement).value)
-        const newVal = e.target.value
+         const selectedBrowser = (document.getElementById("browser") as HTMLSelectElement).value;
+        setBrowser(selectedBrowser)
+        // make sure so that if the user selects for example safari, and the os isnt "any", "apple" or "custom", it gets set to "apple"
+        if (selectedBrowser == "safari") {
+            if (["apple","custom"].includes(os)) {
+                return;
+            }
+            setOS("apple");
+            Array.from((document.getElementById("os") as HTMLSelectElement).children).forEach((a: any) => {
+                if (a.value == "apple") {
+                    a.selected = true;
+                }
+            })
+        } else if (selectedBrowser == "edge") {
+            if (["windows","custom"].includes(os)) {
+                return;
+            }
+            setOS("windows");
+            Array.from((document.getElementById("os") as HTMLSelectElement).children).forEach((a: any) => {
+                if (a.value == "windows") {
+                    a.selected = true;
+                }
+            })
+        } else if (selectedBrowser == "samsungInternet") {
+            if (["android","custom"].includes(os)) {
+                return;
+            }
+            setOS("android");
+            Array.from((document.getElementById("os") as HTMLSelectElement).children).forEach((a: any) => {
+                if (a.value == "android") {
+                    a.selected = true;
+                }
+            })
+        }
 
-        if (newVal == "safari") {
-            setDevice("iphone")
-            if (!["iphone","mac"].includes((document.getElementById("device") as HTMLSelectElement).value)) {
-                Array.from(document.getElementById("device")?.children).forEach((a: any) => {a.selected = a.value == "iphone"})
-            }
-        } else if (newVal == "samsungInternet") {
-            setDevice("android")
-            if ((document.getElementById("device") as HTMLSelectElement).value != "android") {
-                Array.from(document.getElementById("device")?.children).forEach((a: any) => {a.selected = a.value == "android"})
-            }
-        } else if (newVal == "any") {
-            setDevice(null)
-            if ((document.getElementById("device") as HTMLSelectElement).value == "any") {
-                Array.from(document.getElementById("device")?.children).forEach((a: any) => {a.selected = a.value == ""})
-            }
-        } 
+
     }}
      >
      <option className="create" value="any">Any</option> 
      <option className="create" value="safari">Safari</option>
      <option className="create" value="chrome">Chrome</option>
      <option className="create" value="firefox">Firefox</option>
-     <option className="create" value="opera">Opera</option>"iphone"
+     <option className="create" value="opera">Opera</option>
      <option className="create" value="edge">Edge</option>
      <option className="create" value="samsungInternet">Samsung Internet</option>
      <option className="create" value="custom">Custom (Advanced)</option>
@@ -102,32 +229,28 @@ export default function UserAgent({
 
 
      <div hidden={browser !== "custom"}>
-        <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10, fontSize:13}}><b>User-Agent Pattern</b></p>
+        <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10, fontSize:13}}><b>User-Agent RegEx</b></p>
         <input className="create" id="browserPattern" style={{
             width: 250,
-            border: state?.userAgentPattern ? "1px red solid" : '1px black solid',
+            border: '1px black solid',
             borderRadius: 8,
             textAlign: 'center'
         }} type="text" maxLength={50}/>
 
-        <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10, fontSize:13}}><b>Pattern name</b> <span style={{
-                fontSize: '8pt',
-                flexBasis: '100%',
-                marginTop: -5
-    }}>(optional)</span></p>
+        <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10, fontSize:13}}><b>Pattern name</b></p>
         <input className="create" id="browserPatternName" style={{
             width: 250,
-            border: state?.userAgentName ? "1px red solid" : '1px black solid',
+            border: '1px black solid',
             borderRadius: 8,
             textAlign: 'center'
         }} type="text" maxLength={20} defaultValue={"B-Pattern " + (currentUserAgentList.length+1)}/>
 
      </div>
 
-    <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10}}><b>Device</b></p>
+    <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10}}><b>OS</b></p>
 
     <select
-        id="device"
+        id="os"
         className="create disabled:bg-neutral-400"
         style={{
             border: "1px black solid",
@@ -135,42 +258,35 @@ export default function UserAgent({
             width:250,
             paddingLeft:5
         }}
-        defaultValue={browser == "samsungInternet" ? "android": browser == "safari" ? "iphone" : browser == "any" ? "" : (device ?? "")}
-        disabled={browser == "samsungInternet" ? true : false}
-     onChange={() => setDevice((document.getElementById("device") as HTMLSelectElement).value)}
+        defaultValue={os}
+        onChange={() => setOS((document.getElementById("os") as HTMLSelectElement).value)}
      >
-        <option className="create" disabled value="">-- Please choose an option --</option>
-        <option className="create" disabled={browser == "any"} value="any">Any</option>
-        <option className="create" disabled={browser == "safari"} value="android">Android</option>
-        <option className="create" value="iphone">iPhone</option>
-        <option className="create" disabled={browser == "safari"} value="windows">Windows</option>
-        <option className="create" value="mac">Mac</option>
-        <option className="create" disabled={browser == "safari"} value="linux">Linux</option>
-        <option className="create" value="other">Other</option>
+        <option className="create" hidden value="">-- Please choose an option --</option>
+        <option className="create" hidden={["safari","edge","samsungInternet"].includes(browser)} value="any">Any</option>
+        <option className="create" hidden={["edge","samsungInternet"].includes(browser)} value="apple">Apple</option>
+        <option className="create" hidden={["safari","edge"].includes(browser)} value="android">Android</option>
+        <option className="create" hidden={["safari","samsungInternet"].includes(browser)} value="windows">Windows</option>
+        <option className="create" hidden={["safari","samsungInternet","edge"].includes(browser)} value="linux">Linux</option>
+        <option className="create" value="custom">Custom (Advanced)</option>
     </select>
 
-    <div hidden={device !== "other"}>
-        <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10, fontSize:13}}><b>User-Agent Pattern</b></p>
-        <input className="create" id="devicePattern" style={{
+    <div hidden={os !== "custom"}>
+        <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10, fontSize:13}}><b>User-Agent RegEx</b></p>
+        <input className="create" id="osPattern" style={{
             width: 250,
-            border: state?.userAgentPattern ? "1px red solid" : '1px black solid',
+            border: '1px black solid',
             borderRadius: 8,
             textAlign: 'center'
         }} type="text" maxLength={50} />
 
-    <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10, fontSize:13}}><b>Pattern name</b>  <span style={{
-                fontSize: '8pt',
-                flexBasis: '100%',
-                marginTop: -5
-    }}>(optional)</span></p>
-        <input className="create" id="devicePatternName" style={{
+    <p className="qr-info-label flex justify-center items-center flex-wrap" style={{marginTop:10, fontSize:13}}><b>Pattern name</b></p>
+        <input className="create" id="osPatternName" style={{
             width: 250,
-            border: state?.userAgentName ? "1px red solid" : '1px black solid',
+            border: '1px black solid',
             borderRadius: 8,
             textAlign: 'center'
-        }} type="text" maxLength={20} defaultValue={"D-Pattern " + (currentUserAgentList.length+1)}/>
+        }} type="text" maxLength={20} defaultValue={"OS-Pattern " + (currentUserAgentList.length+1)}/>
      </div>
-
 
      <br/>
      <br/>
@@ -217,6 +333,20 @@ export default function UserAgent({
      ></textarea>
      <br/>
      <br/>
+     <div style={{
+            width: "100%",
+            fontSize: "9pt",
+            textAlign: "center",
+            color: "red",
+            fontWeight: 600,
+            paddingRight: "20px",
+            paddingLeft: "20px",
+            marginBottom: "20px",
+        }}>
+            <p style={{textAlign: "center"}}>
+                Be careful to not set these values to one that cannot exist or one that collides with your previous choices. Doing so may lead to unexpected behavior.
+            </p>
+        </div>
      <button className="create"
      type="button"
      onClick={() => {
@@ -224,82 +354,47 @@ export default function UserAgent({
         
 
         
-        const chosenBrowser = (document.getElementById("browser") as HTMLSelectElement).value;
-        const chosenDevice = (document.getElementById("device") as HTMLSelectElement).value;
+        let chosenBrowser = (document.getElementById("browser") as HTMLSelectElement).value;
+        let chosenOS = (document.getElementById("os") as HTMLSelectElement).value;
 
-        if (chosenBrowser == "custom") {
-            const pattern = (document.getElementById("browserPattern") as HTMLInputElement).value;
-
-            if (!pattern) {
-                alert("Browser pattern is required");
-                return;
-            }
-
-            if (pattern.length > 50) {
-                alert("Browser pattern is too long (max 50 characters)")
-                return;
-            }
-
-            if (!validateRegex(pattern)) {
-                alert("Browser pattern is not a valid regex");
-                return;
-            }
-
-
-            const patternName = (document.getElementById("browserPatternName") as HTMLInputElement).value;
-
-            if (!patternName) {
-                alert("Pattern name is required");
-                return;
-            }
-
-            if (patternName.length > 20) {
-                alert("Pattern name is too long (max 20 characters)")
-                return;
-            }
-
-            if (copy.filter((a: { browser_name: string; }) => a.browser_name == patternName).length != 0) {
-                alert("Pattern name already exists");
-                return;
-            }
-
+        if (chosenBrowser === "") {
+            alert("Please select a browser");
+            return;
         }
-        if (chosenDevice == "other") {
-            const pattern = (document.getElementById("devicePattern") as HTMLInputElement).value;
-
-            if (!pattern) {
-                alert("Device pattern is required");
-                return;
-            }
-
-            if (pattern.length > 50) {
-                alert("Device pattern is too long (max 50 characters)")
-                return;
-            }
-
-            if (!validateRegex(pattern)) {
-                alert("Device pattern is not a valid regex");
-                return;
-            }
-
-            const patternName = (document.getElementById("devicePatternName") as HTMLInputElement).value;
-
-            if (!patternName) {
-                alert("Pattern name is required");
-                return;
-            }
-
-            if (patternName.length > 20) {
-                alert("Pattern name is too long (max 20 characters)")
-                return;
-            }
-
-            if (copy.filter((a: { device_name: string; }) => a.device_name == patternName).length != 0) {
-                alert("Pattern name already exists");
-                return;
-            }
-
+        if (chosenOS === "") {
+            alert("Please select an os");
+            return;
         }
+
+        if (browser === "custom" && !validateRegex((document.getElementById("browserPattern") as HTMLInputElement).value)) {
+            alert("Browser pattern must be a valid regex");
+            return;
+        }
+
+        if (os === "custom" && !validateRegex((document.getElementById("osPattern") as HTMLInputElement).value)) {
+            alert("OS pattern must be a valid regex");
+            return;
+        }
+
+        // if it already exists, or there is an "any" for os with the same browser, then return
+        if (copy.some((a: any) => a.browser == chosenBrowser && (a.os == chosenOS || a.os == "any"))) {
+
+            let confirmationMessage = ""
+
+            if (copy.some((a: any) => a.browser == chosenBrowser && a.os == "any")) {
+                confirmationMessage = "A user-agent with the same browser and any OS already exists. Do you want to overwrite it?";
+            } else {
+                confirmationMessage = "A user-agent with the same browser and OS already exists. Do you want to overwrite it?";
+            }
+
+            if (!confirm(confirmationMessage)) {
+                return;
+            }
+
+            copy = copy.filter((a: any) => a.browser != chosenBrowser || (a.os != chosenOS && a.os != "any"));
+        }
+
+
 
         let redirect_to = (document.getElementById("uaRedirect") as HTMLTextAreaElement).value;
         let after_expiry = (document.getElementById("uaAERedirect") as HTMLTextAreaElement).value;
@@ -314,13 +409,26 @@ export default function UserAgent({
             return;
         }
 
+
+        let prettifiedBrowserName = makePretty(chosenBrowser == "custom" ? (document.getElementById("browserPatternName") as HTMLInputElement).value : chosenBrowser,"browser");
+        let prettifiedOSName = makePretty(chosenOS == "custom" ? (document.getElementById("osPatternName") as HTMLInputElement).value : chosenOS,"os");
+
+        
+
+
+
+        
         copy.push({
             browser: chosenBrowser,
             browser_is_regex: chosenBrowser == "custom",
-            browser_name: chosenBrowser == "custom" ? (document.getElementById("browserPatternName") as HTMLInputElement).value : chosenBrowser[0].toUpperCase() + chosenBrowser.slice(1),
-            device: chosenDevice,
-            device_is_regex: chosenDevice == "other",
-            device_name: chosenDevice == "other" ? (document.getElementById("devicePatternName") as HTMLInputElement).value : chosenDevice[0].toUpperCase() + chosenDevice.slice(1),
+            browser_name: chosenBrowser == "custom" ? (document.getElementById("browserPatternName") as HTMLInputElement).value : chosenBrowser,
+            browser_name_pretty: prettifiedBrowserName,
+            
+            os: chosenOS,
+            os_is_regex: chosenOS == "custom",
+            os_name: chosenOS == "custom" ? (document.getElementById("osPatternName") as HTMLInputElement).value : chosenOS, 
+            os_name_pretty: prettifiedOSName,
+            
             redirect_to,
             after_expiry: after_expiry == "" ? undefined : after_expiry
         });

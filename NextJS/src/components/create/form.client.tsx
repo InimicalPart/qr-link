@@ -23,6 +23,7 @@ const initialState: {
     grab_user_agent: boolean | string | null,
     grab_location: boolean | string | null,
     require_location: boolean | string | null,
+    require_user_agent: boolean | string | null,
     send_to_redirect: boolean | string | null,
     jwt_singing_key: string | null,
     type: string | null,
@@ -31,6 +32,7 @@ const initialState: {
     schedule: string | null,
     schedule_timezone: string | null,
     location_zones: string | null,
+    userAgents: string | null,
     submit_button: string | null
 
 } = {
@@ -46,6 +48,7 @@ const initialState: {
     grab_user_agent: null,
     grab_location: null,
     require_location: null,
+    require_user_agent: null,
     send_to_redirect: null,
     jwt_singing_key: null,
     type: null,
@@ -54,6 +57,7 @@ const initialState: {
     schedule: null,
     schedule_timezone: null,
     location_zones: null,
+    userAgents: null,
     submit_button: null
 
 

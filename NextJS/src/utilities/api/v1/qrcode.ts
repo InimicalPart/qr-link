@@ -6,7 +6,7 @@ export class QRCode {
 
     id: string;
     type: string;
-    data: RedirectQRCodeDataT|ScheduleQRCodeDataT|LocationQRCodeDataT
+    data: RedirectQRCodeDataT|ScheduleQRCodeDataT|LocationQRCodeDataT|UserAgentQRCodeDataT;
     update_key: string;
     linked_to: string | null = null;
     created: Date = new Date();
@@ -97,12 +97,12 @@ export class QRCode {
 
 
     async signScanData(scanData: { fingerprint: any; location: any; timestamp: Date; "user-agent": string; ip: string; }) {
-        return this.hassendToURL() ? await new SignJWT({
+        return this.hasSendToURL() ? await new SignJWT({
             scanData
           })
             .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
             .setIssuedAt()
-            .setExpirationTime('1m')
+            .setExpirationTime('1m') //! 1 minute, should be enough for the other end to verify the JWT
             .sign(new Uint8Array(Buffer.from(this.getEncryptionKey(), 'base64'),)) : null
     }
 
@@ -114,12 +114,12 @@ export class QRCode {
         return this.settings.getScanData && this.settings.scanData.information["user-agent"]
     }
 
-    hassendToURL() {
+    hasSendToURL() {
         return this.settings.scanData.sendToURL && this.settings.scanData.JWTEncryptionKey
     }
     
     getEncryptionKey() {
-        return this.hassendToURL() ? this.isBase64(this.settings.scanData.JWTEncryptionKey) ? this.settings.scanData.JWTEncryptionKey : Buffer.from(this.settings.scanData.JWTEncryptionKey).toString("base64") : null
+        return this.hasSendToURL() ? this.isBase64(this.settings.scanData.JWTEncryptionKey) ? this.settings.scanData.JWTEncryptionKey : Buffer.from(this.settings.scanData.JWTEncryptionKey).toString("base64") : null
     }
 
     private isBase64(str: string) {
@@ -138,7 +138,15 @@ export class QRCode {
         return this.expires ? new Date() > new Date(this.expires) : false
     }
 
-    getRedirectTo(locationData?: { latitude: number; longitude: number; accuracy: number; }) {
+    hasAfterExpiry() {
+        return JSON.stringify(this.data).includes("after_expiry")
+    }
+
+    getRedirectTo(scanData?: {
+        latitude: number;
+        longitude: number;
+        accuracy: number;
+    } | string) {
         let currentAction: Partial<RedirectQRCodeDataT> = {}
 
         if (this.type == "redirect") {
@@ -168,13 +176,14 @@ export class QRCode {
             } 
             currentAction = data[day][time]
         } else if (this.type == "location") {
-            if (!locationData) {
+            const locationData = scanData as { latitude: number; longitude: number; accuracy: number; }
+            if (!scanData) {
                 throw new Error("Location data is required for this QR code.")
             }
 
             const data = this.data as unknown as LocationQRCodeDataT
             
-            const zones = data.zones.sort((a,b) => b.priority - a.priority) // sort by priority (highest first)
+            const zones = data.zones.toSorted((a,b) => b.priority - a.priority) // sort by priority (highest first)
             let currentZone = zones.find(zone => {
                 if (zone.isEntireWorld) return true
                 if (zone.type == "circle") {
@@ -203,21 +212,54 @@ export class QRCode {
 
             currentAction.redirect_to = currentZone.redirectTo
             currentAction.after_expiry = currentZone.afterExpiry
+        } else if (this.type == "user-agent") {
+            const data = (this.data as unknown as UserAgentQRCodeDataT).userAgents.toSorted((a, b) => {
+                if (a.browser === "/.*/" && a.os === "/.*/") {
+                    return 1;
+                } else if (b.browser === "/.*/" && b.os === "/.*/") {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            });
+            const userAgent = scanData as string
+            if (!scanData) {
+                throw new Error("User agent data is required for this QR code.")
+            }
+
+            for (let userAgentInformation of data) {
+                let browserRegexOptions = userAgentInformation.browser.split("/").pop()
+                let OSRegexOptions = userAgentInformation.browser.split("/").pop()
+
+                // remove the starting and ending slashes including the options
+                let browserRegex = userAgentInformation.browser.split("/").slice(1, -1).join("/")
+                let OSRegex = userAgentInformation.os.split("/").slice(1, -1).join("/")
+
+
+
+                if (new RegExp(browserRegex, browserRegexOptions).test(userAgent) && new RegExp(OSRegex, OSRegexOptions).test(userAgent)) {
+                    currentAction.redirect_to = userAgentInformation.redirect_to
+                    currentAction.after_expiry = userAgentInformation.after_expiry
+                    break;
+                }
+            }
+
+            if (!currentAction.redirect_to) {
+                return "nil"
+            }
+            
         }
 
         // if redirect_to doesnt start with http:// or https://, add http
         if (currentAction.redirect_to && !currentAction.redirect_to.startsWith("http://") && !currentAction.redirect_to.startsWith("https://") &&
             // not a vcard
-            !(currentAction.redirect_to.startsWith("BEGIN:VCARD") && currentAction.redirect_to.endsWith("END:VCARD"))
-            
-        ) {
+            !(currentAction.redirect_to.startsWith("BEGIN:VCARD") && currentAction.redirect_to.endsWith("END:VCARD"))) {
             currentAction.redirect_to = "http://" + currentAction.redirect_to
         }
         // if after_expiry doesnt start with http:// or https://, add http
         if (currentAction.after_expiry && !currentAction.after_expiry.startsWith("http://") && !currentAction.after_expiry.startsWith("https://")&&
             // not a vcard
-            !(currentAction.after_expiry.startsWith("BEGIN:VCARD") && currentAction.after_expiry.endsWith("END:VCARD"))
-        ) {
+            !(currentAction.after_expiry.startsWith("BEGIN:VCARD") && currentAction.after_expiry.endsWith("END:VCARD"))) {
             currentAction.after_expiry = "http://" + currentAction.after_expiry
         }
 
@@ -456,6 +498,17 @@ export interface LocationQRCodeDataT {
     }>
 }
 
+export interface UserAgentQRCodeDataT {
+    userAgents: Array<{
+        browser: string;
+        browser_name: string;
+        os: string;
+        os_name: string;
+        redirect_to: string;
+        after_expiry?: string;
+    }>
+}
+
 
 export type DataT = Pick<QRCode, "data">;
 export type SettingsT = Pick<QRCode, "settings">;
@@ -465,6 +518,7 @@ export namespace Types {
     export type RedirectQRCodeData = RedirectQRCodeDataT;
     export type ScheduleQRCodeData = ScheduleQRCodeDataT;
     export type LocationQRCodeData = LocationQRCodeDataT;
+    export type UserAgentQRCodeData = UserAgentQRCodeDataT;
 
 }
 

@@ -1,4 +1,3 @@
-import { QRCodeInformation } from "@/types/api/v1/QRCode";
 import { QRLinkGlobal } from "@/types/api/v1/global";
 import { getUser } from "@/utilities/api/v1/authentication";
 import { saveQR } from "@/utilities/api/v1/database";
