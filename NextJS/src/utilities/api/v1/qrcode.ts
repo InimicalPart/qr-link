@@ -64,32 +64,34 @@ export class QRCode {
     }| object)[] = [];
     update_log: {
         date: Date;
-        update: string[];
+        update: {
+            [key:string]: any
+        };
     }[] = [];
 
 
 
     addToUpdateLog(update: Partial<QRCode>, time: Date = new Date()) {
-        let keys = this.getKeys(update)
+
         this.update_log.push({
             date: time,
-            update: keys
+            update: Object.assign({},update as object)
         })
     }
 
-    private getKeys(obj: object, prefix?: string): string[] {
-        let keys = Object.keys(obj) as (keyof object)[]
-        let rtrn = []
-        for (let key of keys) {
-            if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
-                console.log(key)
-                rtrn.push(...this.getKeys(obj[key], prefix ? prefix + "." + key : key))
-            } else {
-                rtrn.push(prefix ? prefix + "." + key : key)
-            }
-        }
-        return rtrn
-    }
+    // private getKeys(obj: object, prefix?: string): string[] {
+    //     let keys = Object.keys(obj) as (keyof object)[]
+    //     let rtrn = []
+    //     for (let key of keys) {
+    //         if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+    //             console.log(key)
+    //             rtrn.push(...this.getKeys(obj[key], prefix ? prefix + "." + key : key))
+    //         } else {
+    //             rtrn.push(prefix ? prefix + "." + key : key)
+    //         }
+    //     }
+    //     return rtrn
+    // }
 
     constructor(newInformation?: Partial<QRCode> | undefined) {
         if (newInformation) Object.assign(this, newInformation)
@@ -285,52 +287,12 @@ export class QRCode {
 
     private getImportantMoments(from:Date, to: Date): {
         date: Date,
-        type: string,
+        update: {[key:string]:any},
     }[] {
 
-        return this.update_log.filter((a: { date: Date; update: string[]; }) => a.date > from && a.date < to).filter(a => a.update.some(b=>b.startsWith("settings.scanData") || b=="id")).map((a) => {
-            let final = 0
-            let multiplier = 1
-            for (let update of a.update) {
-                switch (update) {
-                    case "settings.scanData.information.fingerprint":
-                        final = 1 * multiplier
-                        multiplier *= 2
-                        break;
-                    case "settings.scanData.information.user-agent":
-                        final = 2 * multiplier
-                        multiplier *= 2
-                        break;
-                    case "settings.scanData.information.timestamp":
-                        final = 3 * multiplier
-                        multiplier *= 2
-                        break;
-                    case "settings.scanData.information.ip":
-                        final = 4 * multiplier
-                        multiplier *= 2
-                        break;
-                    case "settings.scanData.information.location":
-                        final = 5 * multiplier
-                        multiplier *= 2
-                        break;
-                    case "settings.getScanData":
-                        final = 6 * multiplier
-                        multiplier *= 2
-                        break;
-                    case "id":
-                        final = 6 * multiplier
-                        multiplier *= 2
-                        break;
-                    default:
-                        break;
-                }
-        }
-
-            return {
-                date: a.date,
-                type: final.toString(2)
-            }
-        })
+        return this.update_log
+            .filter((a: { date: Date; update: {[key:string]:any}}) => (a.date > from && a.date < to))
+            .filter((a: { date: Date; update: {[key:string]:any}}) => Object.keys(a.update).some(b => b.startsWith("settings.scanData") || b == "id"))
         
     }
 
@@ -385,7 +347,9 @@ export class QRCode {
     async getStatistics(type: "ScannedEachX" | "ScannedLastX" | "ScannedWhere" | "Scanned" | "ScannedDayRank", time: "minute" | "hour" | "day" | "week" | "month" | "year", timezone: string): Promise<{
         important_moments: {
             date: Date;
-            type: string
+            update: {
+                [key:string]: any
+            }
         }[],
         info: number | number[] | number[][] | {
             monday: number;
