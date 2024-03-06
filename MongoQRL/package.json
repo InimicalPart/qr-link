@@ -15,7 +15,7 @@
     "express":"^4.18.2",
     "yaml":"^2.3.4",
     "cors":"^2.8.5",
-    "dotenv":"^16.4.1"
+    "dotenv":"^16.4.4"
   },
     "devDependencies": {
         "@types/cors": "^2.8.17",
