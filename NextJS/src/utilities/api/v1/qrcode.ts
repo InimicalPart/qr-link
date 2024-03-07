@@ -95,6 +95,9 @@ export class QRCode {
 
     constructor(newInformation?: Partial<QRCode> | undefined) {
         if (newInformation) Object.assign(this, newInformation)
+        this.addToUpdateLog({
+            created: this.created
+        })
     }
 
 
@@ -216,6 +219,7 @@ export class QRCode {
             currentAction.after_expiry = currentZone.afterExpiry
         } else if (this.type == "user-agent") {
             const data = (this.data as unknown as UserAgentQRCodeDataT).userAgents.toSorted((a, b) => {
+                //! Set "Any (fallback)" (/.*/ & /.*/) to the end of the list
                 if (a.browser === "/.*/" && a.os === "/.*/") {
                     return 1;
                 } else if (b.browser === "/.*/" && b.os === "/.*/") {
@@ -224,10 +228,10 @@ export class QRCode {
                     return 0;
                 }
             });
-            const userAgent = scanData as string
             if (!scanData) {
                 throw new Error("User agent data is required for this QR code.")
             }
+            const userAgent = scanData as string
 
             for (let userAgentInformation of data) {
                 let browserRegexOptions = userAgentInformation.browser.split("/").pop()
@@ -277,10 +281,9 @@ export class QRCode {
     }
 
 
-    private getScannedLast(timeInSeconds:number) {
-        let now = new Date()
-        let timeAgo = new Date(now.getTime() - timeInSeconds*1000)
-        let scans = this.scanData.filter((a: { timestamp?: Date }) => a.timestamp > timeAgo)
+    private getScannedLast(timeInSeconds:number, since=new Date()) {
+        let timeAgo = new Date(since.getTime() - timeInSeconds*1000)
+        let scans = this.scanData.filter((a: any)=>a.timestamp).filter((a: { timestamp?: Date }) => new Date(a.timestamp) > timeAgo && new Date(a.timestamp) < since)
         return scans.length
         
     }
@@ -319,32 +322,45 @@ export class QRCode {
         }
         for (let scan of this.scanData as { timestamp?: Date }[]) {
             if (scan.timestamp) {
-                rtrn[moment(scan.timestamp).tz(timezone).format("dddd") as "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday"]++
+                rtrn[moment(scan.timestamp).tz(timezone).format("dddd").toLowerCase() as "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday"]++
             }
         }
         return rtrn
     }
 
-    private getScannedEach(timeInSeconds: number) {
-        let now = new Date();
-        let timeAgo = new Date(now.getTime() - timeInSeconds * 1000);
-        let scans = this.scanData.filter((a: { timestamp?: Date }) => a.timestamp > timeAgo);
-        let intervalLength = timeInSeconds * 1000; // Length of each interval in milliseconds
-        let intervalCounts = [];
-        for (let i = 0; i < timeInSeconds; i++) {
-            let intervalStart = new Date(timeAgo.getTime() + intervalLength * i);
-            let intervalEnd = new Date(timeAgo.getTime() + intervalLength * (i + 1));
-            let interval = scans.filter((a: { timestamp?: Date }) =>
-                a.timestamp > intervalStart && a.timestamp < intervalEnd
-            );
-            intervalCounts.push(interval.length);
+    private getScannedTimeRank(timezone: string) {
+        // get all scans, show how many happened at each hour of the day
+        let rtrn: { [key: string]: number } = {};
+        for (let i = 0; i < 24; i++) {
+            let label = i.toString().padStart(2, '0') + ":00";
+            rtrn[label] = 0;
         }
-        let totalScans = intervalCounts.reduce((acc, count) => acc + count, 0); // Total number of scans
-        let averageScans = totalScans / intervalCounts.length; // Average number of scans
-        return averageScans;
+        for (let scan of this.scanData as { timestamp?: Date }[]) {
+            if (scan.timestamp) {
+                let hour = moment(scan.timestamp).tz(timezone).hour();
+                let label = hour.toString().padStart(2, '0') + ":00";
+                rtrn[label]++;
+            }
+        }
+        return rtrn;
     }
 
-    async getStatistics(type: "ScannedEachX" | "ScannedLastX" | "ScannedWhere" | "Scanned" | "ScannedDayRank", time: "minute" | "hour" | "day" | "week" | "month" | "year", timezone: string): Promise<{
+
+    private getScannedEach(timeInSeconds: number) {
+        // for every timeInSeconds back, get the amount of scans, then average it out
+        let time = new Date()
+        let totalScans = 0;
+        let count = 0;
+        while (time.getTime() > this.created.getTime()) {
+            totalScans += this.getScannedLast(timeInSeconds,time);
+            count++;
+            time = new Date(time.getTime() - timeInSeconds*1000);
+        }
+        const averageScans = totalScans / count;
+        return Math.floor(averageScans);
+    }
+
+    async getStatistics(type: "ScannedEachX" | "ScannedLastX" | "ScannedWhere" | "Scanned" | "ScannedDayRank" | "ScannedTimeRank", time: "minute" | "hour" | "day" | "week" | "month" | "year", timezone: string): Promise<{
         important_moments: {
             date: Date;
             update: {
@@ -359,29 +375,57 @@ export class QRCode {
             friday: number;
             saturday: number;
             sunday: number;
+        } | {
+            [key: string]: number
+        } | {
+            error: string,
+            message: string
         }
+    } | {
+        error: string,
+        message: string
     }> {
-        let timeInSeconds = 0
-        switch (time) {
-            case "minute":
-                timeInSeconds = 60
-                break;
-            case "hour":
-                timeInSeconds = 60*60
-                break;
-            case "day":
-                timeInSeconds = 60*60*24
-                break;
-            case "week":
-                timeInSeconds = 60*60*24*7
-                break;
-            case "month":
-                timeInSeconds = 60*60*24*30
-                break;
-            case "year":
-                timeInSeconds = 60*60*24*365
-                break;
+
+        if (this.scanData.length == 0) return {
+            error: "NO_SCANS",
+            message: "No scans have been made for this QR code."
         }
+
+        let timeInSeconds = 0
+        if (time) {
+            switch (time) {
+                case "minute":
+                    timeInSeconds = 60
+                    break;
+                case "hour":
+                    timeInSeconds = 60*60
+                    break;
+                case "day":
+                    timeInSeconds = 60*60*24
+                    break;
+                case "week":
+                    timeInSeconds = 60*60*24*7
+                    break;
+                case "month":
+                    timeInSeconds = 60*60*24*30
+                    break;
+                case "year":
+                    timeInSeconds = 60*60*24*365
+                    break;
+                default:
+                    return {
+                        error: "INVALID_TIME",
+                        message: "Invalid time provided in request."
+                    }
+            }
+        }
+
+        if (!type) return {
+            error: "NO_TYPE",
+            message: "No type provided in request."
+        }
+
+
         switch (type) {
             case "ScannedLastX":
                 return {
@@ -401,12 +445,17 @@ export class QRCode {
             case "Scanned":
                 return {
                     info: this.scanCount,
-                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000), new Date())
+                    important_moments: this.getImportantMoments(this.created, new Date())
                 }
             case "ScannedDayRank":
                 return {
                     info: this.getScannedDayRank(timezone),
-                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000), new Date())
+                    important_moments: this.getImportantMoments(this.created, new Date())
+                }
+            case "ScannedTimeRank":
+                return {
+                    info: this.getScannedTimeRank(timezone),
+                    important_moments: this.getImportantMoments(this.created, new Date())
                 }
             default:
                 return null
