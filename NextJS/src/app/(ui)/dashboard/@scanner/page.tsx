@@ -29,6 +29,8 @@ export default function QRScannerModal({
     const [result, setResult] = useState({text: "", resultPoints: []})
     const [enabled, setEnabled] = useState(true)
     const [scannedImage, setScannedImage] = useState("")
+    const [width, setWidth] = useState(0)
+    const [height, setHeight] = useState(0)
     const [status, setStatus] = useState("Please scan a QRLink code")
     const [errored, setErrored] = useState(false)
     
@@ -105,6 +107,8 @@ export default function QRScannerModal({
                 const ctx = canvas.getContext("2d")
                 if (ctx) {
                     ctx.drawImage(videoStream, 0, 0, canvas.width, canvas.height)
+                    setWidth(canvas.width)
+                    setHeight(canvas.height)
                     setScannedImage(canvas.toDataURL("image/png"))
                     setEnabled(false)
                     setResult(data)
@@ -233,7 +237,7 @@ export default function QRScannerModal({
               }}}
               />
               :
-              <Image id="scanned" src={scannedImage} alt=""/>
+              <Image id="scanned" src={scannedImage} alt="" height={height} width={width}/>
             }
           <p id="status" style={{maxWidth:"100%", fontWeight:600, marginTop:10, color:errored ? "red" : "black"}}>{status}</p>
         </div>

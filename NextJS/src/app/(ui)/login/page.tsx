@@ -1,3 +1,11 @@
+
+import type { Metadata } from 'next'
+ 
+export const metadata: Metadata = {
+  title: 'Login to QRLink',
+}
+
+
 import Image from "next/image";
 import Script from "next/script";
 import "./login.css"

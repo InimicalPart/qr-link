@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 
 import { notFound } from 'next/navigation'
 import Image from "next/image";
@@ -6,6 +6,15 @@ import Image from "next/image";
 //@ts-expect-error
 import qz from "qz-tray"; //! Doesn't have typescript definitions, causing errors, which is why we have to use ts-expect-error
 import { useEffect } from "react";
+
+
+import type { Metadata } from 'next'
+ 
+export const metadata: Metadata = {
+  title: 'Print a QRLink-code to a Zebra printer',
+}
+ 
+
 export default function Home() {
     if (process.env.NODE_ENV !== "development") {
         return notFound()

@@ -1,5 +1,11 @@
 // "use server"
 
+import type { Metadata } from 'next'
+ 
+export const metadata: Metadata = {
+  title: 'Create a QRLink-code',
+}
+
 import Script from "next/script";
 import "./create.css"
 import { cookies } from "next/headers";
