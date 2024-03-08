@@ -1,4 +1,4 @@
-FROM mongo:latest
+FROM mongo:7.0.6
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV IS_DOCKER=1
