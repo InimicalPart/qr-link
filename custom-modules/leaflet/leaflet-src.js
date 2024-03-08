@@ -14508,7 +14508,7 @@
         }
         // Always export us to window global (see #2364)
         window.L = exports;
-    } catch (e) { console.log("[QL] Omitted Leaflet error - " + e)} //! Added by @InimicalPart
+    } catch (e) { console.log("[QRLI] Omitted Leaflet error - " + e)} //! Added by @InimicalPart
   }));
   //# sourceMappingURL=leaflet-src.js.map
   

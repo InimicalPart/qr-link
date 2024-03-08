@@ -66,10 +66,12 @@ const initialState: {
 
 export default function Form({
     submit,
-    qrCodeInfo = {}
+    qrCodeInfo = {},
+    delQR = ()=>{},
 }:{
     submit: (prevState:any,form:FormData) => any,
-    qrCodeInfo?: any
+    qrCodeInfo?: any,
+    delQR?: () => any
 }) {
     const [state, formAction] = useFormState(submit, initialState)
 
@@ -138,7 +140,7 @@ export default function Form({
             padDate(date.getMinutes())
         );
         }
-    return (
+    return (<>
         <form id="create-form" action={formAction} style={{
             position:"relative"
         }}>
@@ -238,6 +240,16 @@ export default function Form({
 
         <FormSubmit state={state} qrCodeInfo={qrCodeInfo}/>
     </form>
+    {qrCodeInfo.id ? 
+        <form action={delQR} onSubmit={()=>{
+
+            if (!confirm("Are you sure you want to delete this QR-code? ("+(document.getElementById("qr-id") as HTMLInputElement).value+")")) {
+                return false
+            }
+
+        }}>
+            <button type="submit" className="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Delete QR-code</button>
+        </form>:<></>}</>
     )
 }
 

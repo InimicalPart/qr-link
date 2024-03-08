@@ -58,6 +58,28 @@ export default async function Update({
         },
     }).then((res) => res.json())
 
+    async function delQR() {
+        "use server";
+
+        const id = params.id
+        if (id) {
+            await fetch(`${API_URL}/qrcode/${id}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: cookies().get("token").value
+                }
+            }).then((res) => {
+                if (res.status === 200) {
+                    redirect("/dashboard")
+                } else {
+                    console.error(res)
+                }
+
+            })
+        }
+
+    }
+
 
     const updateSubmit = submit.bind(null, "update", qrCodeDetails)
     
@@ -109,7 +131,7 @@ export default async function Update({
                   position: 'relative',
                   top: 20
               }} className="select-none">
-              <Form submit={updateSubmit} qrCodeInfo={qrCodeDetails}/>
+              <Form submit={updateSubmit} qrCodeInfo={qrCodeDetails} delQR={delQR}/>
               </div>
           </div>
       </div>);

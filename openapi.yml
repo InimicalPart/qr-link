@@ -1904,7 +1904,7 @@ paths:
                             };
                             
                             function send_and_redirect() {
-                                console.log("[QRCode] Sending data to server...")
+                                console.log("[-QR-] Sending data to server...")
                                 fetch("http://localhost:8080/api/v1/qrcode/8c8435e9-f630-4008-844d-31a4c928f1b9/scan", {
                                     method: "POST",
                                     headers: {
@@ -1912,7 +1912,7 @@ paths:
                                     },
                                     body: JSON.stringify(finalData)
                                 }).then(()=>{
-                                    console.log("[QRCode] Redirecting to: " + "https://inimicalpart.com");
+                                    console.log("[-QR-] Redirecting to: " + "https://inimicalpart.com");
                                     window.location.href = "https://inimicalpart.com"
                                 }).catch((err)=>{
                                     alert("An error occured while sending your data to the server. Please try again later.")
