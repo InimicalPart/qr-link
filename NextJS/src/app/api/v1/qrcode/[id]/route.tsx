@@ -231,3 +231,52 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
     }), { status: 200 });
   
 }
+
+
+export async function DELETE(request: NextRequest, {params}: {params: {id: string}}) {
+    let { id } = params;
+    if (!id) {
+      return new NextResponse(JSON.stringify({
+        error: "NO_ID",
+        message: "No ID provided.",
+      }), { status: 400 })
+    }
+    if (!(typeof (id as any) == "string")) {
+      return new NextResponse(JSON.stringify({
+        error: "INVALID_ID",
+        message: "ID needs to be a string.",
+      }), { status: 400 })
+    }
+    if (!Object.keys(global.QRCodeTable).includes(id)) {
+      return new NextResponse(JSON.stringify({
+        error: "INVALID_ID",
+        message: "Invalid ID provided.",
+      }), { status: 400 })
+    }
+    const token = request.headers.get("Authorization")
+    if (!token) {
+        return new NextResponse(JSON.stringify({
+            error: "NO_TOKEN",
+            message: "No token provided in request."
+        }), { status: 401 })
+    }
+    const user = await getUser(token)
+    if (!user.isAuthenticated) {
+        return new NextResponse(JSON.stringify({
+            error: "INVALID_TOKEN",
+            message: "Invalid token provided in request."
+        }), { status: 401 })
+    }
+    if (global.QRCodeTable[id].linked_to !== user.user.id) {
+        return new NextResponse(JSON.stringify({
+            error: "UNAUTHORIZED",
+            message: "You are not authorized to delete this QRCode."
+        }), { status: 403 })
+    }
+    delete global.QRCodeTable[id]
+    saveQR(id, null, true)
+    return new NextResponse(JSON.stringify({
+        id,
+        message: "The QR-code has been deleted."
+    }), { status: 200 });
+}
