@@ -26,40 +26,40 @@ export async function bareBonesConnection(mongoConnectionString: string, res:()=
             });            
             const succeeded = await client.db().admin().listDatabases().catch((a) => a).then((a) => a)
             if (succeeded instanceof MongoServerError && succeeded.code == 13) { // Unauthorized
-                console.log(`[DB] The database at ${process.env.MONGO_URL} is not accessible without credentials (which is expected).`)
+                console.log(`[DATA] The database at ${process.env.MONGO_URL} is not accessible without credentials (which is expected).`)
                 await client.close()
                 if (rej) rej("creds_req")
                 return reject("creds_req")
             } else if (succeeded instanceof MongoServerSelectionError) {
-                console.log("[DB] The database at " + process.env.MONGO_URL + " is not accessible.")
+                console.log("[DATA] The database at " + process.env.MONGO_URL + " is not accessible.")
                 await client.close()
                 if (rej) rej("not_accessible")
                 return reject("not_accessible")
             } else if (succeeded instanceof MongoError) {
-              console.log("[DB] Encountered an error while attempting to connect to the database:")
+              console.log("[DATA] Encountered an error while attempting to connect to the database:")
               console.error(succeeded)
               await client.close()
                 if (rej) rej("error")
               return reject("error")
           }
-            console.log(`[DB] Warning: The database at ${process.env.MONGO_URL} is accessible without credentials. We will now attempt to configure the database to be protected from unauthorized access.`)
+            console.log(`[DATA] Warning: The database at ${process.env.MONGO_URL} is accessible without credentials. We will now attempt to configure the database to be protected from unauthorized access.`)
 
             // Create account for QRLink
             const authenticatingDatabase = client.db("admin")
             await authenticatingDatabase.command({createUser: process.env.MONGO_USERNAME, pwd: process.env.MONGO_PASSWORD, roles: [{role: "readWrite", db: "QRLink"}]}).then(()=>{
-                console.log(`[DB] Created user '${process.env.MONGO_USERNAME}' with password '${process.env.MONGO_PASSWORD}' in the database 'admin'.`)
+                console.log(`[DATA] Created user '${process.env.MONGO_USERNAME}' with password '${process.env.MONGO_PASSWORD}' in the database 'admin'.`)
             }).catch((err) => {
                 if (err.code == 51003) {
-                    console.log(`[DB] User '${process.env.MONGO_USERNAME}' already exists in the database 'admin'.`)
+                    console.log(`[DATA] User '${process.env.MONGO_USERNAME}' already exists in the database 'admin'.`)
                 } else console.error(err)
             })
             // Create root user 
             let rootUserPasswd = await randomString(32)
             await authenticatingDatabase.command({createUser: "root", pwd: rootUserPasswd, roles: ["root"]}).then(()=>{
-                console.log(`[DB] Created user 'root' with password '${rootUserPasswd}' in the database 'admin'. SAVE THIS PASSWORD!`)
+                console.log(`[DATA] Created user 'root' with password '${rootUserPasswd}' in the database 'admin'. SAVE THIS PASSWORD!`)
             }).catch((err) => {
                 if (err.code == 51003) {
-                    console.log(`[DB] User 'root' already exists in the database 'admin'.`)
+                    console.log(`[DATA] User 'root' already exists in the database 'admin'.`)
                 } else console.error(err)
             })
             await ensureDBSetup(client)
@@ -68,7 +68,7 @@ export async function bareBonesConnection(mongoConnectionString: string, res:()=
             const isOpen = await fetch(process.env.MONGO_API_PROTOCOL + "://" + (process.env.MONGO_URL.includes(":") ? process.env.MONGO_URL.replace(/:[0-9]{1,5}/g, ":3010") : process.env.MONGO_URL+":3010") + "/test").then((res) => res.ok).catch((err) => false)
             if (isOpen) {
                 // DOCKER:DOCKER
-                console.log("[DB] QRLink has detected that the database has the QRL API enabled. Attempting to configure the database to be protected from unauthorized access...")
+                console.log("[DATA] QRLink has detected that the database has the QRL API enabled. Attempting to configure the database to be protected from unauthorized access...")
                 const currentDBConfig = await fetch(process.env.MONGO_API_PROTOCOL + "://" + (process.env.MONGO_URL.includes(":") ? process.env.MONGO_URL.replace(/:[0-9]{1,5}/g, ":3010") : process.env.MONGO_URL+":3010") + "/mongodb/config").then((res) => res.json()).catch((err) => null)
                 if (currentDBConfig) {
                     if (!currentDBConfig["security"]) {
@@ -82,15 +82,15 @@ export async function bareBonesConnection(mongoConnectionString: string, res:()=
                         },
                         body: JSON.stringify(currentDBConfig)
                     }).then((res) => res.json()).catch((err) => console.error(err))
-                    console.log("[DB] Updated database configuration.")
-                    console.log("[DB] Requesting database restart...")
+                    console.log("[DATA] Updated database configuration.")
+                    console.log("[DATA] Requesting database restart...")
                     await fetch(process.env.MONGO_API_PROTOCOL + "://" + (process.env.MONGO_URL.includes(":") ? process.env.MONGO_URL.replace(/:[0-9]{1,5}/g, ":3010") : process.env.MONGO_URL+":3010") + "/mongodb/restart", {
                         method: "POST"
                     }).then((res) => res.json()).catch((err) => console.error(err))
-                    console.log("[DB] Database restart completed.")
+                    console.log("[DATA] Database restart completed.")
                     resolve()
                 } else {
-                    console.warn("[DB] Failed to fetch database configuration.")
+                    console.warn("[DATA] Failed to fetch database configuration.")
                 }
             } else {
                 //LOCAL:LOCAL
@@ -116,14 +116,14 @@ export async function bareBonesConnection(mongoConnectionString: string, res:()=
 
 
                         const configLoc = process.platform == "linux" ? "/etc/mongod.conf" : process.platform == "darwin" ? "/usr/local/etc/mongod.conf" : "" // TODO: Add Windows support
-                        console.log("[DB] QRLink has detected that the database is running on the same machine as this program, but the database is not set up correctly to be protected from unauthorized access and is not compatible with QRLink.")
-                        console.log("[DB] In 10 seconds, the program will automatically make the necessary changes to the database configuration and restart the database.")
-                        console.log("[DB] To cancel this process, press CTRL+C now.")
+                        console.log("[DATA] QRLink has detected that the database is running on the same machine as this program, but the database is not set up correctly to be protected from unauthorized access and is not compatible with QRLink.")
+                        console.log("[DATA] In 10 seconds, the program will automatically make the necessary changes to the database configuration and restart the database.")
+                        console.log("[DATA] To cancel this process, press CTRL+C now.")
                         await new Promise((resolve) => setTimeout(resolve, 10000))
-                        console.log("[DB]")
-                        console.log("[DB]")
-                        console.log("[DB] Making changes to the database configuration...")
-                        console.log("[DB]")
+                        console.log("[DATA]")
+                        console.log("[DATA]")
+                        console.log("[DATA] Making changes to the database configuration...")
+                        console.log("[DATA]")
                         if (process.platform == "linux") {
                             const {promises:fs} = await import("fs")
                             try {
@@ -131,26 +131,26 @@ export async function bareBonesConnection(mongoConnectionString: string, res:()=
                             } catch {
                                 // get current file owner
                                 const currentFileOwner = (child_process.spawnSync("ls",["-la", configLoc])).stdout.toString().split(" ")[2]
-                                console.log("[DB] User '" + process.env.USER + "' does not have write permissions to the configuration file at " + configLoc + ".")
-                                console.log("[DB] QRLink can temporarily add write permissions for user '" + process.env.USER + "' to the configuration file at " + configLoc + " automatically.")
-                                console.log("[DB]")
-                                console.log("[DB] QRLink will do the following:")
-                                console.log("[DB]     1. Give user '" + process.env.USER + "' ownership of the configuration file at " + configLoc + ".")
-                                console.log("[DB]     2. Add 'security.authorization = enabled' to the configuration file at " + configLoc + ".")
-                                console.log("[DB]     3. Return ownership of the configuration file at " + configLoc + " to '" + currentFileOwner + "' (current file owner).")
-                                console.log("[DB]     4. Restart the database.")
-                                console.log("[DB]")
+                                console.log("[DATA] User '" + process.env.USER + "' does not have write permissions to the configuration file at " + configLoc + ".")
+                                console.log("[DATA] QRLink can temporarily add write permissions for user '" + process.env.USER + "' to the configuration file at " + configLoc + " automatically.")
+                                console.log("[DATA]")
+                                console.log("[DATA] QRLink will do the following:")
+                                console.log("[DATA]     1. Give user '" + process.env.USER + "' ownership of the configuration file at " + configLoc + ".")
+                                console.log("[DATA]     2. Add 'security.authorization = enabled' to the configuration file at " + configLoc + ".")
+                                console.log("[DATA]     3. Return ownership of the configuration file at " + configLoc + " to '" + currentFileOwner + "' (current file owner).")
+                                console.log("[DATA]     4. Restart the database.")
+                                console.log("[DATA]")
                                 const readline = (await import('readline')).createInterface({
                                     input: process.stdin,
                                     output: process.stdout
                                 })
                                 const answer = await new Promise<string>(resolve => {
-                                    readline.question("[DB] Would you like to proceed? (y/n) ", resolve)
+                                    readline.question("[DATA] Would you like to proceed? (y/n) ", resolve)
                                   })
 
                                 if (answer.toLowerCase() == "y") {
                                     readline.close()
-                                    console.log("[DB] Configurating...")
+                                    console.log("[DATA] Configurating...")
                                     console.log("> sudo chown " + process.env.USER + " " + configLoc)
                                     child_process.execSync("sudo chown " + process.env.USER + " " + configLoc)
                                     await editConfiguration(configLoc)
@@ -158,11 +158,11 @@ export async function bareBonesConnection(mongoConnectionString: string, res:()=
                                     child_process.execSync("sudo chown " + currentFileOwner + " " + configLoc)
                                     await restartDatabase()
                                     
-                                    console.log("[DB] Database configuration updated and database restarted, verifying...")
+                                    console.log("[DATA] Database configuration updated and database restarted, verifying...")
                                     await bareBonesConnection(mongoConnectionString, res, rej).then(()=>{throw new DatabaseError("Attempt for verifying updated configuration failed.")}).catch(()=>null)
 
                                 } else {
-                                    console.log("[DB] The database will not be set up correctly and QRLink will not work.")
+                                    console.log("[DATA] The database will not be set up correctly and QRLink will not work.")
                                     readline.close()
                                     showDBSetupInstructions(false)
                                     await new Promise(() => {}) // sleep forever
@@ -171,7 +171,7 @@ export async function bareBonesConnection(mongoConnectionString: string, res:()=
                         }
                         await editConfiguration(configLoc)
                         await restartDatabase()
-                        console.log("[DB] Database configuration updated and database restarted, verifying...")
+                        console.log("[DATA] Database configuration updated and database restarted, verifying...")
                         await bareBonesConnection(mongoConnectionString, res, rej).then(()=>{throw new DatabaseError("Attempt for verifying updated configuration failed.")}).catch(()=>null)
                     } else {
                         showDBSetupInstructions(false)
@@ -188,23 +188,23 @@ export async function bareBonesConnection(mongoConnectionString: string, res:()=
 }
 
 export async function restartDatabase() {
-    console.log("[DB] Restarting the database...")
+    console.log("[DATA] Restarting the database...")
     const util = await import("util")
     const exec = util.promisify((await import('child_process')).exec);
     const restartcommand = process.platform == "linux" ? "sudo systemctl restart mongod" : process.platform == "darwin" ? "brew services restart mongodb-community" : "net stop mongod && net start mongod" // TODO: TEST WINDOWS
     if (!["win32", "darwin", "linux"].includes(process.platform)) {
-        console.error("[DB] Unsupported platform.")
-        console.error("[DB] Please restart the database manually and then restart QRLink.")
+        console.error("[DATA] Unsupported platform.")
+        console.error("[DATA] Please restart the database manually and then restart QRLink.")
         await new Promise(() => {}) // sleep forever
         return
     }
     console.log("> " + restartcommand)
     await exec(restartcommand).catch(async (err: any) => {
         console.error(err)
-        console.error("[DB] An error occurred, please restart the database manually and then restart QRLink.")
+        console.error("[DATA] An error occurred, please restart the database manually and then restart QRLink.")
         await new Promise(() => {}) // sleep forever
     })
-    console.log("[DB] Database restarted.")
+    console.log("[DATA] Database restarted.")
     return
 }
 
@@ -216,7 +216,7 @@ async function editConfiguration(configLoc: string) {
     }
     config["security"]["authorization"] = "enabled"
     await fs.writeFile(configLoc, yaml.stringify(config))
-    console.log("[DB] Database configuration updated.")
+    console.log("[DATA] Database configuration updated.")
         
 }
 
@@ -236,9 +236,9 @@ export async function ensureDBSetup(clientORmCS: MongoClient | string) {
         const collections = (await db.listCollections().toArray()).map((collection) => collection.name);
         if (!collections.includes("qrcodes")) {
             await db.createCollection("qrcodes");
-            console.log("[DB] Database and collection setup was successful.")
+            console.log("[DATA] Database and collection setup was successful.")
         } else {
-            console.log("[DB] Database and collection are already set up correctly.")
+            console.log("[DATA] Database and collection are already set up correctly.")
         }
         resolve()
     } catch (err) {
@@ -279,7 +279,7 @@ export async function readQRCodeTable(storage=global.storageMethod) {
             resolve(classed);
       } else {
           try {
-                console.log("[DB] Reading QRCodeTable from the database...")
+                console.log("[DATA] Reading QRCodeTable from the database...")
               let results: Array<MongoQRCodeInformation> = await global.mongoClient.db("QRLink").collection("qrcodes").find({}).toArray() as unknown as Array<MongoQRCodeInformation>
               resolve(await convertToQRCTFormat(results))
           } catch (err) {
@@ -300,19 +300,19 @@ export async function saveQR(id: string = null, obj: QRCode = new QRCode(), upda
             resolve()
         } else {
             if (update) {
-                console.log("[DB] Updating QR-code " + id + " in the database...")
+                console.log("[DATA] Updating QR-code " + id + " in the database...")
                 global.mongoClient.db("QRLink").collection("qrcodes").updateOne({id: id}, {$set: Object.assign({},obj)}).then((status) => {
                     if (status.modifiedCount == 0) {
-                        console.log("[DB] Failed to update QR-code " + id + " in the database.")
+                        console.log("[DATA] Failed to update QR-code " + id + " in the database.")
                     }
                     resolve()
                 })
             } else {
-                console.log("[DB] Inserting QR-code " + id + " into the database...");
+                console.log("[DATA] Inserting QR-code " + id + " into the database...");
                 (obj as MongoQRCodeInformation).id = id 
                 global.mongoClient.db("QRLink").collection("qrcodes").insertOne(Object.assign({},obj)).then((status) => {
                     if (!status.acknowledged) {
-                        console.log("[DB] Failed to insert QR-code " + id + " into the database.")
+                        console.log("[DATA] Failed to insert QR-code " + id + " into the database.")
                     }
                     resolve()
                 })
@@ -343,7 +343,7 @@ export async function convertFile2MongoDB() {
 
     if (dataToInsert.length != 0) {
         await global.mongoClient.db("QRLink").collection("qrcodes").insertMany(dataToInsert)
-        console.log("[DB] " + dataToInsert.length + " QR-codes were converted from file storage to MongoDB.")
+        console.log("[DATA] " + dataToInsert.length + " QR-codes were converted from file storage to MongoDB.")
     }
 }
 

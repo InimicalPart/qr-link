@@ -1,5 +1,19 @@
 // "use server"
 
+export async function generateMetadata(
+    { params}: {
+        params: { id: string }
+    },
+    parent: ResolvingMetadata
+  ): Promise<Metadata> {
+    // read route params
+    const id = params.id
+
+    return {
+      title: "Manage QRLink with ID " + id,
+    }
+  }
+
 import Script from "next/script";
 import "./manage.css"
 import { cookies } from "next/headers";
@@ -20,6 +34,7 @@ import Alerts from "@/components/all/alerts.client";
 import QRCodeImage from "@/components/create/qrCodeImage.client";
 import PDFButton from "@/components/manage/generatePDF.client";
 import ExportButtons from "@/components/all/exportButtons.client";
+import { Metadata, ResolvingMetadata } from "next";
 
 export default async function Update({
     params

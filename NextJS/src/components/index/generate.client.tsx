@@ -31,8 +31,11 @@ export default function GenerateQRs({
             <form action={handleClick} key={qrcodeJSON.id} className="qr select-none" id="manage-qr-form" style={{
                 display: "flex",
                 border: "1px black solid",
+                borderRadius:3,
+                backgroundColor: "white",
                 justifyContent: "flex-start",
                 flexDirection: "column",
+                overflow: "hidden",
             }}>
                 <input type="hidden" name="id" id="qr-id-input" value={qrcodeJSON.id}/>
                 <button title="Click to manage" className="qr select-none" id="sample-qr" style={{
@@ -54,6 +57,11 @@ export default function GenerateQRs({
                         <p className="information" id="qr-scancount-cntr">Scan Count:<br/><b><span id="qr-scancount">{qrcodeJSON.scanCount}</span></b></p>
                         <p className="information" id="qr-expires-cntr">Expires:<br/><b><span id="qr-expires">{qrcodeJSON.expires ? new Date(qrcodeJSON.expires).toLocaleString() : "Never"}</span></b></p>
                         <p className="information" id="qr-valid-cntr">Valid:<br/><b><span id="qr-valid" style={{color:qrcodeJSON.expires ? new Date(qrcodeJSON.expires) > new Date() ? "#3bc53b" : "#c92121" : "#3bc53b"}}>YES</span></b></p>
+                    </div>
+                    <div id="filler" style={{
+                        width:"100%",
+                        height:"100%"
+                    }}>
                     </div>
                 </button>
             </form>

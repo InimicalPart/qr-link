@@ -1,5 +1,11 @@
+
+import type { Metadata } from 'next'
+ 
+export const metadata: Metadata = {
+  title: 'QRLink Dashboard',
+}
+
 import Image from 'next/image'
-import Script from 'next/script';
 import "./index.css";
 import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
@@ -101,99 +107,76 @@ export default async function Home({
         redirect("/login")
     }
     return (
-      <div>
+      <div className="dashboard main-container" style={{
+        backgroundImage: "url('/res/img/newseed_background.png')",
+        backgroundRepeat: "no-repeat",
+        overflowX: "hidden",
+    }}>
         {show &&
             <Modal backURL='/dashboard'>
                 <QRScannerModal callback={scanResult} API_URL={API_URL}/>
             </Modal>
         }
-        <div id="buttons" className="w-[calc(302px*1)] md:w-[calc(302px*2)] lg:w-[calc(302px*3)] xl:w-[calc(302px*4)] 2xl:w-[calc(302px*5)]" style={{
-                position: "relative",
-                left: "50%",
-                top: "20px",
-                transform: "translateX(-50%)",
-                display: "flex",
-                justifyContent: "center",
-                flexWrap: "wrap",
-                marginBottom: "20px",
+        <header style={{padding:"calc(1.5em + 8px)", display:"flex", justifyContent: "space-between"}} className="dashboard">
+            <Image src="/res/img/logo.png" width={450} height={99} alt="QRLink logo"/>
+            <div id="buttons" className="w-[408px] dashboard buttons">
+
+            <form action={scanQR} className="w-[200px]" id="scanQR">
+                <button type="submit" id="scanQRButton" className="w-[100%] dashboard main-button" style={{
+                }}>Find QR <Image src={"/res/img/camera.png"} width={40} height={30} alt="Find QR" style={{paddingLeft:10}}/></button>
+                </form>
+                <form action={logout} className="w-[200px]" id="logOut">
+                    <button type="submit" id="logOutButton" className="w-[100%] dashboard main-button" style={{
+                    }}>Logout <Image src="/res/img/signout.png" width={40} height={29} alt="Logout" style={{paddingLeft:10}}/>
+                    </button>
+                    </form>
                 
-        }}>
+                </div>
 
-        <form action={logout} className="w-[calc(302px*1)] md:w-[calc(302px*2)] lg:w-[calc(302px*3)] xl:w-[calc(302px*4)] 2xl:w-[calc(302px*5)]" id="logOut">
-            <button type="submit" id="logOutButton" className="w-[100%] dashboard main-button" style={{
 
-                padding: "0.75vh 0px",
-                color: "white",
-                background: "linear-gradient(45deg, rgb(165 31 31), #1800ff, rgb(165 31 31))",
-                fontWeight: "900",
-                borderRadius: "12px",
-                border: "2px solid black",
-                marginBottom: 5,
-                lineHeight: 1.5  
-            }}>Log out</button>
-            </form>
-        <form action={scanQR} className="w-[calc(151px*1)] md:w-[calc(151px*2)] lg:w-[calc(151px*3)] xl:w-[calc(151px*4)] 2xl:w-[calc(151px*5)]" id="scanQR">
-            <button type="submit" id="scanQRButton" className="w-[calc(100%-1px)] dashboard main-button" style={{
-                padding: "0.75vh 0px",
-                color: "white",
-                background: "linear-gradient(45deg, rgb(165 31 31), #1800ff)",
-                fontWeight: "900",
-                borderRadius: "12px",
-                marginRight: 1,
-                border: "2px solid black",        
-            }}>Scan QR</button>
-            </form>
-            <form action={linkQR} className="w-[calc(151px*1)] md:w-[calc(151px*2)] lg:w-[calc(151px*3)] xl:w-[calc(151px*4)] 2xl:w-[calc(151px*5)]" id="linkQR">
-            <button type="submit" id="linkQRButton" className="w-[calc(100%-1px)] dashboard main-button" style={{
-                padding: "0.75vh 0px",
-                color: "white",
-                background: "linear-gradient(45deg, #1800ff, rgb(165 31 31))",
-                fontWeight: "900",
-                borderRadius: "12px",
-                border: "2px solid black",        
-                marginLeft: 1,
-            }}>Link QR <br className="mobile-only"/><span style={{fontSize:10, verticalAlign:"middle"}}>(not implemented yet)</span></button>
-            </form>
-            
-            </div>
-    <div id="qr-container" className="left-[50%] w-[calc(302px*1)] md:w-[calc(302px*2)] lg:w-[calc(302px*3)] xl:w-[calc(302px*4)] 2xl:w-[calc(302px*5)]" style={{
+            </header>
+    <div id="qr-container" className="left-[50%] w-[calc(302px*1)] md:w-[calc(302px*2)] lg:w-[calc(302px*3)] xl:w-[calc(302px*4)] 2xl:w-[calc(302px*5)] relative" style={{
         transform: "translateX(-50%)",
         display: "flex",
         flexWrap: "wrap",
-        position: "absolute",
-        marginTop: "40px",
         paddingBottom: "20px",
     }}>
 
         <GenerateQRs handleClick={manageQR} token={cookies().get("token").value} apiURL={API_URL}/>
 
         <form action={addQR} className="qr select-none cursor-pointer md:min-h-[633px]" id="add-qr-form" style={{
-                background: "linear-gradient(114deg, #0000ffc7,#00dcffc7)",
-                width: "302px",
-                height: "auto",
-                border: "1px black solid",
-                justifyContent: "center",
-                flexDirection: "column",
-                display:'flex',
-                pointerEvents: "none",
-                }}>
+            width: "302px",
+            height: "auto",
+            // border: "1px black solid",
+            borderRadius:3,
+            justifyContent: "center",
+            flexDirection: "column",
+            display:'flex',
+            pointerEvents: "none",
+        }}>
             <button id="add-qr" style={{
                 pointerEvents: "auto",
                 width:"100%",
                 height:"100%",
+                display:"flex",
+                justifyContent:"center",
+                alignItems:"center",
             }}> 
-                <h1 style={{
-                    fontSize: "55pt",
-                    color: "white",
-                    position: "relative",
-                    // top: "50%",
-                    left: "50%",
-                    textAlign: "center",
-                    transform: "translateX(-50%)",
-                }}>+</h1>
+                <Image src={"/res/img/add_text.png"} width={179} height={179} alt="Add QR" style={{
+                    transform: "scale(0.8)",
+                    margin: "30px 0px"
+                }}/>
             </button>
         </form>
     </div>
+
+
+
+    <footer className="copyright-footer">
+        <p>
+            &copy; 2024 - <a className="copyright" href="https://github.com/InimicalPart" target="_blank">InimicalPart</a> & <a className="copyright" href="https://newseed.se" target="_blank">NewSeed IT Solutions AB</a> - All rights reserved.
+        </p>
+    </footer>
   </div>
   );
 }

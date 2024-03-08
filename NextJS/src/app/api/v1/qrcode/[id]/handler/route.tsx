@@ -23,16 +23,16 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
         return new NextResponse(JSON.stringify({error: "INVALID", message: "This request is invalid."}), {status: 400})
       }
     }
-    console.log("[QRCode] QR-code was scanned: " + id);
+    console.log("[-QR-] QR-code was scanned: " + id);
     const redirectRequiresInfoFromUser = ["location", "user-agent"].includes(global.QRCodeTable[id].type)
     const redirect_to = redirectRequiresInfoFromUser ? null : global.QRCodeTable[id].getRedirectTo()
 
     if (global.QRCodeTable[id].isExpired()) {
-        console.log('[HA] The client tried to connect to an expired QR-code');
+        console.log('[-WS-] The client tried to connect to an expired QR-code');
 
         if (global.QRCodeTable[id].hasAfterExpiry()) {
             if (!redirectRequiresInfoFromUser) {
-                console.log("[WS] Sending client to after_expiry URL...")
+                console.log("[-WS-] Sending client to after_expiry URL...")
                 const after_expiry = global.QRCodeTable[id].getRedirectTo() //! .getRedirectTo() will return the after_expiry URL if the QR-code is expired   
                 return NextResponse.redirect(after_expiry)
             }
@@ -128,14 +128,14 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
 
                     const ws = new WebSocket("${process.env.API_URL.startsWith("https") ? "wss" : "ws"}://${process.env.API_URL.replace(/(https|http):\/\//g,"")}/qrcode/${id}/handler"+window.location.search);
                     ws.onopen = () => {
-                        console.log("[QRCode] WebSocket connection established for QR-code " + "${id}");
+                        console.log("[-QR-] WebSocket connection established for QR-code " + "${id}");
                     }
                     ws.onmessage = (event) => {
                         let parsed = {}
                         try {
                             parsed = JSON.parse(event.data)
                         } catch (e) {
-                            console.error("[QRCode] Error parsing JSON: " + e.message)
+                            console.error("[-QR-] Error parsing JSON: " + e.message)
                             document.getElementById("status").innerText = "An error occurred while parsing the data from the server."
                         }
                         console.log(">", parsed)
@@ -311,14 +311,14 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                             }
                             // if uri is vcard
                             if (uri.toLowerCase().startsWith("begin:vcard") && uri.toLowerCase().endsWith("end:vcard")){
-                                console.log("[QRCode] Redirecting to vCard: " + uri);
+                                console.log("[-QR-] Redirecting to vCard: " + uri);
                                 const meta = document.createElement("meta")
                                 meta.httpEquiv = "refresh"
                                 meta.content = "0;url=data:text/vcard;charset=utf-8," + encodeURIComponent(uri)
                                 document.head.appendChild(meta)
                                 document.getElementById("status").innerHTML = "Redirecting... If you do not get redirected: <a download='vcard_${new Date().getTime()}.vcf' href='data:text/vcard;charset=utf-8," + encodeURIComponent(uri) + "'>click here</a>"
                             } else {
-                                console.log("[QRCode] Redirecting to: " + uri);
+                                console.log("[-QR-] Redirecting to: " + uri);
                                 window.location.href = uri
                             }
                             
@@ -347,17 +347,17 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
     if (redirect_to) {
         //! if redirect_to is vcard
         if (redirect_to.toLowerCase().startsWith("begin:vcard") && redirect_to.toLowerCase().endsWith("end:vcard")){
-            console.log("[QRCode] Redirecting to vCard: " + redirect_to.replace(/\n/g,"%0A"));
+            console.log("[-QR-] Redirecting to vCard: " + redirect_to.replace(/\n/g,"%0A"));
             return new NextResponse(redirect_to, { status: 200, headers:{
                 "Content-Type": "text/vcard",
                 "Content-Disposition": "attachment; filename=vcard_"+new Date().getTime()+".vcf"
             } });
         } else {
-            console.log("[QRCode] Redirecting to: " + redirect_to);
+            console.log("[-QR-] Redirecting to: " + redirect_to);
             return NextResponse.redirect(redirect_to)
         }
     } else {
-        console.log("[QRCode] Err! No redirect URL provided for QR-code " + id);
+        console.log("[-QR-] Err! No redirect URL provided for QR-code " + id);
         return new NextResponse(`
             <!DOCTYPE html>
             <html lang="en">
@@ -379,10 +379,10 @@ export function SOCKET(
     _server: import('ws').WebSocketServer,
 ) {
     const id = request.url.split("/")[4] //! s**t solution but i think that this is the only way to get the id
-    console.log('[HA] A client is trying to connect to QR-code with ID ' + id);
+    console.log('[-WS-] A client is trying to connect to QR-code with ID ' + id);
     
     if (!Object.keys(global.QRCodeTable).includes(id)) {
-      console.log('[HA] The client tried to connect to a non-existing QR-code');
+      console.log('[-WS-] The client tried to connect to a non-existing QR-code');
       client.send(JSON.stringify({error: "INVALID_ID", message: "Invalid ID provided."}))
       client.close()
       return
@@ -390,11 +390,11 @@ export function SOCKET(
 
     const redirectRequiresInfoFromUser = ["location", "user-agent"].includes(global.QRCodeTable[id].type)
     if (global.QRCodeTable[id].isExpired()) {
-        console.log('[HA] The client tried to connect to an expired QR-code');
+        console.log('[-WS-] The client tried to connect to an expired QR-code');
 
         if (global.QRCodeTable[id].hasAfterExpiry()) {
             if (!redirectRequiresInfoFromUser) {
-                console.log("[WS] Sending client to after_expiry URL...")
+                console.log("[-WS-] Sending client to after_expiry URL...")
                 const after_expiry = global.QRCodeTable[id].getRedirectTo() //! .getRedirectTo() will return the after_expiry URL if the QR-code is expired   
                 console.log("<", JSON.stringify({type: "redirect", data: after_expiry}))
                 client.send(JSON.stringify({type: "redirect", data: after_expiry}))
@@ -409,14 +409,14 @@ export function SOCKET(
     }
 
     if (!global.QRCodeTable[id].wantsScanData() && !redirectRequiresInfoFromUser) {
-        console.log('[HA] The client tried to connect to a QR-code that does not want scan data');
+        console.log('[-WS-] The client tried to connect to a QR-code that does not want scan data');
         client.send(JSON.stringify({error: "SCAN_DATA_NOT_ENABLED", message: "Scan data is not enabled for this QR-code."}))
         client.close()
         return
     }
     
     if (!querystring.parse(request.url.split("?")[1] ?? "")._) {
-        console.log('[HA] The client tried to connect to the QR-code with an invalid request');
+        console.log('[-WS-] The client tried to connect to the QR-code with an invalid request');
         client.send(JSON.stringify({error: "INVALID", message: "This request is invalid."}))
         client.close()
     } else {
@@ -424,14 +424,14 @@ export function SOCKET(
         const then = new Date(parseInt(Buffer.from(parsedQuery._ as string, "base64").toString("utf-8").split("").reverse().join("")))
         const now = new Date().getTime()
         if (now - then.getTime() > 2000 || then.getTime() - now > 0) {
-            console.log('[HA] The client tried to connect to the QR-code with an invalid request');
+            console.log('[-WS-] The client tried to connect to the QR-code with an invalid request');
             client.send(JSON.stringify({error: "INVALID", message: "This request is invalid."}))
             client.close()
             return
         }
       }
 
-      console.log('[HA] The client has connected to the QR-code with ID ' + id);
+      console.log('[-WS-] The client has connected to the QR-code with ID ' + id);
 
     const scanDataSettings = global.QRCodeTable[id].isExpired() ? {
         timestamp: false,
@@ -472,31 +472,31 @@ export function SOCKET(
     }))
     let websocketPing = setInterval(() => {
         client.ping()
-        console.log("[HA] Sent ping to client")
+        console.log("[-WS-] Sent ping to client")
     }, 30000)
 
     client.on("ping", () => {
-        console.log("[HA] Received ping from client")
+        console.log("[-WS-] Received ping from client")
         client.pong()
     })
     client.on("pong", () => {
-        console.log("[HA] Received pong from client")
+        console.log("[-WS-] Received pong from client")
     })
     client.on('message', async (message) => {
         try {
             const parsed = JSON.parse(message.toString())
             console.log(">", message.toString())
             if (parsed.type == "scanData") {
-                console.log('[HA] The client has sent scan data for QR-code ' + id);
+                console.log('[-WS-] The client has sent scan data for QR-code ' + id);
                 if (!parsed.data.location && (scanDataSettings.location_required)) {
-                    console.log('[HA] The client tried to send scan data without location for a QR-code that requires it');
+                    console.log('[-WS-] The client tried to send scan data without location for a QR-code that requires it');
                     console.log("<", JSON.stringify({error: "LOCATION_REQUIRED", message: "Location is required for this QR-code."}))
                     client.send(JSON.stringify({error: "LOCATION_REQUIRED", message: "Location is required for this QR-code."}))
                     client.close()
                     return
                 }
                 if (!parsed.data["user-agent"] && scanDataSettings.user_agent_required) {
-                    console.log('[HA] The client tried to send scan data without user-agent for a QR-code that requires it');
+                    console.log('[-WS-] The client tried to send scan data without user-agent for a QR-code that requires it');
                     console.log("<", JSON.stringify({error: "USER_AGENT_REQUIRED", message: "User-Agent is required for this QR-code."}))
                     client.send(JSON.stringify({error: "USER_AGENT_REQUIRED", message: "User-Agent is required for this QR-code."}))
                     client.close()
@@ -573,11 +573,11 @@ export function SOCKET(
                 }
                 
             } else if (parsed.type == "denied") {
-                console.log('[HA] The client has denied the request for scan data for QR-code ' + id);
+                console.log('[-WS-] The client has denied the request for scan data for QR-code ' + id);
                 if (client.readyState == client.OPEN) client.close()
             }
         } catch (e) {
-            console.log('[HA] The client tried to send invalid JSON');
+            console.log('[-WS-] The client tried to send invalid JSON');
             console.log("<", JSON.stringify({error: "INVALID_JSON", message: "Invalid JSON."}))
             client.send(JSON.stringify({error: "INVALID_JSON", message: "Invalid JSON."}))
             client.close()
@@ -586,7 +586,7 @@ export function SOCKET(
     
     
     client.on('close', () => {
-      console.log('[HA] A client has disconnected.');
+      console.log('[-WS-] A client has disconnected.');
         clearInterval(websocketPing)
     });
 }

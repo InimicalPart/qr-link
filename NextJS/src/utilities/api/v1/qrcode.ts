@@ -1,6 +1,7 @@
 import moment from "moment-timezone";
 import { getPassedTime } from "./misc";
 import { SignJWT } from "jose";
+import UAParser from "ua-parser-js";
 
 export class QRCode {
 
@@ -97,7 +98,7 @@ export class QRCode {
         if (newInformation) Object.assign(this, newInformation)
         this.addToUpdateLog({
             created: this.created
-        })
+        }, this.created)
     }
 
 
@@ -174,7 +175,7 @@ export class QRCode {
         
                     maxiumumDaysToGoBack--
                     if (maxiumumDaysToGoBack == 0) {
-                        console.log("[QRCode] No valid schedule found for QR-code " + this.id + "!!")
+                        console.log("[-QR-] No valid schedule found for QR-code " + this.id + "!!")
                         throw new Error("No valid schedule found for QR-code " + this.id)
                     }
                 }
@@ -201,16 +202,16 @@ export class QRCode {
             if (!currentZone) {
                 return "nil" // no valid zone found
             } else {
-                console.log("[QRCode] Zone " + currentZone.type+"-"+currentZone.priority+"-"+currentZone?.positions?.length + " found for QR-code " + this.id + "!!")
-                console.log("[QRCode] User is at " + locationData.latitude + "," + locationData.longitude)
+                console.log("[-QR-] Zone " + currentZone.type+"-"+currentZone.priority+"-"+currentZone?.positions?.length + " found for QR-code " + this.id + "!!")
+                console.log("[-QR-] User is at " + locationData.latitude + "," + locationData.longitude)
                 if (currentZone.isEntireWorld) {
-                    console.log("[QRCode] Zone is the entire world.")
+                    console.log("[-QR-] Zone is the entire world.")
                 } else if (currentZone.type == "circle") {
-                    console.log("[QRCode] Zone is a circle with a radius of " + currentZone.radius + " meters and a center at " + currentZone.center[0] + "," + currentZone.center[1])
-                    console.log("[QRCode] User is " + getDistanceFromLatLonInMeters(locationData.latitude, locationData.longitude, currentZone.center[0], currentZone.center[1]) + " meters away from the center.")
+                    console.log("[-QR-] Zone is a circle with a radius of " + currentZone.radius + " meters and a center at " + currentZone.center[0] + "," + currentZone.center[1])
+                    console.log("[-QR-] User is " + getDistanceFromLatLonInMeters(locationData.latitude, locationData.longitude, currentZone.center[0], currentZone.center[1]) + " meters away from the center.")
                 } else if (currentZone.type == "polygon") {
-                    console.log("[QRCode] Zone is a polygon with " + currentZone.positions.length + " points.")
-                    console.log("[QRCode] User is " + (this.isPointInPolygon(locationData, currentZone.positions) ? "" : "not ") + "inside the polygon.")
+                    console.log("[-QR-] Zone is a polygon with " + currentZone.positions.length + " points.")
+                    console.log("[-QR-] User is " + (this.isPointInPolygon(locationData, currentZone.positions) ? "" : "not ") + "inside the polygon.")
                 }
             }
 
@@ -281,21 +282,43 @@ export class QRCode {
     }
 
 
-    private getScannedLast(timeInSeconds:number, since=new Date()) {
-        let timeAgo = new Date(since.getTime() - timeInSeconds*1000)
-        let scans = this.scanData.filter((a: any)=>a.timestamp).filter((a: { timestamp?: Date }) => new Date(a.timestamp) > timeAgo && new Date(a.timestamp) < since)
-        return scans.length
-        
+    private getBrowsers() {
+        return this.scanData.filter((a: { "user-agent"?: string }) => a["user-agent"]).map((a: { "user-agent"?: string }) => new UAParser(a["user-agent"]).getBrowser().name).reduce((a: { [key: string]: number }, b: string) => {
+            a[b] = (a[b] || 0) + 1
+            return a
+        }, {}) // Add an empty object as the initial value for the accumulator
     }
 
-    private getImportantMoments(from:Date, to: Date): {
+    private getOSs() {
+        return this.scanData.filter((a: { "user-agent"?: string }) => a["user-agent"]).map((a: { "user-agent"?: string }) => new UAParser(a["user-agent"]).getOS().name).reduce((a: { [key: string]: number }, b: string) => {
+            a[b] = (a[b] || 0) + 1
+            return a
+        }, {}) // Add an empty object as the initial value for the accumulator
+    }
+
+
+    private getScannedLast(timeInSeconds: number, since = new Date()) {
+        let timeAgo = new Date(since.getTime() - timeInSeconds * 1000)
+        let scans = this.scanData.filter((a: { timestamp?: Date }) => a.timestamp).filter((a: { timestamp?: Date }) => new Date(a.timestamp) > timeAgo && new Date(a.timestamp) < since)
+        return scans.length
+
+    }
+
+    
+    getImportantMoments(from:Date, to: Date): {
         date: Date,
         update: {[key:string]:any},
     }[] {
 
         return this.update_log
-            .filter((a: { date: Date; update: {[key:string]:any}}) => (a.date > from && a.date < to))
-            .filter((a: { date: Date; update: {[key:string]:any}}) => Object.keys(a.update).some(b => b.startsWith("settings.scanData") || b == "id"))
+            .filter((a: { date: Date; update: {[key:string]:any}}) => (a.date >= from && a.date <= to))
+            .filter((a: { date: Date; update: {[key:string]:any}}) => Object.keys(a.update).some(b => b.startsWith("settings.scanData") || b == "id" || b == "created")).map((a: { date: Date; update: {[key:string]:any}}) => {
+                console.log(a)
+                return {
+                    date: a.date,
+                    update: a.update
+                }
+            })
         
     }
 
@@ -360,7 +383,7 @@ export class QRCode {
         return Math.floor(averageScans);
     }
 
-    async getStatistics(type: "ScannedEachX" | "ScannedLastX" | "ScannedWhere" | "Scanned" | "ScannedDayRank" | "ScannedTimeRank", time: "minute" | "hour" | "day" | "week" | "month" | "year", timezone: string): Promise<{
+    async getStatistics(type: "ScannedEachX" | "ScannedLastX" | "ScannedWhere" | "Scanned" | "ScannedDayRank" | "ScannedTimeRank"|"OS"|"Browser", time: "minute" | "hour" | "day" | "week" | "month" | "year", timezone: string): Promise<{
         important_moments: {
             date: Date;
             update: {
@@ -455,6 +478,16 @@ export class QRCode {
             case "ScannedTimeRank":
                 return {
                     info: this.getScannedTimeRank(timezone),
+                    important_moments: this.getImportantMoments(this.created, new Date())
+                }
+            case "OS":
+                return {
+                    info: this.getOSs(),
+                    important_moments: this.getImportantMoments(this.created, new Date())
+                }
+            case "Browser":
+                return {
+                    info: this.getBrowsers(),
                     important_moments: this.getImportantMoments(this.created, new Date())
                 }
             default:
