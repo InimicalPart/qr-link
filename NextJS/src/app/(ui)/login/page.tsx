@@ -104,7 +104,7 @@ export default async function Home() {
             </div>
           </div>
         </div>
-        <footer className="copyright-footer">
+        <footer className="copyright-footer login">
         <p>
             &copy; 2024 - <a className="copyright" href="https://github.com/InimicalPart" target="_blank">InimicalPart</a> & <a className="copyright" href="https://newseed.se" target="_blank">NewSeed IT Solutions AB</a> - All rights reserved.
         </p>

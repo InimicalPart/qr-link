@@ -34,6 +34,7 @@
     "react-dom": "^18",
     "react-leaflet": "^4.2.1",
     "react-qr-scanner": "^1.0.0-alpha.11",
+    "recharts": "^2.12.2",
     "sharp": "^0.33.2",
     "ua-parser-js": "^1.0.37",
     "ws": "^8.16.0",

@@ -214,7 +214,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 information: {
                     fingerprint: settings?.scanData?.information?.fingerprint ?? false,
                     "user-agent": settings?.scanData?.information["user-agent"] ?? false,
-                    timestamp: settings?.scanData?.information?.timestamp ?? true,
                     ip: settings?.scanData?.information?.ip ?? false,
                     location: settings?.scanData?.information?.location ?? false,
                 },

@@ -153,11 +153,18 @@ header.dashboard {
     scrollbar-width: none;  /* Firefox */
 }
 .mobile-only {
-    display: none;
+    display: none !important;
+}
+
+.desktop-only {
+    display: block !important;
+}
+.desktop-only .DO-flex {
+    display: flex !important;
 }
 
 
-footer.copyright-footer {
+footer.dashboard.copyright-footer {
     display:flex;
     justify-content: center;
     position: relative;
@@ -169,7 +176,7 @@ footer.copyright-footer {
     transform: translateX(-50%);
     margin-bottom:10px;
 }
-footer.copyright-footer > p {
+footer.dashboard.copyright-footer > p {
     font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
     font-size: 12pt;
     margin: 0;
@@ -178,26 +185,30 @@ footer.copyright-footer > p {
     width: max-content;
     /* background: rgba(0,0,0,0.5);  */
 }
-footer.copyright-footer > p > a.copyright {
+footer.dashboard.copyright-footer > p > a.copyright {
     color:#1f1f1f;
 }
-footer.copyright-footer > p > a.copyright:hover {
+footer.dashboard.copyright-footer > p > a.copyright:hover {
     text-decoration: underline;
 }
 @media screen and (max-width: 600px){
-    footer.copyright-footer > p {
+    footer.dashboard.copyright-footer > p {
         font-size: 9pt;
     }
 }
 
 @media (max-width: 768px) {
     .mobile-only {
-        display: block;
+        display: block !important;
     }
-    /* .dashboard.main-container {
-        background-size: 0px;
-        background-position: top left;
-    } */
+    .mobile-only .DO-flex {
+        display: flex !important;
+    }
+    
+    .desktop-only {
+        display: none !important;
+    }
+
 }
 
 /* @media (min-width: 769px) and (max-width: 900px) {

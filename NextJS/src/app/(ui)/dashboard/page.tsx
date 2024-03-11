@@ -17,6 +17,7 @@ const secret = new Uint8Array(
 import GenerateQRs from '@/components/index/generate.client';
 import { Modal } from '@/components/all/modal';
 import QRScannerModal from './@scanner/page';
+import { AddQR } from '@/components/index/addQR.client';
 const API_URL = process.env.API_URL ?? "http://localhost:8080/api/v1"
 type SearchParamProps = {
     searchParams: Record<string, string> | null | undefined
@@ -40,19 +41,16 @@ export default async function Home({
         }
     }
 
-    async function addQR() {
-        "use server";
-        redirect("/create")
-    }
+
 
     async function scanQR() {
         "use server";
         redirect("/dashboard?scan=true")
     }
 
-    async function linkQR() {
-        "use server";
-    }
+    // async function linkQR() {
+    //     "use server";
+    // }
 
     async function scanResult(RES:string) {
         "use server";
@@ -141,38 +139,14 @@ export default async function Home({
         flexWrap: "wrap",
         paddingBottom: "20px",
     }}>
-
+        <AddQR className="mobile-only DO-flex"/>
         <GenerateQRs handleClick={manageQR} token={cookies().get("token").value} apiURL={API_URL}/>
-
-        <form action={addQR} className="qr select-none cursor-pointer md:min-h-[633px]" id="add-qr-form" style={{
-            width: "302px",
-            height: "auto",
-            // border: "1px black solid",
-            borderRadius:3,
-            justifyContent: "center",
-            flexDirection: "column",
-            display:'flex',
-            pointerEvents: "none",
-        }}>
-            <button id="add-qr" style={{
-                pointerEvents: "auto",
-                width:"100%",
-                height:"100%",
-                display:"flex",
-                justifyContent:"center",
-                alignItems:"center",
-            }}> 
-                <Image src={"/res/img/add_text.png"} width={179} height={179} alt="Add QR" style={{
-                    transform: "scale(0.8)",
-                    margin: "30px 0px"
-                }}/>
-            </button>
-        </form>
+        <AddQR className="desktop-only DO-flex"/>
     </div>
 
 
 
-    <footer className="copyright-footer">
+    <footer className="copyright-footer dashboard">
         <p>
             &copy; 2024 - <a className="copyright" href="https://github.com/InimicalPart" target="_blank">InimicalPart</a> & <a className="copyright" href="https://newseed.se" target="_blank">NewSeed IT Solutions AB</a> - All rights reserved.
         </p>

@@ -3,7 +3,7 @@
 import type { Metadata } from 'next'
  
 export const metadata: Metadata = {
-  title: 'Create a QRLink-code',
+  title: 'Create a QRLink-code'
 }
 
 import Script from "next/script";

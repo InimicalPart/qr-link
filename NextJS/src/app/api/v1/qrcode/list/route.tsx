@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { QRLinkGlobal } from "@/types/api/v1/global";
 import { getUser } from "@/utilities/api/v1/authentication";
 import QRCodeGenerator from "qrcode";
+import moment from "moment-timezone";
 declare const global: QRLinkGlobal
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -34,15 +35,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
     identifier = tokenVerificationResult.user.id
   // get all QR-codes that are linked to the identifier
-  const qrcodekeys = Object.keys(global.QRCodeTable).filter((key) => {
+  const ownedQRCodes = Object.keys(global.QRCodeTable).filter((key) => {
     return global.QRCodeTable[key].linked_to == identifier;
   });
   let qrCodes: Array<{}> = [];
-  for (let qrcodekey of qrcodekeys) {
+  for (let ownedQRCodeID of ownedQRCodes) {
     let exportData: Partial<{
         svg: string;
         png: string;
     }> = {}
+    let statistics: any = {
+        info: []
+    }
 if (request.nextUrl.searchParams.get("export")) {
   const exportType = (request.nextUrl.searchParams.get("export") as string)?.toLowerCase() ?? "svg,png"
   let exportTypes = exportType.split(",")
@@ -51,13 +55,13 @@ if (request.nextUrl.searchParams.get("export")) {
     switch (exportType) {
       case "svg":
         exportData["svg"] = await QRCodeGenerator.toString(
-          process.env.API_URL + "/qrcode/" + qrcodekey + "/handler",
+          process.env.API_URL + "/qrcode/" + ownedQRCodeID + "/handler",
           { type: "svg", errorCorrectionLevel: "H" }
         );
         break;
       case "png":
         exportData["png"] = await QRCodeGenerator.toDataURL(
-          process.env.API_URL + "/qrcode/" + qrcodekey + "/handler",
+          process.env.API_URL + "/qrcode/" + ownedQRCodeID + "/handler",
           { errorCorrectionLevel: "H", width: 400}
         );
         break;
@@ -69,10 +73,64 @@ if (request.nextUrl.searchParams.get("export")) {
     }
   }
 }
+if (request.nextUrl.searchParams.get("statistics")) {
+    const value = request.nextUrl.searchParams.get("statistics") as string
+    const statisticsTypeAbbr = value[0]
+    const statisticsTimeMultiplier = parseInt(value.match(/[0-9]{1,3}/)[0])
+    const statisticsPeriodUnitAbbr = value[value.length - 1]
+    const timezone = request.nextUrl.searchParams.get("timezone") ?? moment.tz.guess()
+    const wantedFields = request.nextUrl.searchParams.get("fields")?.split(",") // optional
+
+    let statisticsType: "ScannedLastX" | string = null
+    let statisticsPeriodUnit: "day" | "week" | "month" | "year" = null
+
+    switch (statisticsTypeAbbr) {
+        case "L":
+            statisticsType = "ScannedLastX"
+            break
+        default:
+            return new NextResponse(JSON.stringify({
+                error: "INVALID_STATISTICS_TYPE",
+                message: "Invalid statistics type: " + statisticsTypeAbbr,
+            }), {status: 400})
+    }
+
+    switch (statisticsPeriodUnitAbbr) {
+        case "D":
+            statisticsPeriodUnit = "day"
+            break
+        case "W":
+            statisticsPeriodUnit = "week"
+            break
+        case "M":
+            statisticsPeriodUnit = "month"
+            break
+        case "Y":
+            statisticsPeriodUnit = "year"
+            break
+        default:
+            return new NextResponse(JSON.stringify({
+                error: "INVALID_STATISTICS_PERIOD_UNIT",
+                message: "Invalid statistics period unit: " + statisticsPeriodUnitAbbr,
+            }), {status: 400})
+    }
+
+    statistics = await global.QRCodeTable[ownedQRCodeID].getStatistics({
+        type: statisticsType,
+        time: statisticsPeriodUnit,
+        multiplier: statisticsTimeMultiplier,
+        timezone,
+        onlyFields: wantedFields.length > 0 ? wantedFields : null
+    })
+}
+
+
+
     qrCodes.push({
-      id: qrcodekey,
-      ...Object.assign({},global.QRCodeTable[qrcodekey]),
+      id: ownedQRCodeID,
+      ...Object.assign({},global.QRCodeTable[ownedQRCodeID]),
       ...exportData,
+      statistics: statistics.info
     });
   }
   return new NextResponse(JSON.stringify(qrCodes), { status: 200 });
