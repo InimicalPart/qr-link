@@ -45,8 +45,10 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
     const query = request.nextUrl.searchParams
 
     const type = query.get("type")
-    const period = query.get("period") // optional
+    const multiplier = query.get("period_length") // optional // 1 (Month), 3 (Weeks)
+    const period = query.get("period_unit") // optional // (1) Month, (3) Weeks
     const timezone = query.get("timezone") ?? moment.tz.guess()
+    const wantedFields = query.get("fields")?.split(",") // optional
 
 
     if (!type) {
@@ -64,7 +66,14 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
     }
 
 
-    const statistics = await qrcode.getStatistics(type as "ScannedEachX" | "ScannedLastX" | "ScannedWhere" | "Scanned" | "ScannedDayRank"|"ScannedTimeRank", period as "minute" | "hour" | "day" | "week" | "month" | "year" | undefined, timezone)
+    const statistics = await qrcode.getStatistics({
+        type,
+        time: period,
+        multiplier: multiplier ? parseInt(multiplier) : 1,
+        timezone,
+        onlyFields: wantedFields
+    
+    })
 
     if ((statistics as {error:string,message:string}).error) {
         return new NextResponse(JSON.stringify({

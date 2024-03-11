@@ -60,10 +60,6 @@ export default function Settings({
                             <label style={{marginLeft:5}} htmlFor="device-fingerprint">Device Fingerprint</label>
                         </div>
                         <div>
-                            <input className="create" type="checkbox" id="timestamp" name="grab_timestamp" defaultChecked={qrCodeInfo?.settings?.scanData?.information?.timestamp ?? false} />
-                            <label style={{marginLeft:5}} htmlFor="timestamp">Timestamp</label>
-                        </div>
-                        <div>
                             <input className="create" type="checkbox" id="ip-address" name="grab_ip_address" defaultChecked={qrCodeInfo?.settings?.scanData?.information?.ip ?? false} />
                             <label style={{marginLeft:5}} htmlFor="ip-address">IP address</label>
                         </div>

@@ -26,11 +26,10 @@ export async function QRCode2PDF(qrcode: QRCode, id: string) {
     function settings2HTML(settings: { getScanData: boolean; scanData: {information:{
         fingerprint:boolean;
         "user-agent":boolean;
-        timestamp:boolean;
         ip:boolean;
         location:boolean;
     }; sendToURL:boolean; JWTEncryptionKey:string;
-    }; requirements: {location:boolean}; }) {
+    }; requirements: {location:boolean; "user-agent":boolean;}}) {
         let rtrn = []
         let template = `<span>[TXT]</span>`
 
@@ -38,7 +37,6 @@ export async function QRCode2PDF(qrcode: QRCode, id: string) {
         if (settings.getScanData) {
             rtrn.push(template.replace("[TXT]", "Get Device Fingerprint -> " + (settings.scanData.information.fingerprint ? "YES" : "NO")))
             rtrn.push(template.replace("[TXT]", "Get User-Agent -> " + (settings.scanData.information["user-agent"] ? "YES" : "NO")))
-            rtrn.push(template.replace("[TXT]", "Get Timestamp -> " + (settings.scanData.information.timestamp ? "YES" : "NO")))
             rtrn.push(template.replace("[TXT]", "Get IP -> " + (settings.scanData.information.ip ? "YES" : "NO")))
             rtrn.push(template.replace("[TXT]", "Get Location -> " + (settings.scanData.information.location ? "YES" : "NO")))
             rtrn.push(template.replace("[TXT]", "Require Location -> " + (settings.requirements.location ? "YES" : "NO")))

@@ -51,33 +51,6 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
     }
     
     if (global.QRCodeTable[id].wantsScanData() || redirectRequiresInfoFromUser) {
-        //! if only timestamp is requested, we can get it using NextJS and redirect them normally
-        const onlyWantsTimestamp = Object.keys(global.QRCodeTable[id].settings.scanData.information).filter((key) => !["timestamp"].includes(key) && global.QRCodeTable[id].settings.scanData.information[key as "location"|"timestamp"|"ip"|"user-agent"|"fingerprint"] == true).length == 0
-        const typeRequiresInfo = redirectRequiresInfoFromUser
-        if (global.QRCodeTable[id].wantsScanData() && onlyWantsTimestamp && !typeRequiresInfo) {
-            let finalScanData: Partial<{
-                fingerprint: string,
-                "user-agent": string,
-                timestamp: Date,
-                ip: string,
-                location: {
-                    latitude: number,
-                    longitude: number,
-                    accuracy: number
-                }
-            }> = {}
-
-            finalScanData.timestamp = new Date()
-
-            global.QRCodeTable[id].scanData.push(finalScanData)
-            global.QRCodeTable[id].scanCount++
-
-            saveQR(id, global.QRCodeTable[id], true)
-
-            if (redirect_to) return NextResponse.redirect(redirect_to)
-            throw new Error("No redirect URL provided.")
-        }
-
         //! Return the HTML page that will connect to this endpoint using WebSocket, get the scan data and send it back to the server
         //! where the server will then redirect the user to the URL that the QR-code wants to redirect them to based on the scan data
         return new NextResponse(`
@@ -340,7 +313,10 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
             }
         })
     } else {
-        global.QRCodeTable[id].scanCount++; //! Only add to scanCount if we are not getting scan data
+        global.QRCodeTable[id].scanData.push({
+            timestamp: new Date()
+        })
+        global.QRCodeTable[id].scanCount++;
         saveQR(id, global.QRCodeTable[id], true)
     }
 
@@ -434,7 +410,6 @@ export function SOCKET(
       console.log('[-WS-] The client has connected to the QR-code with ID ' + id);
 
     const scanDataSettings = global.QRCodeTable[id].isExpired() ? {
-        timestamp: false,
         fingerprint: false,
         ip: false,
         location: global.QRCodeTable[id].type == "location",
@@ -523,7 +498,7 @@ export function SOCKET(
                     scanData = {
                         fingerprint: parsed.data.fingerprint ?? undefined,
                         location: parsed.data.location ?? undefined,
-                        timestamp: scanDataSettings.timestamp ? new Date() : undefined,
+                        timestamp: new Date(),
                         "user-agent": parsed.data["user-agent"] ?? undefined,
                         ip: parsed.data.ip ?? undefined
                     }

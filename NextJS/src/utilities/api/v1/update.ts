@@ -132,10 +132,6 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>) {
                     //! Needs to be a boolean
                     if (!(typeof (update.settings.scanData.information["user-agent"] as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.user-agent' needs to be a boolean."}), {status:400});
                 }
-                if (update.settings.scanData.information.timestamp) {
-                    //! Needs to be a boolean
-                    if (!(typeof (update.settings.scanData.information.timestamp as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.timestamp' needs to be a boolean."}), {status:400});
-                }
                 if (update.settings.scanData.information.ip) {
                     //! Needs to be a boolean
                     if (!(typeof (update.settings.scanData.information.ip as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.ip' needs to be a boolean."}), {status:400});
@@ -175,7 +171,6 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>) {
                     information: {
                         fingerprint: update.settings.scanData?.information?.fingerprint == global.QRCodeTable[id].settings.scanData.information.fingerprint ? undefined : update.settings.scanData?.information?.fingerprint ?? undefined,
                         "user-agent": update.settings.scanData?.information?.["user-agent"] == global.QRCodeTable[id].settings.scanData.information["user-agent"] ? undefined : update.settings.scanData?.information?.["user-agent"] ?? undefined,
-                        timestamp: update.settings.scanData?.information?.timestamp == global.QRCodeTable[id].settings.scanData.information.timestamp ? undefined : update.settings.scanData?.information?.timestamp ?? undefined,
                         ip: update.settings.scanData?.information?.ip == global.QRCodeTable[id].settings.scanData.information.ip ? undefined : update.settings.scanData?.information?.ip ?? undefined,
                         location: update.settings.scanData?.information?.location == global.QRCodeTable[id].settings.scanData.information.location ? undefined : update.settings.scanData?.information?.location ?? undefined,
                     },

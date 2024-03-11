@@ -1,3 +1,4 @@
+import { QRCode } from "@/utilities/api/v1/qrcode"
 import { cookies } from "next/headers"
 import { z } from "zod"
 
@@ -24,7 +25,6 @@ const createSchema = z.object({
     expires_never_checkbox: z.string().nullable(),
     grab_scan_data: z.string().nullable(),
     grab_device_fingerprint: z.string().nullable(),
-    grab_timestamp: z.string().nullable(),
     grab_ip_address: z.string().nullable(),
     grab_user_agent: z.string().nullable(),
     grab_location: z.string().nullable(),
@@ -64,7 +64,6 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
         expires_never_checkbox: form.get('expires_never_checkbox'),
         grab_scan_data: form.get('grab_scan_data'),
         grab_device_fingerprint: form.get('grab_device_fingerprint'),
-        grab_timestamp: form.get('grab_timestamp'),
         grab_ip_address: form.get('grab_ip_address'),
         grab_user_agent: form.get('grab_user_agent'),
         grab_location: form.get('grab_location'),
@@ -97,7 +96,6 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
     const expires = validatedFields.data.expires_never_checkbox == "on" ? null : validatedFields.data.expires
     const grabScanData = validatedFields.data.grab_scan_data == "on"
     const grabDeviceFingerprint = validatedFields.data.grab_device_fingerprint == "on"
-    const grabTimestamp = validatedFields.data.grab_timestamp == "on"
     const grabIpAddress = validatedFields.data.grab_ip_address == "on"
     const grabUserAgent = validatedFields.data.grab_user_agent == "on"
     const grabLocation = validatedFields.data.grab_location == "on"
@@ -129,74 +127,18 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
     })();
 
 
-    const JSONBody: {
-        id: string | null,
-        update_key: string | null,
-        name: string | null,
-        description: string | null,
-        expires: string | null,
-        settings: {
-            getScanData: boolean,
-            scanData: {
-                information: {
-                    fingerprint: boolean,
-                    "user-agent": boolean,
-                    timestamp: boolean,
-                    ip: boolean,
-                    location: boolean
-                },
-                sendToURL: boolean,
-                JWTEncryptionKey: string
-            },
-            requirements: {
-                location: boolean,
-                "user-agent": boolean
-            }
-        },
-        type: string,
-        data: {
-            redirect_to: string | null,
-            after_expiry: string | null,
-        } | {
-            monday?: {[key:string]:{redirect_to: string, after_expiry: string}},
-            tuesday?: {[key:string]:{redirect_to: string, after_expiry: string}},
-            wednesday?: {[key:string]:{redirect_to: string, after_expiry: string}},
-            thursday?: {[key:string]:{redirect_to: string, after_expiry: string}},
-            friday?: {[key:string]:{redirect_to: string, after_expiry: string}},
-            saturday?: {[key:string]:{redirect_to: string, after_expiry: string}},
-            sunday?: {[key:string]:{redirect_to: string, after_expiry: string}},
-            timezone: string
-        } | {
-            zones: Array<{
-                type: 'circle' | 'polygon',
-                priority: number,
-                isEntireWorld: boolean,
-                positions?: number[][],
-                center?: number[],
-                radius?: number,
-                redirectTo: string,
-                afterExpiry: string
-            }>
-        } | {
-            userAgents: {
-                browser: string,
-                device: string,
-                
-            }[]
-        }
-    } = {
+    const JSONBody: Partial<QRCode> = {
         id: ID,
         update_key: updateKey,
         name: name,
         description: description,
-        expires: expires,
+        expires: expires ? new Date(expires) : null,
         settings: {
             getScanData: grabScanData,
             scanData: {
                 information: {
                     fingerprint: grabDeviceFingerprint,
                     "user-agent": grabUserAgent,
-                    timestamp: grabTimestamp,
                     ip: grabIpAddress,
                     location: grabLocation
                 },
@@ -293,7 +235,7 @@ async function additionalChecks(form: FormData) {
 
     //! If grabbing information from each scan, at least one grab choice must be selected
     if (form.get('grab_scan_data') == "on") {
-        if (!form.get('grab_device_fingerprint') && !form.get('grab_timestamp') && !form.get('grab_ip_address') && !form.get('grab_user_agent') && !form.get('grab_location')) {
+        if (!form.get('grab_device_fingerprint') && !form.get('grab_ip_address') && !form.get('grab_user_agent') && !form.get('grab_location')) {
             returnData = {
                 ...returnData,
                 grab_scan_data: ["At least one of these fields must be checked"]

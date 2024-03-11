@@ -63,7 +63,7 @@ export function StatisticsPage(
         useEffect(() => {
             const isWithinXBounds = (a: { x: number; xx: number; }, b: { x: number; xx: number; }) => ((a.x >= b.x && a.x <= b.xx) || (a.xx >= b.x && a.xx <= b.xx)); //? x = left boundry, xx = right boundry
 
-            if (statisticsType === "timestamp") {
+            if (statisticsType === "line") {
 
 
                 if (!data.important_moments.find(a=>a.update.today === "yes"))
@@ -564,7 +564,7 @@ export function StatisticsPage(
                 });
         
             }
-        
+
             function fillWithZeros(scanData: { timestamp: Date; }[]) {
                 // for every day between the first and last day, if it's not in the scanData, add it with '0' scans
                 let firstDay = new Date((data.important_moments.find(a=>a.update.created)?.timestamp ?? data.scanData[0].timestamp).setHours(0,0,0,0));

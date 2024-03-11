@@ -272,7 +272,7 @@ export async function readQRCodeTable(storage=global.storageMethod) {
     return new Promise<QRCodeTable>(async (resolve, reject) => {
       if (storage == "file") {
             const {promises:fs} = await import("fs")
-            console.log(`[QR] Reading QRCodeTable from '${global.QRBackupFilePath}'...`);
+            console.log(`[DATA] Reading QRCodeTable from '${global.QRBackupFilePath}'...`);
             const data = await fs.readFile(global.QRBackupFilePath, "utf8");
             const parsed = parseJSONC(data)
             const classed = Object.fromEntries(Object.entries(parsed).map(([key, value]) => [key, new QRCode({...(value as QRCode), id: key})])) as QRCodeTable // Convert QRCode from object to class

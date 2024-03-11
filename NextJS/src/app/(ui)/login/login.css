@@ -39,7 +39,7 @@
 }
 
 
-footer.copyright-footer {
+footer.login.copyright-footer {
     display:flex;
     justify-content: center;
     position: fixed;
@@ -47,7 +47,7 @@ footer.copyright-footer {
     left:0;
     width: 100svw;
 }
-footer.copyright-footer > p {
+footer.login.copyright-footer > p {
     font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
     font-size: 12pt;
     margin: 0;
@@ -56,11 +56,11 @@ footer.copyright-footer > p {
     width: max-content;
     background: rgba(0,0,0,0.5); 
 }
-footer.copyright-footer > p > a.copyright {
+footer.login.copyright-footer > p > a.copyright {
     color:#737373;
 }
 @media screen and (max-width: 600px){
-    footer.copyright-footer > p {
+    footer.login.copyright-footer > p {
         font-size: 9pt;
     }
 }

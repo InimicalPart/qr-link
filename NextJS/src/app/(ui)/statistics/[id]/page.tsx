@@ -43,10 +43,11 @@ export default async function Statistics({
     // return <></> // TODO: delete later
 
     console.log(moment.tz.guess())
+    const data = (await global.QRCodeTable[params.id].getStatistics({type:"Scanned", time:null, timezone: moment.tz.guess(), onlyFields:"timestamp"}) as {info:{[key:string]:number}, important_moments: {date: Date, update: any}[]})
     return <StatisticsPage params={params} data={
         {
-            scanData: (await global.QRCodeTable[params.id].getStatistics("OS",null, moment.tz.guess()) as {info:{[key:string]:number}}).info,
-            important_moments: global.QRCodeTable[params.id].getImportantMoments(global.QRCodeTable[params.id].created, new Date()).map(a=>{
+            scanData: data.info,
+            important_moments: data.important_moments.map(a=>{
                 return {
                     timestamp: a.date,
                     update: a.update
@@ -55,5 +56,5 @@ export default async function Statistics({
         }
 
 
-    } statisticsType="OS" />
+    } statisticsType="timestamp" />
 }

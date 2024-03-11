@@ -7,6 +7,10 @@
 ## Description
 QRLink is a system that allows someone to generate a QR-code and change where it's pointing to based on multiple factors like time, location, etc.. QRLink can also be integrated with various other systems to add custom factors.
 
+## Management
+For help with managing QRLink, please see [GuideForManaging.md](https://github.com/newseedit/dynamic-qr-link/blob/main/GuideForManaging.md)
+NewSeed IT employees, if I, the creator, were no longer at service, look at the document for a detailed explanation of QRLink, its systems, and help with troubleshooting.
+
 ## Prerequisites
 To run QRLink, you need to have the following installed:
 - NodeJS (>=18.17.1)
