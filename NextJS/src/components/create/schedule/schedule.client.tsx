@@ -5,6 +5,27 @@ import moment from "moment-timezone";
 import ScheduleList from "./scheduleList.client";
 import { useState } from "react";
 
+import Swal from "sweetalert2"
+import "@sweetalert2/theme-dark"
+
+function showError(text: string, time: number = 3000) {
+    Swal.mixin({
+        toast: true,
+        position: 'bottom',
+        showConfirmButton: false,
+        timer: time,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    }).fire({
+        icon: 'error',
+        animation: true,
+        title: text
+    })
+}
+
 export default function Schedule({
     state,
     qrCodeInfo = {},
@@ -183,7 +204,7 @@ export default function Schedule({
                         document.getElementById("scheduleAERedirect") as HTMLInputElement
                         ).value.trim() ?? ""
                         if (day === "" || (time === "" && !allDay) || redirect_to === "") {
-                            alert("Please fill in all required fields. [DAY, TIME, REDIRECT_TO]");
+                            showError("Please fill in all required fields. [DAY, TIME, REDIRECT_TO]");
                             return;
                         }
                         if (allDay) {
@@ -221,12 +242,12 @@ export default function Schedule({
                         }
 
                         if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(redirect_to)) {
-                            alert("Redirect to must be a valid URL or VCard");
+                            showError("Redirect to must be a valid URL or VCard");
                             return;
                         }
 
                         if (after_expiry.length != 0 && !/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(after_expiry)) {
-                            alert("After Expiry must be a valid URL or VCard");
+                            showError("After Expiry must be a valid URL or VCard");
                             return;
                         }
 

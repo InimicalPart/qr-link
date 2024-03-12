@@ -30,7 +30,6 @@ let secret = new Uint8Array(
 import Form from "@/components/create/form.client";
 import React, { useState } from 'react'
 import Head from "next/head";
-import Alerts from "@/components/all/alerts.client";
 import QRCodeImage from "@/components/create/qrCodeImage.client";
 import PDFButton from "@/components/manage/generatePDF.client";
 import ExportButtons from "@/components/all/exportButtons.client";
@@ -85,7 +84,6 @@ export default async function Update({
     
     return (
         <div>
-          <Alerts/>
           <div id="create-new">
               <div style={{
                   width: 250,

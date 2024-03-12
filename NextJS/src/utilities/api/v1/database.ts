@@ -288,6 +288,30 @@ export async function readQRCodeTable(storage=global.storageMethod) {
       }
     });
   }
+
+export async function deleteQR(id: string) {
+    return new Promise<void>(async (resolve, reject) => {
+        if (global.storageMethod == "file") {
+            console.log(`[QR] Deleting QRCodeTable entry '${id}' from '${global.QRBackupFilePath}'...`);
+            const {promises:fs} = await import("fs")
+            let data = await readQRCodeTable("file")
+            delete data[id]
+            await fs.writeFile(global.QRBackupFilePath, JSON.stringify((Object.keys(data).map((key)=>Object.assign({}, data[key])))) // Convert QRCode from class to object
+            );
+            resolve()
+        } else {
+            console.log("[DATA] Deleting QR-code " + id + " from the database...")
+            global.mongoClient.db("QRLink").collection("qrcodes").deleteOne({id: id}).then((status) => {
+                if (status.deletedCount == 0) {
+                    console.log("[DATA] Failed to delete QR-code " + id + " from the database.")
+                }
+                resolve()
+            })
+        }
+    });
+
+}
+
 export async function saveQR(id: string = null, obj: QRCode = new QRCode(), update:boolean=false) {
     return new Promise<void>(async (resolve, reject) => {
         if (global.storageMethod == "file") {

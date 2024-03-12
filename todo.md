@@ -3,7 +3,7 @@
 
 
 - Make alert/confirm be Sweetalert2 instead
-    - This will be done by the end of the project
+    - In progress
 
 <!-- - fix going back breaks things -->
 <!-- ^^^ Should be fixed now, the reason for this was because we were impropely using CSS, which also triggers on other pages if you move through pages (because of smooth redirection)-->

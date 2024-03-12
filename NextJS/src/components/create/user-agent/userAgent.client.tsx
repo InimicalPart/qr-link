@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import UserAgentList from "./userAgentList.client";
+import Swal from "sweetalert2";
+import "@sweetalert2/theme-dark"
 
 const browserRegexMap = {
     "opera": /(?:Opera|OPR)\/([0-9]+\.[0-9]+)/,
@@ -21,7 +23,23 @@ const osRegexMap = {
     "linux": /(?:Linux|X11)/,
     "any": /.*/
 }
-
+function showError(text: string, time: number = 3000) {
+    Swal.mixin({
+        toast: true,
+        position: 'bottom',
+        showConfirmButton: false,
+        timer: time,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    }).fire({
+        icon: 'error',
+        animation: true,
+        title: text
+    })
+}
 function makePretty(data: any, type: any) {
 
     if (type == "browser") {
@@ -347,9 +365,7 @@ export default function UserAgent({
                 Be careful to not set these values to one that cannot exist or one that collides with your previous choices. Doing so may lead to unexpected behavior.
             </p>
         </div>
-     <button className="create"
-     type="button"
-     onClick={() => {
+     <button className="create" type="button" onClick={() => {
         let copy = JSON.parse(JSON.stringify(currentUserAgentList));
         
 
@@ -358,21 +374,21 @@ export default function UserAgent({
         let chosenOS = (document.getElementById("os") as HTMLSelectElement).value;
 
         if (chosenBrowser === "") {
-            alert("Please select a browser");
+            showError("Please select a browser");
             return;
         }
         if (chosenOS === "") {
-            alert("Please select an os");
+            showError("Please select an os");
             return;
         }
 
         if (browser === "custom" && !validateRegex((document.getElementById("browserPattern") as HTMLInputElement).value)) {
-            alert("Browser pattern must be a valid regex");
+            showError("Browser pattern must be a valid regex");
             return;
         }
 
         if (os === "custom" && !validateRegex((document.getElementById("osPattern") as HTMLInputElement).value)) {
-            alert("OS pattern must be a valid regex");
+            showError("OS pattern must be a valid regex");
             return;
         }
 
@@ -400,12 +416,12 @@ export default function UserAgent({
         let after_expiry = (document.getElementById("uaAERedirect") as HTMLTextAreaElement).value;
 
         if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(redirect_to)) {
-            alert("Redirect to must be a valid URL or VCard");
+            showError("Redirect to must be a valid URL or VCard");
             return;
         }
 
         if (after_expiry.length != 0 && !/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(after_expiry)) {
-            alert("After Expiry must be a valid URL or VCard");
+            showError("After Expiry must be a valid URL or VCard");
             return;
         }
 
