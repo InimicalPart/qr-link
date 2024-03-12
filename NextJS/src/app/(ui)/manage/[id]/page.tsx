@@ -34,6 +34,7 @@ import QRCodeImage from "@/components/create/qrCodeImage.client";
 import PDFButton from "@/components/manage/generatePDF.client";
 import ExportButtons from "@/components/all/exportButtons.client";
 import { Metadata, ResolvingMetadata } from "next";
+import moment from "moment-timezone";
 
 export default async function Update({
     params
@@ -80,7 +81,7 @@ export default async function Update({
     }
 
 
-    const updateSubmit = submit.bind(null, "update", qrCodeDetails)
+    const updateSubmit = submit.bind(null, "update", qrCodeDetails, moment.tz.guess())
     
     return (
         <div>

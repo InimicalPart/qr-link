@@ -195,7 +195,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
         message: "Invalid arguments provided: " + Object.keys(update).filter((key) => !global.supportedUpdateKeys.includes(key)).join(", "),
       }), { status: 400 })
     }
-    const wasAnytingUpdated = await validateAndDoUpdate(id, update)
+    const wasAnytingUpdated = await validateAndDoUpdate(id, update, request.nextUrl.searchParams.get("timezone"))
     if (wasAnytingUpdated instanceof NextResponse) {
         return wasAnytingUpdated
     }
