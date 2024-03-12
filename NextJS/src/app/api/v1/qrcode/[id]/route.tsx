@@ -1,6 +1,6 @@
 import { QRLinkGlobal } from "@/types/api/v1/global";
 import { getUser } from "@/utilities/api/v1/authentication";
-import { saveQR } from "@/utilities/api/v1/database";
+import { deleteQR as deleteQRFromStorage, saveQR } from "@/utilities/api/v1/database";
 import { QRCode2PDF } from "@/utilities/api/v1/misc";
 import { validateAndDoUpdate } from "@/utilities/api/v1/update";
 import { NextRequest, NextResponse } from "next/server";
@@ -274,7 +274,7 @@ export async function DELETE(request: NextRequest, {params}: {params: {id: strin
         }), { status: 403 })
     }
     delete global.QRCodeTable[id]
-    saveQR(id, null, true)
+    deleteQRFromStorage(id)
     return new NextResponse(JSON.stringify({
         id,
         message: "The QR-code has been deleted."

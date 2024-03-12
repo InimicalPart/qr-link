@@ -8,6 +8,8 @@ import Settings from './settings.client';
 import FormSubmit from './form-submit.client';
 import { useEffect, useState } from 'react';
 import { redirect } from 'next/navigation';
+import Swal from 'sweetalert2';
+import "@sweetalert2/theme-dark"
 
 
 const initialState: {
@@ -81,11 +83,32 @@ export default function Form({
         console.log(state)
         if (state?.success) {
             if (updating) {
-                alert("Successfully updated QR Code\n\nID: " + state?.success?.id + "\nUpdate Key: " + state?.success?.update_key)
+                Swal.fire({
+                    title: "QR-code updated!",
+                    html: "Successfully updated QR-code!<br><br>ID: <b>" + state?.success?.id + "</b>",
+                    icon: "success",
+                    showCancelButton: false,
+                    showConfirmButton: true,
+                    confirmButtonText: "Awesome!",
+                    confirmButtonColor: "#3085d6",
+                    allowOutsideClick: true,
+                    allowEscapeKey: true,
+                    allowEnterKey: true
+                }).then(()=>window.location.href = "/dashboard")
             } else {
-                alert("Successfully created QR Code\n\nID: " + state?.success?.id + "\nUpdate Key: " + state?.success?.update_key)
+                Swal.fire({
+                    title: "QR-code created!",
+                    html: "Successfully created QR-code!<br><br>ID: <b>" + state?.success?.id + "</b>",
+                    icon: "success",
+                    showCancelButton: false,
+                    showConfirmButton: true,
+                    confirmButtonText: "Awesome!",
+                    confirmButtonColor: "#3085d6",
+                    allowOutsideClick: true,
+                    allowEscapeKey: true,
+                    allowEnterKey: true
+                }).then(()=>window.location.href = "/dashboard")
             }
-            redirect("/dashboard")
         }
     },[state,updating])
 
@@ -239,12 +262,57 @@ export default function Form({
         <FormSubmit state={state} qrCodeInfo={qrCodeInfo}/>
     </form>
     {qrCodeInfo.id ? 
-        <form action={delQR} onSubmit={()=>{
-
-            if (!confirm("Are you sure you want to delete this QR-code? ("+(document.getElementById("qr-id") as HTMLInputElement).value+")")) {
-                return false
+        <form action={delQR} onSubmit={async (e:any)=>{
+            async function confirm() {
+                return new Promise((resolve, reject) => {
+                    Swal.fire({
+                        title: "Are you sure?",
+                        text: "You're about to delete QRLink-code with ID " + (document.getElementById("qr-id") as HTMLInputElement).value + ". This action is irreversible. Are you sure you want to continue?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Yes, delete it!",
+                    }).then((result) => {
+                        resolve(result.isConfirmed)
+                    });
+                })
             }
+            if (e.nativeEvent.submitter) {
 
+                e.preventDefault()
+                
+                
+                let res = (await confirm())
+                console.log(res)
+                if (!res) {
+                    console.log("cancelled")
+                    return false
+                }
+                (e as any).target.requestSubmit()
+                return 
+            } 
+
+            //! event was triggered programmatically
+            var toastMixin = Swal.mixin({
+                toast: true,
+                icon: 'success',
+                title: 'General Title',
+                animation: false,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                  toast.addEventListener('mouseenter', Swal.stopTimer)
+                  toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+              });
+
+            toastMixin.fire({
+                animation: true,
+                title: 'QRLink-code with ID '+(document.getElementById("qr-id") as HTMLInputElement).value+' was deleted successfully'
+            })
         }}>
             <button type="submit" className="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Delete QR-code</button>
         </form>:<></>}</>

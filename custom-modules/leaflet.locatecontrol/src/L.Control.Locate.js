@@ -322,7 +322,7 @@ export default function init(L) { //! Added by @InimicalPart
             title: "", //! Edited by @InimicalPart
             metersUnit: "meters",
             feetUnit: "feet",
-            popup: "You are within {distance} {unit} from this point",
+            popup: "You are within {distance} {unit} of this point", //! Edited by @InimicalPart
             outsideMapBoundsMsg: "You seem located outside the boundaries of the map"
         },
         /** The default options passed to leaflets locate method. */

@@ -7,6 +7,28 @@ import { intersect as intersects, contains } from "@/utilities/(ui)/create/shape
 import crypto from 'crypto'
 import { LocateControl } from "./locateControl.client";
 import React from "react";
+
+import Swal from "sweetalert2";
+import "@sweetalert2/theme-dark"
+
+function showError(text: string, time: number = 3000) {
+    Swal.mixin({
+        toast: true,
+        position: 'bottom',
+        showConfirmButton: false,
+        timer: time,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    }).fire({
+        icon: 'error',
+        animation: true,
+        title: text
+    })
+}
+
 export default function Location({
     state,
     qrCodeInfo = {},
@@ -125,8 +147,9 @@ export default function Location({
                 setSelectedZoneIndex(zones.length); // Set the newly created zone as the selected zone
                 setIsCreatingZone(false);
             } else if (zoneType == "polygon") {
-                if (polygonPositions.length > 100) {
-                    alert("You cannot have more than 100 points in a polygon zone");
+                if (polygonPositions.length >= 100) {
+
+                    showError("You cannot have more than 100 points in a polygon zone")
                     return;
                 }
                 setPolygonPositions([...polygonPositions, [e.latlng.lat, e.latlng.lng]]);
@@ -175,11 +198,11 @@ export default function Location({
     }
     const finishPolygonZone = () => {
         if (polygonPositions.length < 3) {
-            alert("You need at least 3 points to create a polygon zone");
+            showError("You need at least 3 points to create a polygon zone");
             return;
         }
         if (polygonPositions.length > 100) {
-            alert("You cannot have more than 100 points in a polygon zone");
+            showError("You cannot have more than 100 points in a polygon zone");
             return;
         }
         setIsCreatingZone(false);
@@ -272,13 +295,13 @@ export default function Location({
         bounds: L.LatLngBounds
     }[]) {
             if (zones.length < 1) {
-                alert("You need at least 1 zone")
+                showError("You need at least 1 zone")
                 return false
             }
 
             // at least 2 zones
             if (zones.length == 1 && zones[0].isEntireWorld) {
-                alert("Your only zone cannot be the entire world, if you need to make it work everywhere, check out the 'Redirect' action.")
+                showError("Your only zone cannot be the entire world, if you need to make it work everywhere, check out the 'Redirect' action.")
                 return false
             }
 
@@ -321,7 +344,7 @@ export default function Location({
                 }
             }
             if (samePriority.length > 0) {
-                (window as unknown as any).showAlert(`     <span class="font-medium">Intersected zones with the same priority are not allowed. Please fix the following zones:</span>
+                showError(`<span class="font-medium">Intersected zones with the same priority are not allowed. Please fix the following zones:</span>
                                 <ul class="mt-1.5 ml-1.5 list-disc list-inside">
                                     ${samePriority
                                         .map((z) => {
@@ -334,7 +357,7 @@ export default function Location({
                                         })
                                         .join("")}
                                 </ul>`
-                        ,"error")
+                        ,10000)
                 return false
             }
 
@@ -346,7 +369,7 @@ export default function Location({
             }
 
             if (whatWasPlannedHere.length > 0) {
-                (window as unknown as any).showAlert(`     <span class="font-medium">Some zones are inside a zone with higher priority than the zone inside, the zone inside will never be triggered. Please fix the following zones:</span>
+                showError(`<span class="font-medium">Some zones are inside a zone with higher priority than the zone inside, the zone inside will never be triggered. Please fix the following zones:</span>
                                 <ul class="mt-1.5 ml-1.5 list-disc list-inside">
                                     ${whatWasPlannedHere
                                         .map((z) => {
@@ -359,7 +382,7 @@ export default function Location({
                                         })
                                         .join("")}
                                 </ul>`
-                        ,"error")
+                        ,10000)
                 return false
             }
 
@@ -373,7 +396,7 @@ export default function Location({
             }
 
             if (missingRedirects.length > 0) {
-                (window as unknown as any).showAlert(`     <span class="font-medium">Some zones are missing the 'redirect to' property. Please fix the following zones:</span>
+                showError(`     <span class="font-medium">Some zones are missing the 'redirect to' property. Please fix the following zones:</span>
                                 <ul class="mt-1.5 ml-1.5 list-disc list-inside">
                                     ${missingRedirects
                                         .map((z) => {
@@ -384,7 +407,7 @@ export default function Location({
                                         })
                                         .join("")}
                                 </ul>`
-                        ,"error")
+                        ,10000)
                 return false
             }
 
@@ -403,7 +426,7 @@ export default function Location({
             }
 
             if (invalidRedirects.length > 0) {
-                (window as unknown as any).showAlert(`     <span class="font-medium">Some zones have invalid 'redirect to' properties. Please fix the following zones:</span>
+                showError(`<span class="font-medium">Some zones have invalid 'redirect to' properties. Please fix the following zones:</span>
                                 <ul class="mt-1.5 ml-1.5 list-disc list-inside">
                                     ${invalidRedirects
                                         .map((z) => {
@@ -414,10 +437,10 @@ export default function Location({
                                         })
                                         .join("")}
                                 </ul>`
-                        ,"error")
+                        ,10000)
                 return false
             } else if (invalidAfterExpiry.length > 0) {
-                (window as unknown as any).showAlert(`     <span class="font-medium">Some zones have invalid 'after expiry' properties. Please fix the following zones:</span>
+                showError(`<span class="font-medium">Some zones have invalid 'after expiry' properties. Please fix the following zones:</span>
                                 <ul class="mt-1.5 ml-1.5 list-disc list-inside">
                                     ${invalidAfterExpiry
                                         .map((z) => {
@@ -428,7 +451,7 @@ export default function Location({
                                         })
                                         .join("")}
                                 </ul>`
-                        ,"error")
+                        ,10000)
                 return false
             }
 
@@ -465,13 +488,6 @@ export default function Location({
             window.addEventListener("typeChange", onTypeChanged)
             return ()=>{
                 window.removeEventListener("typeChange", onTypeChanged)
-            }
-        },[map])
-
-        useEffect(()=>{
-            if (action == "location") {
-                console.log("Invalidating size")
-                map.invalidateSize()
             }
         },[map])
 
@@ -583,7 +599,7 @@ export default function Location({
                 <ul style={{textAlign:"center",marginTop:10}}>
                 {polygonPositions.map((point, index) => (
                     <li key={"point-"+index} style={{cursor:"pointer", fontWeight:600, textDecoration:"underline"}} onMouseOver={()=>highlightPolygonPoint(index)} onMouseOut={()=>unHighlightPolygonPoint(index)} onClick={() => handleDeletePoint(index)}>Delete Point {index + 1}</li>
-                ))}
+                )).toReversed()}
                 </ul>
                 </div>
                 <div hidden={selectedZoneIndex == -1 || zones.length < 1} style={{
