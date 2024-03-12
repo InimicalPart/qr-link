@@ -14,7 +14,7 @@ export async function AddQR({
 
 
     return (
-        <form action={addQR} className={"qr select-none cursor-pointer md:min-h-[558px] " + className} id="add-qr-form" style={{
+        <form action={addQR} className={"qr select-none cursor-pointer min-h-[150px] md:min-h-[558px] " + className} id="add-qr-form" style={{
             width: "302px",
             height: "auto",
             // border: "1px black solid",
@@ -23,6 +23,7 @@ export async function AddQR({
             flexDirection: "column",
             display:'flex',
             pointerEvents: "none",
+            order: className.includes("mobile-only") ? -Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER, // This is a hack to make the addQR button always be at the bottom / top of the list, depending on the screen size
         }}>
             <button id="add-qr" style={{
                 pointerEvents: "auto",
@@ -32,8 +33,8 @@ export async function AddQR({
                 justifyContent:"center",
                 alignItems:"center",
             }}> 
-                <Image src={"/res/img/add_text.png"} width={179} height={179} alt="Add QR" style={{
-                    transform: "scale(0.8)",
+                <Image src={"/res/img/add_text.png"} height={89} width={188} alt="Add QR" style={{
+                    transform: "scale(.825)",
                     margin: "30px 0px"
                 }}/>
             </button>
