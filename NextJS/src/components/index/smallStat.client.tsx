@@ -16,13 +16,15 @@ export default function SmallStat({
     width=300,
     height=100,
     dataKey="count",
-    className
+    className,
+    style
 }:{
     data: {timestamp: string|Date, count?: number}[],
     width?: number,
     height?: number,
     dataKey?: string,
     className?: string
+    style?: any
 }) {
 
     if (!data) return <></>
@@ -77,10 +79,12 @@ export default function SmallStat({
     //   <ResponsiveContainer width={width} height={height} >
         
         <LineChart
-          width={width}
-          height={height}
-          data={data}
-          className={className}
+            title={"Scans during the last 2 months"}
+            width={width}
+            height={height}
+            data={data}
+            style={style}
+            className={className}
         >
             <defs>
                 <linearGradient
