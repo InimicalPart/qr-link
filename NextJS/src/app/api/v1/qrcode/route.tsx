@@ -5,6 +5,7 @@ import { saveQR } from "@/utilities/api/v1/database";
 import { QRCode, Types } from "@/utilities/api/v1/qrcode";
 import { checkDataValidity } from "@/utilities/api/v1/update";
 import crypto from "crypto";
+import moment from "moment-timezone";
 import { NextRequest, NextResponse } from "next/server";
 import QRCodeGenerator from "qrcode";
 
@@ -36,7 +37,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         },
         ...(body as Partial<{ id: string; update_key: string }>),
     };
-    const { type, data, expires, name, description, settings } = body;
+    const { type, data, name, description, settings } = body;
+    let { expires } = body;
     const token = request.headers.get("Authorization");
     
 
@@ -170,6 +172,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                     message: "expires needs to be a date or null.",
                 }), {status:400});
             }
+
+        // Adjust to UTC
+        const minuteOffset = moment.tz(request.nextUrl.searchParams.get("timezone")).utcOffset()
+        const currentOffset = moment.tz().utcOffset()
+
+        const difference = minuteOffset - currentOffset
+
+        expires = moment(expires).subtract(difference, "minutes").toDate() // convert to UTC
     }
         
     if (settings) {

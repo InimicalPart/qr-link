@@ -5,10 +5,12 @@ import moment from "moment-timezone";
 import { QRLinkGlobal } from "@/types/api/v1/global";
 import { NextResponse } from "next/server";
 
+
+
 declare const global: QRLinkGlobal;
 
 
-export async function validateAndDoUpdate(id: string, update: Partial<QRCode>) {
+export async function validateAndDoUpdate(id: string, update: Partial<QRCode>, timezone: string) {
     let updated: Partial<QRCode> = {}
     for (let key of Object.keys(update)) {
         switch (key) {
@@ -68,6 +70,16 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>) {
             //! Needs to be a date or null
             if (((new Date(update.expires) as any) == "Invalid Date" || !(typeof (update.expires as any) == "string")) && update.expires != null) return new NextResponse(JSON.stringify({error: "INVALID_EXPIRES", message: "'update.expires' needs to be a date or null."}), {status:400});
             
+            if (update.expires) {
+                // Adjust to UTC
+                const minuteOffset = moment.tz(timezone).utcOffset()
+                const currentOffset = moment.tz().utcOffset()
+
+                const difference = minuteOffset - currentOffset
+
+                update.expires = moment(update.expires).subtract(difference, "minutes").toDate() // convert to UTC
+            }
+
             updated.expires = update.expires;
             break;
         case "id":

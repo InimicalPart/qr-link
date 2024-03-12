@@ -23,6 +23,7 @@ import Form from "@/components/create/form.client";
 import React, { useState } from 'react'
 import Head from "next/head";
 import QRCodeImage from "@/components/create/qrCodeImage.client";
+import moment from 'moment-timezone';
 
 export default async function Home() {
     if (cookies()?.get("token")?.value) {
@@ -38,7 +39,7 @@ export default async function Home() {
     }
     console.log("valid")
 
-    const createSubmit = submit.bind(null, "create", {})
+    const createSubmit = submit.bind(null, "create", {}, moment.tz.guess())
     
     return (
       <div>
