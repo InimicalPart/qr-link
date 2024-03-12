@@ -4,7 +4,6 @@ import moment from "moment-timezone";
 import Image from "next/image";
 import React, { useState, useEffect } from 'react';
 import SmallStat from "./smallStat.client";
-import { Flipper, Flipped } from 'react-flip-toolkit'
 
 export default function GenerateQRs({
     token,

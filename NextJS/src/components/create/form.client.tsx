@@ -8,7 +8,7 @@ import Settings from './settings.client';
 import FormSubmit from './form-submit.client';
 import { useEffect, useState } from 'react';
 import { redirect } from 'next/navigation';
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2-ql";
 import "@sweetalert2/theme-dark"
 
 

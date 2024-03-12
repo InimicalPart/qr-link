@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import UserAgentList from "./userAgentList.client";
-import Swal from "sweetalert2";
+import Swal from "sweetalert2-ql";
 import "@sweetalert2/theme-dark"
 
 const browserRegexMap = {
