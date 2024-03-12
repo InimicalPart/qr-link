@@ -6,6 +6,101 @@ First of all, let's get into what QRLink is. QRLink is a demo project to showcas
 
 In more detail, QRLink spits out a QR-code that points to a backend API handler (in this case https://qrlink.newseed.se/api/v1/qrcode/[ID]/handler), which processes the request and makes various checks with the information that the owner has set for the QR-code with that ID.
 
+## Documentation
+You can find the full OpenAPI specification for QRLink [here](https://github.com/newseedit/dynamic-qr-link/blob/main/openapi.yml).
+
+## QRLink-code's structure
+Below is an example of what a QRLink-code's object looks like:
+```jsonc
+{
+  "linked_to": "user_01HQSXYJD34D76YV1X9Q6SGPE7", // The QRLink-code's owner as an Authkit user ID
+  "created": "2024-03-11T14:51:27.450Z", // The date and time that the QRLink-code was created
+  "updated": "2024-03-11T14:51:27.450Z", // The date and time that the QRLink-code was last updated.
+  "description": "This is a very well working QRLink-code", // The description of the QRLink-code (shows up in the dashboard)
+  "name": "QRLink-code for testing", // The name of the QRLink-code (shows up in the dashboard) 
+  "settings": {
+    "getScanData": true, // Whether or not the QRLink-code will grab information from a scan
+    "scanData": {
+      "information": {
+        "fingerprint": true, // Get the user's device fingerprint
+        "user-agent": true, // Get the user's device and browser information
+        "ip": true, // Get the IP that the user is connecting from
+        "location": true // Get the user's location
+      },
+      "sendToURL": false, // If the scan data should be sent to the redirect URL (only works for links, not VCards)
+      "JWTEncryptionKey": "" // The secret key used to sign the JWT token sent to the redirect URL, this has to be set to something other than "" or null if "sendToURL" is set to true
+    },
+    "requirements": {
+      "location": false, // Whether or not the user needs to provide their location to continue
+      "user-agent": false // Whether or not the user needs to provide their device and browser information to continue
+    }
+  },
+  "scanCount": 1, // The amount of time that the QR-code was scanned
+  "scanData": [
+    {
+      "fingerprint": 123456789,
+      "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+      "location": { // The user's coordinates
+         "latitude": -10.514473,
+         "longitude": 105.622559,
+         "accuracy": 19.093 // in meters
+      },
+      "timestamp": "2024-03-11T14:56:49.441Z", // Timestamp of when the code was scanned (automatically collected)
+      "ip": "1.2.3.4" // The user's IP address
+    }
+  ],
+  "update_log": [ // Shows what updates have been made and at which time
+    {
+      "date": "2024-03-11T14:51:27.450Z",
+      "update": {
+         "created": "2024-03-11T14:51:27.450Z"
+      }
+    },
+    {
+      "date": "2024-03-11T15:51:27.450Z",
+      "update": {
+         "settings.scanData.getScanData": true,
+         "settings.scanData.information.fingerprint": true,
+         "settings.scanData.information.user-agent": true,
+         "settings.scanData.information.ip": true,
+         "settings.scanData.information.location": true,
+      }
+    }
+  ],
+  "type": "user-agent", // The redirection type of the QRLink-code
+  "data": { // Specific instructions for the redirection type
+    "userAgents": [
+      {
+        "browser": "/(?:Chrome|CriOS)\\/([0-9]+\\.[0-9]+)/", // Regular expression pattern for the "Chrome" browser
+        "browser_name": "chrome", // The name of the browser pattern (shows when creating/managing a code in the dashboard)
+        "os": "/(?:Windows|Win[0-9]+)/", // Regular expression pattern for the "Windows" OS
+        "os_name": "windows", // The name of the OS pattern (shows when creating/managing a code in the dashboard)
+        "redirect_to": "chromewin.extension.com", // The site/VCard to redirect the user to if the above conditions match
+        "after_expiry": "expired.chromewin.extension.com" // The site/VCard to redirect the user to if the above conditions match but the QRLink-code is expired. This property is optional.  
+      },
+      {
+        "browser": "/(?:Chrome|CriOS)\\/([0-9]+\\.[0-9]+)/",
+        "browser_name": "chrome",
+        "os": "/(?:Linux|X11)/",
+        "os_name": "linux",
+        "redirect_to": "chromelinux.extension.com"
+      },
+         ...
+      { // Fallback condition, if none of the above match
+        "browser": "/.*/",
+        "browser_name": "any",
+        "os": "/.*/",
+        "os_name": "any",
+        "redirect_to": "anyother.extension.com"
+      }
+    ]
+  },
+  "update_key": "80970bdf5309ffec408383bd48d8f6d76e6181f1898ae0b6956d9f90325b5aeb", // The secret key that is used to update the QR-code, this property is optional. If this property is not provided, QRLink will automatically generate one for you.
+  "expires": null, // The date and time at which the QRLink-code expires (in the YYYY-MM-DDTHH:mm:ss.sssZ format (ISO 8601 format)), this property is optional. If this property is not provided, the QRLink-code will never expire.
+  "id": "08cc49d5-5ab2-45d2-a26f-a4abf53ca7c9" // The ID of the QRLink-code. This property is optional. If this property is not provided, QRLink will automatically generate one for you.
+}
+```
+
 ## QRLink-code Types
 
 The QRLink-code can have various properties set that defines what to do with the incoming request. This is a list of them all, as of March 11th 2024:
@@ -41,9 +136,9 @@ QRLink also allows the owner to retrieve information about the scan that the use
   - When the QRLink-code's type is set to 'location', this will automatically be enabled and cannot be disabled unless the type is changed from 'location'.
   - You can also mark this information as required, letting the user know that they are only able to continue with the redirection if they share their location.
 
-All information gathered from the scan is saved to the database/file, more on this further on in the guide.
+All information gathered from the scan is saved to the database/file under the `scanData` property.
 
-Timestamp from when the user scanned the QR-code is automatically saved too.
+**Timestamp from when the user scanned the QR-code is automatically saved too.**
 
 ### Sending information to the redirect URL
 
@@ -51,10 +146,10 @@ QRLink also has the option to send the gathered information to the redirect URL,
 When this option has been enabled in the settings of the QRLink-code, the owner will have to provide a secret key that will be used to sign the JWT token, this is to prevent the user from tampering with the information.
 
 This is the data structure of the decoded JWT token:
-```json
+```jsonc
 {
   "scanData": {
-    "fingerprint": 243471812, // The fingerprint of the user's device
+    "fingerprint": 243471812, // The fingerprint of the user's device (if selected)
     "location": { // The user's coordinates (if selected)
       "latitude": -10.514473,
       "longitude": 105.622559,
@@ -87,6 +182,7 @@ The conditions for QRLink to consider a MongoDB database as valid are as follows
 
 If QRLink is unable to connect to the database or considers it not to be valid or cannot configure it to be valid, it will switch to the backup storage option (file). The running user has to have read and write access to the file path provided above. QRLink will also attempt to create these folders if they do not exist.
 
+
 ## Authentication
 
 QRLink uses Authkit (made by WorkOS) to authenticate users to QRLink's systems. Please make sure you configure your instance of Authkit and supply valid API credentials in the `.env` file. More information can be found at [Authkit's website](https://workos.com/docs/user-management)
@@ -115,10 +211,10 @@ Due to security precautions, we have made it so that the server runs the NextJS 
 
 In case something goes catastrophically wrong, make sure that the following is true:
 - The NodeJS dependencies are up to date: `npm update --prefix /opt/QRLink/NextJS`
-- Port :8080, :80, and :443 are not in use
-- The `appuser` user has permission to listen on port :8080
-- `www-data` user has permission to listen on port :80 and :443
-- Your SSL certificate is valid
+- Port :8080, :80, and :443 are not in use: `sudo lsof -i :8080,443,80 | grep "LISTEN"`
+- The `appuser` user has permission to listen on port :8080\: `sudo -u appuser nc -lvnp 8080`
+- `root` user has permission to listen on port :80 and :443\: `sudo nc -lvnp 80` & `sudo nc -lvnp 443` 
+- Your SSL certificate is valid: `sudo openssl verify /path/to/chain.pem`
 - There are no very hard to understand errors in the console
 - You have googled the errors in the console and searched for ways to fix it
 
