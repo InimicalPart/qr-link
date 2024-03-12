@@ -8,7 +8,7 @@ import crypto from 'crypto'
 import { LocateControl } from "./locateControl.client";
 import React from "react";
 
-import Swal from "sweetalert2";
+import Swal from "sweetalert2-ql";
 import "@sweetalert2/theme-dark"
 
 function showError(text: string, time: number = 3000) {

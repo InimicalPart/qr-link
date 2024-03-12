@@ -5,7 +5,7 @@ import moment from "moment-timezone";
 import ScheduleList from "./scheduleList.client";
 import { useState } from "react";
 
-import Swal from "sweetalert2"
+import Swal from "sweetalert2-ql"
 import "@sweetalert2/theme-dark"
 
 function showError(text: string, time: number = 3000) {

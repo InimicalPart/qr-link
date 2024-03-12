@@ -1,13 +1,12 @@
 {
-  "name": "sweetalert2",
+  "name": "sweetalert2-ql",
   "version": "11.10.6",
-  "repository": "sweetalert2/sweetalert2",
   "homepage": "https://sweetalert2.github.io/",
   "description": "A beautiful, responsive, customizable and accessible (WAI-ARIA) replacement for JavaScript's popup boxes, supported fork of sweetalert",
-  "main": "dist/sweetalert2.js",
-  "browser": "dist/sweetalert2.js",
-  "module": "dist/sweetalert2.js",
-  "types": "sweetalert2.d.ts",
+  "main": "dist/sweetalert2-ql.js",
+  "browser": "dist/sweetalert2-ql.js",
+  "module": "dist/sweetalert2-ql.js",
+  "types": "sweetalert2-ql.d.ts",
   "author": "Limon Monte (https://limonte.github.io)",
   "contributors": [
     "Matthew Francis Brunetti <zenflow87@gmail.com> (https://github.com/zenflow)",
@@ -21,6 +20,5 @@
     "type": "individual",
     "url": "https://github.com/sponsors/limonte"
   },
-  "bugs": "https://github.com/sweetalert2/sweetalert2/issues",
   "license": "MIT"
 }
