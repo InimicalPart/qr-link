@@ -1,11 +1,17 @@
 import { QRLinkGlobal } from "@/types/api/v1/global";
 import { getUser, resolveID } from "@/utilities/api/v1/authentication";
 import moment from "moment-timezone";
+import { notFound } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 
 declare const global: QRLinkGlobal
 
 export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
+
+    //TODO: REMOVE
+    if (process.env.NODE_ENV == "production") {
+        return notFound()
+    }
 
     const { id } = params
     if (!Object.keys(global.QRCodeTable).includes(id)) {
