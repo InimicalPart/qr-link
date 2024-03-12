@@ -209,6 +209,9 @@
 .mobile-only {
     display: none !important;
 }
+.mobile-only.DO-flex {
+    display: none !important;
+}
 
 .desktop-only {
     display: block !important;
@@ -260,6 +263,9 @@ footer.dashboard.copyright-footer > p > a.copyright:hover {
     }
     
     .desktop-only {
+        display: none !important;
+    }
+    .desktop-only.DO-flex {
         display: none !important;
     }
 
