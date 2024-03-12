@@ -116,22 +116,45 @@ export default async function Home({
             </Modal>
         }
         <header style={{padding:"calc(1.5em + 8px)", display:"flex", justifyContent: "space-between"}} className="dashboard">
-            <Image src="/res/img/logo.png" width={450} height={99} alt="QRLink logo"/>
-            <div id="buttons" className="w-[408px] dashboard buttons">
+            <Image src="/res/img/logo.png" priority={true} width={450} height={99} alt="QRLink logo"/>
 
-            <form action={scanQR} className="w-[200px]" id="scanQR">
-                <button type="submit" id="scanQRButton" className="w-[100%] dashboard main-button" style={{
-                }}>Find QR <Image src={"/res/img/camera.png"} width={40} height={30} alt="Find QR" style={{paddingLeft:10}}/></button>
-                </form>
-                <form action={logout} className="w-[200px]" id="logOut">
-                    <button type="submit" id="logOutButton" className="w-[100%] dashboard main-button" style={{
-                    }}>Logout <Image src="/res/img/signout.png" width={40} height={29} alt="Logout" style={{paddingLeft:10}}/>
-                    </button>
-                    </form>
-                
+
+            <div className='topright' style={{
+                display: "flex",
+                gap: "10px",
+                height:"min-content",
+                width: "min-content",
+                alignItems: "center"
+            }}>
+                <div className="max-w-md w-[275px] h-[60px] dashboard search">   
+                    <label htmlFor="default-search" className="mb-2 text-sm font-medium text-gray-900 sr-only">Search</label>
+                    <div className="relative" style={{height:"inherit"}}>
+                        <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                            </svg>
+                        </div>
+                        <input type="search" id="qr-search" className="h-[60px] block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-500 rounded-2xl focus:outline-none" placeholder="Search for QRLink-codes" />
+                    </div>
                 </div>
 
 
+                <div id="buttons" className="w-max dashboard buttons h-[60px]">
+
+                    <form action={scanQR} className="w-[200px] h-min" id="scanQR">
+                        <button type="submit" id="scanQRButton" className="w-[100%] dashboard main-button">
+                            Find QR <Image src={"/res/img/camera.png"} width={40} height={40} alt="Find QR" style={{paddingLeft:10}}/>
+                        </button>
+                    </form>
+                    <form action={logout} className="w-[200px] h-min" id="logOut">
+                        <button type="submit" id="logOutButton" className="w-[100%] dashboard main-button">
+                            Logout <Image src="/res/img/signout.png" width={40} height={39} alt="Logout" style={{paddingLeft:10}}/>
+                        </button>
+                    </form>                        
+                </div>
+
+
+                </div>
             </header>
     <div id="qr-container" className="left-[50%] w-[calc(302px*1)] md:w-[calc(302px*2)] lg:w-[calc(302px*3)] xl:w-[calc(302px*4)] 2xl:w-[calc(302px*5)] relative" style={{
         transform: "translateX(-50%)",

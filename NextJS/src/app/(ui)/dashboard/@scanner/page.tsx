@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import "./scanner.css";
+import "./scanner.css" 
 
 const QRReader = dynamic(() => import("react-qr-scanner"), {
   ssr: false,
@@ -236,8 +236,8 @@ export default function QRScannerModal({
                 facingMode: "environment"
               }}}
               />
-              :
-              <Image id="scanned" src={scannedImage} alt="" height={height} width={width}/>
+              : scannedImage ? <Image id="scanned" src={scannedImage} alt="" height={height} width={width}/>
+              : <></>
             }
           <p id="status" style={{maxWidth:"100%", fontWeight:600, marginTop:10, color:errored ? "red" : "black"}}>{status}</p>
         </div>
