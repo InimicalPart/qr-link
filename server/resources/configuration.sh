@@ -72,8 +72,8 @@ setfacl -R -d -m u:appuser:rwX,u::rwX /opt/QRLink/NextJS/build/cache
 # user 'appuser' can write to all files and directories in /opt/QRLink/NextJS/build/cache
 setfacl -R -m u:appuser:rwX,u::rwX /opt/QRLink/NextJS/build/cache
 
-echo "[CFG] Removing execute from all files in /opt/QRLink/NextJS/build that arent .sh files"
-# remove execute from all files in /opt/QRLink that arent .sh files
+# remove execute from all files in /opt/QRLink that aren't .sh files
+echo "[CFG] Removing execute from all files in /opt/QRLink/NextJS/build that aren't .sh files"
 find /opt/QRLink -name node_modules -prune -o -name build -prune -o -type f ! -name "*.sh" -exec chmod -x {} \;
 
 

@@ -2,6 +2,7 @@ import { StatisticsPage } from "@/components/statistics/statistics.client";
 import { QRLinkGlobal } from "@/types/api/v1/global";
 import moment from "moment-timezone";
 import { Metadata, ResolvingMetadata } from "next";
+import { notFound } from "next/navigation";
 
 const API_URL = process.env.API_URL ?? "http://localhost:3000/api/v1"
 
@@ -14,6 +15,12 @@ export async function generateMetadata(
     },
     parent: ResolvingMetadata
   ): Promise<Metadata> {
+    
+    //TODO: REMOVE
+    if (process.env.NODE_ENV == "production") {
+        return notFound()
+    }
+
     // read route params
     const id = params.id
 
@@ -30,10 +37,9 @@ export default async function Statistics({
     }
 }) {
 
-    if (process.env.NODE_ENV === "production") {
-        return <p>
-            This page is not available in production mode.
-        </p>
+    //TODO: REMOVE
+    if (process.env.NODE_ENV == "production") {
+        return notFound()
     }
 
 
