@@ -18,6 +18,10 @@ export default function GenerateQRs({
         const [qrcodes, setQRCodes] = useState([]);
         const [searchText, setSearchText] = useState("");
         const [regexError, setRegexError] = useState(false);
+        
+        const [searchByName, setSearchByName] = useState(true);
+        const [searchByDesc, setSearchByDesc] = useState(true);
+        const [searchByID, setSearchByID] = useState(true);
 
         useEffect(() => {
 
@@ -52,17 +56,31 @@ export default function GenerateQRs({
 
         
         function createQR(qrcodeJSON:any) {
-            function matchesSearch() {
-                return genRegex().test(qrcodeJSON.name ?? "No Name") || genRegex().test(qrcodeJSON.description ?? "No Description") || genRegex().test(qrcodeJSON.id);
+            function matchesSearch(detailed:boolean = false, ignoreSearchBy:boolean = false) {
+                const regex = genRegex();
+
+                const nameMatches = (searchByName || ignoreSearchBy) && regex.test(qrcodeJSON.name ?? "No Name");
+                const descMatches = (searchByDesc || ignoreSearchBy) && regex.test(qrcodeJSON.description ?? "No Description");
+                const idMatches   = (searchByID   || ignoreSearchBy) && regex.test(qrcodeJSON.id);
+                
+                if (detailed) {
+                    return {
+                        name: nameMatches,
+                        desc: descMatches,
+                        id: idMatches
+                    };
+                }
+                return nameMatches || descMatches || idMatches;
             }
             return (
-                    <form action={handleClick} key={qrcodeJSON.id} className="qr select-none" id="manage-qr-form" style={{
+                    <form action={handleClick} key={qrcodeJSON.id} onSubmit={console.log} className="qr select-none" id="manage-qr-form" style={{
                         display: "flex",
                         border: "1px black solid",
                         borderRadius:3,
                         backgroundColor: "white",
                         justifyContent: "flex-start",
                         flexDirection: "column",
+                        pointerEvents: "all",
                         overflow: "hidden",
                         order: matchesSearch() ? 0 : 1,
                         
@@ -76,12 +94,12 @@ export default function GenerateQRs({
                             backgroundColor: "white",
                             borderRadius:3,
                             pointerEvents: matchesSearch() ? "none" : "all",
-                            zIndex:200,
+                            zIndex:10,
                             transition: "opacity 0.25s"
                         }}>
 
                         </div>
-                        <button title="Click to manage" className="qr select-none" id="sample-qr" style={{
+                        <button type="submit" title="Click to manage" className="qr select-none" id="sample-qr" style={{
                             paddingLeft: "25px",
                             paddingRight: "25px",
                         }}>
@@ -93,10 +111,11 @@ export default function GenerateQRs({
                             }}></Image>
 
                             <div style={{
-                                display:matchesSearch() && !regexError && !!searchText ? "flex" : "none",
+                                display:matchesSearch(undefined, true) && !regexError && !!searchText ? "flex" : "none",
                                 flexWrap:"wrap",
                                 width:"min-content",
                                 gap:2,
+                                zIndex:20,
                                 marginTop:2.5,
                                 marginBottom:2.5,
                                 maxWidth: 352,
@@ -105,9 +124,9 @@ export default function GenerateQRs({
                                 position: "relative",
                                 transition: "display 0.25s"
                             }}>
-                                <span title={"Your search query matched to this QRLink-code's ID ("+qrcodeJSON.id+")"} hidden={!regexError && !genRegex().test(qrcodeJSON.id) || !searchText} className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full relative w-max left-1/2 -translate-x-1/2">ID Matches</span>
-                                <span title={"Your search query matched to this QRLink-code's name"} hidden={!regexError && !genRegex().test(qrcodeJSON.name ?? "No Name") || !searchText} className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full relative w-max left-1/2 -translate-x-1/2">Name Matches</span>
-                                <span title={"Your search query matched to this QRLink-code's description"} hidden={!regexError && !genRegex().test(qrcodeJSON.description ?? "No Description") || !searchText} className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full relative w-max left-1/2 -translate-x-1/2">Description Matches</span>
+                                <span onClick={(e)=>{e.preventDefault(); setSearchByID(!searchByID)}} title={"Your search query matched to this QRLink-code's ID ("+qrcodeJSON.id+"). Click to toggle."} hidden={!regexError && !genRegex().test(qrcodeJSON.id) || !searchText} className={(searchByID ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-400") + " text-xs font-medium px-2.5 py-0.5 rounded-full relative w-max left-1/2 -translate-x-1/2"}>ID Matches</span>
+                                <span onClick={(e)=>{e.preventDefault(); setSearchByName(!searchByName)}} title={"Your search query matched to this QRLink-code's name. Click to toggle."} hidden={!regexError && !genRegex().test(qrcodeJSON.name ?? "No Name") || !searchText} className={(searchByName ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-400") + " text-xs font-medium px-2.5 py-0.5 rounded-full relative w-max left-1/2 -translate-x-1/2"}>Name Matches</span>
+                                <span onClick={(e)=>{e.preventDefault(); setSearchByDesc(!searchByDesc)}} title={"Your search query matched to this QRLink-code's description. Click to toggle."} hidden={!regexError && !genRegex().test(qrcodeJSON.description ?? "No Description") || !searchText} className={(searchByDesc ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-400") + " text-xs font-medium px-2.5 py-0.5 rounded-full relative w-max left-1/2 -translate-x-1/2"}>Description Matches</span>
                             </div>
                             {/* <span className="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded relative ">Matches ID</span> */}
 
@@ -127,7 +146,7 @@ export default function GenerateQRs({
                             <div id="stats" style={{pointerEvents: "none",height:"fit-content", width:"100%",paddingBottom:15}}>
                                 <p className="information" id="qr-expires-cntr"><b>Scans:</b></p>
                                 <p style={{fontWeight:700, pointerEvents:"all"}} title={numberWithCommas(qrcodeJSON.scanCount)}>{numberFormatter(qrcodeJSON.scanCount,2)}</p>
-                                <SmallStat width={150} height={50} data={[...qrcodeJSON.statistics,{count:0},{count:0}]} className="relative left-[50%] -translate-x-1/2 mt-4"></SmallStat>
+                                <SmallStat style={{pointerEvents: "all", cursor:"pointer"}} width={150} height={50} data={[...qrcodeJSON.statistics,{count:0},{count:0}]} className="relative left-[50%] -translate-x-1/2 mt-4"></SmallStat>
                             </div>
                         </button>
                     </form>
