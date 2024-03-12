@@ -82,13 +82,14 @@ export default function GenerateQRs({
                         flexDirection: "column",
                         pointerEvents: "all",
                         overflow: "hidden",
+                        position:"relative",
                         order: matchesSearch() ? 0 : 1,
                         
                     }}>
                         <input type="hidden" name="id" id="qr-id-input" value={qrcodeJSON.id}/>
                         <div id="overlay" style={{
-                            width:299,
-                            height:585,
+                            width:"100%",
+                            height:"100%",
                             opacity: matchesSearch() ? 0 : 0.7,
                             position:"absolute",
                             backgroundColor: "white",
