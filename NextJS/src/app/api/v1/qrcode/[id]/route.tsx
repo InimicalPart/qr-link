@@ -133,7 +133,6 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
             message: "Invalid JSON provided.",
         }), { status: 400 });
     }
-
     let { update_key, update } = requestBody
     let { id } = params;
     if (!id) {
@@ -195,8 +194,9 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
         message: "Invalid arguments provided: " + Object.keys(update).filter((key) => !global.supportedUpdateKeys.includes(key)).join(", "),
       }), { status: 400 })
     }
-    const wasAnytingUpdated = await validateAndDoUpdate(id, update, request.nextUrl.searchParams.get("timezone"))
+    const wasAnytingUpdated = await validateAndDoUpdate(id, update, requestBody.timezone??null)
     if (wasAnytingUpdated instanceof NextResponse) {
+        //! validateAndDoUpdate had an error
         return wasAnytingUpdated
     }
     if (!wasAnytingUpdated) {

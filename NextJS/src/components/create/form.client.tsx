@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { redirect } from 'next/navigation';
 import Swal from "sweetalert2-ql";
 import "@sweetalert2/theme-dark"
+import moment from 'moment-timezone';
 
 
 const initialState: {
@@ -243,6 +244,7 @@ export default function Form({
             }}>{state?.description}</p>
         </div>
         <div id="qr-expires-cntr" className="QRL-container">
+            <input type="hidden" name="timezone" value={moment.tz.guess()} />
             <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Expires</b></p>
             <input id="qr-expires" name="expires" className="create disabled:bg-neutral-400" style={{
                 border: '1px black solid',
@@ -313,7 +315,7 @@ export default function Form({
                 animation: true,
                 title: 'QRLink-code with ID '+(document.getElementById("qr-id") as HTMLInputElement).value+' was deleted successfully'
             })
-        }}>
+        }} >
             <button type="submit" className="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Delete QR-code</button>
         </form>:<></>}</>
     )
