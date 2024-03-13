@@ -13,9 +13,6 @@ const createSchema = z.object({
         }).refine(value=>!/^-|-$|^\.|\.$|-{2,99}|\.{2,99}/g.test(value), {
             message: "ID cannot start or end with a dash or period, or contain more than 2 dashes or periods in a row"
         }).nullable(),
-    updateKey: z.string().max(100, {
-        message: "Update Key must be at most 100 characters"
-    }).nullable(),
     name: z.string().max(50, {
         message: "Name must be at most 50 characters"
     }).nullable(),
@@ -59,7 +56,6 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
 
     const validatedFields = createSchema.safeParse({
         id: form.get('id'),
-        updateKey: form.get('update_key'),
         name: form.get('name'),
         description: form.get('description'),
         expires: form.get('expires'),
@@ -93,7 +89,6 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
 
     //! Correctly format all data
     const ID = validatedFields.data.id == "" ? null : validatedFields.data.id
-    const updateKey = validatedFields.data.updateKey == "" ? null : validatedFields.data.updateKey
     const name = validatedFields.data.name == "" ? null : validatedFields.data.name
     const description = validatedFields.data.description == "" ? null : validatedFields.data.description
     const expires = validatedFields.data.expires_never_checkbox == "on" ? null : validatedFields.data.expires
@@ -132,7 +127,6 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
 
     const JSONBody: Partial<QRCode> = {
         id: ID,
-        update_key: updateKey,
         name: name,
         description: description,
         expires: expires ? new Date(expires): null,
@@ -157,7 +151,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
         data: data
     }
 
-    //! If we are updating the QR code, we need to provide the update key and send it to (PATCH) /qrcode/:id
+    //! If we are updating the QR code, we need to send it to (PATCH) /qrcode/:id
     //! If we are creating a new QR code, we need to send it to (POST) /qrcode
     const response = await fetch(`${(process.env.API_URL ?? "http://localhost:8080/api/v1")}/qrcode` + (submitType=="update"?"/"+qrCodeInfo.id:""), {
         method: submitType=="update"?"PATCH":"POST",
@@ -165,11 +159,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
             "Content-Type": "application/json",
             "Authorization": `${cookies().get("token").value}`
         },
-        body: JSON.stringify(
-            submitType == "update"
-                ? { update_key: qrCodeInfo.update_key, update: {...JSONBody, timezone}}
-                : {...JSONBody, timezone}
-            ),
+        body: JSON.stringify({...JSONBody, timezone}),
         cache: "no-cache"
     })
     const responseData = await response.json()
@@ -228,7 +218,6 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
         return {
             success: {
                 id: validatedFields.data.id ? validatedFields.data.id : responseData.id,
-                update_key: validatedFields.data.updateKey ? validatedFields.data.updateKey : responseData.update_key
             }
         }
     }

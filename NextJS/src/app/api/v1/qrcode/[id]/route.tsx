@@ -19,19 +19,19 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
         return new NextResponse(JSON.stringify({
             error: "NO_ID",
             message: "No ID provided.",
-        }), { status: 400 });
+        }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     if (!(typeof (id as any) == "string")) {
         return new NextResponse(JSON.stringify({
             error: "INVALID_ID",
             message: "ID needs to be a string.",
-        }), { status: 400 });
+        }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     if (!Object.keys(global.QRCodeTable).includes(id)) {
         return new NextResponse(JSON.stringify({
             error: "INVALID_ID",
             message: "Invalid ID provided.",
-        }), { status: 400 });
+        }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
         // TODO: Make it so that we don't have to generate the QRCode twice
         let identifier = null
@@ -41,22 +41,37 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
                 return new NextResponse(JSON.stringify({
                     error: "INVALID_TOKEN",
                     message: "Token needs to be a string.",
-                }), { status: 400 });
+                }), { status: 400, headers: { "Content-Type": "application/json" } });
             }
             
-            let tokenVerificationResult = await getUser(token)
+            let tokenVerificationResult = await getUser(token, {
+                required_permission: "qrcode:read"
+            })
             if (!tokenVerificationResult.isAuthenticated) {
+                if (tokenVerificationResult.reason) {
+                    switch (tokenVerificationResult.reason) {
+                        case "invalid_perms":
+                            return new NextResponse(JSON.stringify({
+                                error: "INVALID_PERMISSIONS",
+                                message: "This API token does not have the required permissions to get QRCodes.",
+                            }), {status:403, headers: { "Content-Type": "application/json" } });
+                        case "invalid_owner":
+                            return new NextResponse(JSON.stringify({
+                                error: "INVALID_OWNER",
+                                message: "The owner of this API token does not exist.",
+                            }), {status:400, headers: { "Content-Type": "application/json" } });
+                    }
+                }
                 return new NextResponse(JSON.stringify({
                     error: "INVALID_TOKEN",
                     message: "Invalid token.",
-                }), { status: 400 });
+                }), { status: 400, headers: { "Content-Type": "application/json" } });
             }
             identifier = tokenVerificationResult.user.id
         }
         let qrcodeCopy = JSON.parse(JSON.stringify(Object.assign({},global.QRCodeTable[id])));
         delete qrcodeCopy._id;
         if (!identifier || identifier != qrcodeCopy.linked_to) {
-            delete qrcodeCopy.update_key;
             delete qrcodeCopy.linked_to;
             delete qrcodeCopy.scanData;
             delete qrcodeCopy.scanCount;
@@ -75,7 +90,7 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
     if (fileExport) {
         const exportType = (fileExport as string)?.toLowerCase() ?? "svg,png,pdf"
         let exportTypes = exportType.split(",")
-        if (exportTypes.filter(a=>!["svg","png","pdf"].includes(a)).length != 0) return new NextResponse(JSON.stringify({error: "INVALID_EXPORT_TYPE", message: "Invalid export type."}), { status: 400 })
+        if (exportTypes.filter(a=>!["svg","png","pdf"].includes(a)).length != 0) return new NextResponse(JSON.stringify({error: "INVALID_EXPORT_TYPE", message: "Invalid export type."}), { status: 400, headers: { "Content-Type": "application/json" } });
         for (let exportType of exportTypes) {
         switch (exportType) {
             case "svg":
@@ -95,7 +110,7 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
                     return new NextResponse(JSON.stringify({
                         error: "UNAUTHORIZED",
                         message: "You are not authorized to export this QR-code as a PDF. If you are the owner of this QR-code, please provide your token in the 'Authorization' header.",
-                    }), { status: 401 });
+                    }), { status: 401, headers: { "Content-Type": "application/json" } });
                 }
                 exportData["pdf"] = await QRCode2PDF(qrcodeCopy, id)
                 break;
@@ -103,7 +118,7 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
                 return new NextResponse(JSON.stringify({
                     error: "INVALID_EXPORT_TYPE",
                     message: "Invalid export type: " + exportType,
-                }), { status: 400 });
+                }), { status: 400, headers: { "Content-Type": "application/json" } });
         }
         }
     }
@@ -112,15 +127,7 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
                 id, 
             ...qrcodeCopy,
             ...exportData
-        }), { status: 200 });
-
-        // let pdf = await QRCode2PDF(a,"8c8435e9-f630-4008-844d-31a4c928f1b9")
-        // return new Response(Buffer.from(pdf.replace("data:application/pdf;base64,",""),"base64"), {
-        //     headers: {
-        //         "Content-Type": "application/pdf",
-        //         "Content-Disposition": `attachment; filename="qrcode_${params.id}.pdf"`
-        //     }
-        // })
+        }), { status: 200, headers: { "Content-Type": "application/json" } });
 }
 export async function PATCH(request: NextRequest, {params}: {params: {id: string}}) {
 
@@ -131,53 +138,64 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
         return new NextResponse(JSON.stringify({
             error: "INVALID_JSON",
             message: "Invalid JSON provided.",
-        }), { status: 400 });
+        }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
-    let { update_key, update } = requestBody
+    let update = requestBody
     let { id } = params;
     if (!id) {
       return new NextResponse(JSON.stringify({
         error: "NO_ID",
         message: "No ID provided.",
-      }), { status: 400 })
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     if (!(typeof (id as any) == "string")) {
       return new NextResponse(JSON.stringify({
         error: "INVALID_ID",
         message: "ID needs to be a string.",
-      }), { status: 400 })
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     if (!Object.keys(global.QRCodeTable).includes(id)) {
       return new NextResponse(JSON.stringify({
         error: "INVALID_ID",
         message: "Invalid ID provided.",
-      }), { status: 400 })
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
-    if (!update_key) {
-      return new NextResponse(JSON.stringify({
-        error: "NO_UPDATE_KEY",
-        message: "No update_key provided.",
-      }), { status: 400 })
+    const token = request.headers.get("Authorization")
+    if (!token) {
+        return new NextResponse(JSON.stringify({
+            error: "NO_TOKEN",
+            message: "No token provided in request."
+        }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    if (!(typeof (update_key as any) == "string")) {
-      return new NextResponse(JSON.stringify({
-        error: "INVALID_UPDATE_KEY",
-        message: "update_key needs to be a string.",
-      }), { status: 400 })
-    }
-  
-    if (global.QRCodeTable[id].update_key != update_key) {
-      return new NextResponse(JSON.stringify({
-        error: "INVALID_UPDATE_KEY",
-        message: "Invalid update_key provided.",
-      }), { status: 401 })
+    const user = await getUser(token, {
+        required_permission: "qrcode:update"
+    })
+    if (!user.isAuthenticated) {
+        if (user.reason) {
+            switch (user.reason) {
+                case "invalid_perms":
+                    return new NextResponse(JSON.stringify({
+                        error: "INVALID_PERMISSIONS",
+                        message: "This API token does not have the required permissions to update a QRCode.",
+                    }), {status:403, headers: { "Content-Type": "application/json" } });
+                case "invalid_owner":
+                    return new NextResponse(JSON.stringify({
+                        error: "INVALID_OWNER",
+                        message: "The owner of this API token does not exist.",
+                    }), {status:400, headers: { "Content-Type": "application/json" } });
+            }
+        }
+        return new NextResponse(JSON.stringify({
+            error: "INVALID_TOKEN",
+            message: "Invalid token provided in request."
+        }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
   
     if (!update) {
       return new NextResponse(JSON.stringify({
         error: "NO_UPDATE",
         message: "No update provided.",
-      }), { status: 400 })
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
   
     // update needs to be an object
@@ -185,16 +203,18 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
       return new NextResponse(JSON.stringify({
         error: "INVALID_UPDATE",
         message: "update needs to be an object.",
-      }), { status: 400 })
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
   
     if (Object.keys(update).filter((key) => !global.supportedUpdateKeys.includes(key)).length != 0) {
       return new NextResponse(JSON.stringify({
         error: "INVALID_ARGUMENTS",
         message: "Invalid arguments provided: " + Object.keys(update).filter((key) => !global.supportedUpdateKeys.includes(key)).join(", "),
-      }), { status: 400 })
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
-    const wasAnytingUpdated = await validateAndDoUpdate(id, update, requestBody.timezone??null)
+    const timezone = update.timezone ?? null
+    delete update.timezone
+    const wasAnytingUpdated = await validateAndDoUpdate(id, update, timezone)
     if (wasAnytingUpdated instanceof NextResponse) {
         //! validateAndDoUpdate had an error
         return wasAnytingUpdated
@@ -206,7 +226,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
           data: global.QRCodeTable[id].data,
           linked_to: global.QRCodeTable[id].linked_to,
           expires: global.QRCodeTable[id].expires,
-      }), { status: 200 });
+      }), { status: 200, headers: { "Content-Type": "application/json" } });
     }
     saveQR(id, global.QRCodeTable[update.id??id], true)
     
@@ -228,7 +248,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
         expires: global.QRCodeTable[id].expires,
       },
       ...additionalInformation,
-    }), { status: 200 });
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
   
 }
 
@@ -239,44 +259,59 @@ export async function DELETE(request: NextRequest, {params}: {params: {id: strin
       return new NextResponse(JSON.stringify({
         error: "NO_ID",
         message: "No ID provided.",
-      }), { status: 400 })
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     if (!(typeof (id as any) == "string")) {
       return new NextResponse(JSON.stringify({
         error: "INVALID_ID",
         message: "ID needs to be a string.",
-      }), { status: 400 })
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     if (!Object.keys(global.QRCodeTable).includes(id)) {
       return new NextResponse(JSON.stringify({
         error: "INVALID_ID",
         message: "Invalid ID provided.",
-      }), { status: 400 })
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     const token = request.headers.get("Authorization")
     if (!token) {
         return new NextResponse(JSON.stringify({
             error: "NO_TOKEN",
             message: "No token provided in request."
-        }), { status: 401 })
+        }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    const user = await getUser(token)
+    const user = await getUser(token, {
+        required_permission: "qrcode:delete"
+    })
     if (!user.isAuthenticated) {
+        if (user.reason) {
+            switch (user.reason) {
+                case "invalid_perms":
+                    return new NextResponse(JSON.stringify({
+                        error: "INVALID_PERMISSIONS",
+                        message: "This API token does not have the required permissions to delete a QRCode.",
+                    }), {status:403, headers: { "Content-Type": "application/json" } });
+                case "invalid_owner":
+                    return new NextResponse(JSON.stringify({
+                        error: "INVALID_OWNER",
+                        message: "The owner of this API token does not exist.",
+                    }), {status:400, headers: { "Content-Type": "application/json" } });
+            }
+        }
         return new NextResponse(JSON.stringify({
             error: "INVALID_TOKEN",
             message: "Invalid token provided in request."
-        }), { status: 401 })
+        }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
     if (global.QRCodeTable[id].linked_to !== user.user.id) {
         return new NextResponse(JSON.stringify({
             error: "UNAUTHORIZED",
             message: "You are not authorized to delete this QRCode."
-        }), { status: 403 })
+        }), { status: 403, headers: { "Content-Type": "application/json" } });
     }
     delete global.QRCodeTable[id]
     deleteQRFromStorage(id)
     return new NextResponse(JSON.stringify({
         id,
-        message: "The QR-code has been deleted."
-    }), { status: 200 });
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
 }

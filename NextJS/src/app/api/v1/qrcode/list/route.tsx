@@ -14,29 +14,47 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return new NextResponse(JSON.stringify({
       error: "NO_TOKEN",
       message: "No token provided.",
-    }), { status: 400 });
+    }), { status: 400, headers: { "Content-Type": "application/json" } });
   }
 
-  let identifier: string = null
+  let userID: string = null
         // check if identifier is valid (it is already hashed)
     if (!(typeof (token as any) == "string")) {
         return new NextResponse(JSON.stringify({
             error: "INVALID_TOKEN",
             message: "Token needs to be a string.",
-        }), { status: 400 });
+        }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
-    let tokenVerificationResult = await getUser(token)
+    let tokenVerificationResult = await getUser(token, {
+        required_permission: "qrcode:read",
+    })
     if (!tokenVerificationResult.isAuthenticated) {
+        if (tokenVerificationResult.reason) {
+            switch (tokenVerificationResult.reason) {
+                case "invalid_perms":
+                    return new NextResponse(JSON.stringify({
+                        error: "INVALID_PERMISSIONS",
+                        message: "This API token does not have the required permissions to get QRCodes.",
+                    }), {status:403, headers: { "Content-Type": "application/json" } });
+                case "invalid_owner":
+                    return new NextResponse(JSON.stringify({
+                        error: "INVALID_OWNER",
+                        message: "The owner of this API token does not exist.",
+                    }), {status:400, headers: { "Content-Type": "application/json" } });
+            }
+        }
         return new NextResponse(JSON.stringify({
             error: "INVALID_TOKEN",
             message: "Invalid token.",
-        }), { status: 400 });
+        }), {status:400, headers: { "Content-Type": "application/json" } });
     }
-    identifier = tokenVerificationResult.user.id
-  // get all QR-codes that are linked to the identifier
+    userID = tokenVerificationResult.user.id
+
+
+  //! Get all QR-codes that are linked to the user
   const ownedQRCodes = Object.keys(global.QRCodeTable).filter((key) => {
-    return global.QRCodeTable[key].linked_to == identifier;
+    return global.QRCodeTable[key].linked_to == userID;
   });
   let qrCodes: Array<{}> = [];
   for (let ownedQRCodeID of ownedQRCodes) {
@@ -50,7 +68,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 if (request.nextUrl.searchParams.get("export")) {
   const exportType = (request.nextUrl.searchParams.get("export") as string)?.toLowerCase() ?? "svg,png"
   let exportTypes = exportType.split(",")
-    if (exportTypes.filter(a=>!["svg","png"].includes(a)).length != 0) return new NextResponse(JSON.stringify({error: "INVALID_EXPORT_TYPE", message: "Invalid export type."}), {status: 400})
+    if (exportTypes.filter(a=>!["svg","png"].includes(a)).length != 0) return new NextResponse(JSON.stringify({error: "INVALID_EXPORT_TYPE", message: "Invalid export type."}), {status: 400, headers: { "Content-Type": "application/json" } });
   for (let exportType of exportTypes) {
     switch (exportType) {
       case "svg":
@@ -92,7 +110,7 @@ if (request.nextUrl.searchParams.get("statistics")) {
             return new NextResponse(JSON.stringify({
                 error: "INVALID_STATISTICS_TYPE",
                 message: "Invalid statistics type: " + statisticsTypeAbbr,
-            }), {status: 400})
+            }), {status: 400, headers: { "Content-Type": "application/json" } });
     }
 
     switch (statisticsPeriodUnitAbbr) {
@@ -112,7 +130,7 @@ if (request.nextUrl.searchParams.get("statistics")) {
             return new NextResponse(JSON.stringify({
                 error: "INVALID_STATISTICS_PERIOD_UNIT",
                 message: "Invalid statistics period unit: " + statisticsPeriodUnitAbbr,
-            }), {status: 400})
+            }), {status: 400, headers: { "Content-Type": "application/json" } });
     }
 
     statistics = await global.QRCodeTable[ownedQRCodeID].getStatistics({
@@ -133,5 +151,5 @@ if (request.nextUrl.searchParams.get("statistics")) {
       statistics: statistics.info
     });
   }
-  return new NextResponse(JSON.stringify(qrCodes), { status: 200 });
+  return new NextResponse(JSON.stringify(qrCodes), { status: 200, headers: { "Content-Type": "application/json" } });
 }

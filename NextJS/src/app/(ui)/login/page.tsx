@@ -23,6 +23,9 @@ const secret = new Uint8Array(
 const workos = new WorkOS(process.env.WORKOS_API_KEY);
 const WORKOS_CLIENT_ID=process.env.WORKOS_CLIENT_ID
 let thisURL = process.env.BASE_URL ?? "http://localhost:8080"
+
+const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
+
 export default async function Home() {
 
 
@@ -46,12 +49,12 @@ export default async function Home() {
     }
 
     if (cookies()?.get("token")?.value) {
-        let valid = false
-        await jwtVerify(cookies().get("token").value, secret).then(()=>{
-            valid = true
-        }).catch(()=>{})
-        console.log(valid)
-        if (valid) redirect("/dashboard")
+        await jwtVerify(cookies().get("token").value, secret, {
+            audience: strippedBaseURL,
+            issuer: strippedBaseURL,
+            algorithms: ["HS256"],
+            requiredClaims: ["exp", "iat", "iss", "aud"],
+        }).then(()=>redirect("/dashboard")).catch(()=>{})
     }
     
 

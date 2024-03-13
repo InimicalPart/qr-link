@@ -15,7 +15,6 @@ import moment from 'moment-timezone';
 
 const initialState: {
     id: string | null,
-    update_key: string | null,
     name: string | null,
     description: string | null,
     expires: string | Date | null,
@@ -39,7 +38,6 @@ const initialState: {
 
 } = {
     id: null,
-    update_key: null,
     name: null,
     description: null,
     expires: null,
@@ -184,25 +182,6 @@ export default function Form({
                 color: "red",
                 display: state?.id ? "block" : "none"
             }}>{state?.id}</p>
-        </div>
-        <div id="qr-updatekey-cntr" className="QRL-container">
-            <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Update Key</b> <span style={{
-                fontSize: '8pt',
-                flexBasis: '100%',
-                marginTop: -5
-            }}>(optional)</span></p>
-            <input className="create" id="qr-updatekey" name="update_key" style={{
-                width: 300,
-                border: state?.update_key ? "1px red solid" : '1px black solid',
-                borderRadius: 8,
-                fontSize: 13,
-                textAlign: 'center'
-            }} autoCapitalize="false" autoComplete="new-password" spellCheck="false" type={updateKeyShown?"text":"password"} onFocus={()=>setUpdateKeyShown(true)} onBlur={()=>setUpdateKeyShown(false)} placeholder="Leave blank for random" maxLength={100} defaultValue={qrCodeInfo.update_key}/>
-            <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
-                fontSize: "9pt",
-                color: "red",
-                display: state?.update_key ? "block" : "none"
-            }}>{state?.update_key}</p>
         </div>
         <div id="qr-name-cntr" className="QRL-container">
             <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Name</b><span style={{

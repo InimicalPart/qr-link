@@ -6,33 +6,31 @@ export const metadata: Metadata = {
   title: 'Create a QRLink-code'
 }
 
-import Script from "next/script";
 import "./create.css"
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { redirect } from "next/navigation";
-import { z } from 'zod'
 import { submit } from "@/utilities/(ui)/create/submit.server";
 
+import Form from "@/components/create/form.client";
+import React from 'react'
+import QRCodeImage from "@/components/create/qrCodeImage.client";
+
+
 const API_URL = (process.env.API_URL ?? "http://localhost:8080/api/v1")
-let secret = new Uint8Array(
+const secret = new Uint8Array(
     Buffer.from(process.env.JWT_SECRET, 'base64'),
     );
-// import CreateQR from "@/components/create/createqr.client";
-import Form from "@/components/create/form.client";
-import React, { useState } from 'react'
-import Head from "next/head";
-import QRCodeImage from "@/components/create/qrCodeImage.client";
-import moment from 'moment-timezone';
+const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
 
 export default async function Home() {
     if (cookies()?.get("token")?.value) {
-        let valid = false
-        await jwtVerify(cookies().get("token").value, secret).then(()=>{
-            valid = true
-        }).catch(()=>{
-            valid = false
-        })
+        let valid = await jwtVerify(cookies().get("token").value, secret, {
+            audience: strippedBaseURL,
+            issuer: strippedBaseURL,
+            algorithms: ["HS256"],
+            requiredClaims: ["exp", "iat", "iss", "aud"],
+        }).then(()=>true).catch(()=>false)
         if (!valid) redirect("/login")
     } else {
         redirect("/login")

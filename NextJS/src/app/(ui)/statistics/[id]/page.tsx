@@ -1,10 +1,17 @@
 import { StatisticsPage } from "@/components/statistics/statistics.client";
 import { QRLinkGlobal } from "@/types/api/v1/global";
+import { jwtVerify } from "jose";
 import moment from "moment-timezone";
 import { Metadata, ResolvingMetadata } from "next";
-import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
+import { notFound, redirect } from "next/navigation";
 
 const API_URL = process.env.API_URL ?? "http://localhost:3000/api/v1"
+
+const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
+const secret = new Uint8Array(
+    Buffer.from(process.env.JWT_SECRET, 'base64'),
+    );
 
 declare const global: QRLinkGlobal
 
@@ -42,6 +49,17 @@ export default async function Statistics({
         return notFound()
     }
 
+    if (cookies()?.get("token")?.value) {
+        let valid = await jwtVerify(cookies().get("token").value, secret, {
+            audience: strippedBaseURL,
+            issuer: strippedBaseURL,
+            algorithms: ["HS256"],
+            requiredClaims: ["exp", "iat", "iss", "aud"],
+        }).then(()=>true).catch(()=>false)
+        if (!valid) redirect("/login")
+    } else {
+        redirect("/login")
+    }
 
 
     // const response = await fetch(`${API_URL}/qrcode/${params.id}/statistics?

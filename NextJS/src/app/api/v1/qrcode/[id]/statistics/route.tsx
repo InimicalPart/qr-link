@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
       return new NextResponse(JSON.stringify({
         error: "INVALID_ID",
         message: "Invalid ID provided.",
-      }), { status: 400 });
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     
     const token = request.headers.get("Authorization")
@@ -27,24 +27,35 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
         return new NextResponse(JSON.stringify({
             error: "NO_TOKEN",
             message: "No token provided in request."
-        }), { status: 401 })
+        }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
 
     const qrcode = global.QRCodeTable[id]
 
-    const user = await getUser(token)
+    const user = await getUser(token,{
+        allowAPIKey: false, //TODO: Change to true 
+    })
     if (!user.isAuthenticated) {
+        if (user.reason) {
+            switch (user.reason) {
+                case "api_key":
+                    return new NextResponse(JSON.stringify({
+                        error: "NOT_ALLOWED",
+                        message: "This endpoint does not allow API keys."
+                    }), { status: 401, headers: { "Content-Type": "application/json" } })
+            }
+        }
         return new NextResponse(JSON.stringify({
             error: "INVALID_TOKEN",
             message: "Invalid token provided in request."
-        }), { status: 401 })
+        }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
 
     if (qrcode.linked_to !== user.user.id) {
         return new NextResponse(JSON.stringify({
             error: "UNAUTHORIZED",
             message: "You are not authorized to view the statistics for this QRCode."
-        }), { status: 403 })
+        }), { status: 403, headers: { "Content-Type": "application/json" } });
     }
 
 
@@ -61,14 +72,14 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
         return new NextResponse(JSON.stringify({
             error: "NO_TYPE",
             message: "No type provided in request."
-        }), { status: 400 })
+        }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
     if (!["ScannedEachX", "ScannedLastX", "ScannedWhere", "Scanned", "ScannedDayRank", "ScannedTimeRank"].includes(type)) {
         return new NextResponse(JSON.stringify({
             error: "INVALID_TYPE",
             message: "Invalid type provided in request."
-        }), { status: 400 })
+        }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
 
@@ -85,7 +96,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
         return new NextResponse(JSON.stringify({
             error: (statistics as {error:string,message:string}).error,
             message: (statistics as {error:string,message:string}).message
-        }), { status: 500 })
+        }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
 
 
@@ -93,9 +104,4 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
     return new NextResponse(JSON.stringify({
         statistics
     }), { status: 200, headers: { "Content-Type": "application/json" } })
-
-
-
-
-
 }

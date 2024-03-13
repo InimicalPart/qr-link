@@ -19,7 +19,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         return new NextResponse(JSON.stringify({
             error: "INVALID_JSON",
             message: "Invalid JSON provided.",
-        }), {status:400});
+        }), {status:400, headers: { "Content-Type": "application/json" } });
     }
 
     // if any property is null, delete it
@@ -30,12 +30,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
 
-    let { id, update_key } = {
+    let { id } = {
         ...{
             id: crypto.randomUUID(),
-            update_key: await randomString(32),
         },
-        ...(body as Partial<{ id: string; update_key: string }>),
+        ...(body as Partial<{ id: string; }>),
     };
     const { type, data, name, description, settings } = body;
     let { expires } = body;
@@ -47,10 +46,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         return new NextResponse(JSON.stringify({
             error: "INVALID_ID",
             message: "ID needs to be a string.",
-        }), {status:400});
+        }), {status:400, headers: { "Content-Type": "application/json" } });
     }
     
-    if (!/^[a-zA-Z0-9_.-]*$/.test(id)) return new NextResponse(JSON.stringify({error: "INVALID_ID", message: "'id' can only contain alphanumeric characters, underscores and dashes and periods."}), {status:400});
+    if (!/^[a-zA-Z0-9_.-]*$/.test(id)) return new NextResponse(JSON.stringify({error: "INVALID_ID", message: "'id' can only contain alphanumeric characters, underscores and dashes and periods."}), {status:400, headers: { "Content-Type": "application/json" } });
 
     // Check if ID is already in use, as well as if it's user-specified, if both are true, return an error, otherwise, if it's only in use, generate a new ID until it is not in use
     while (global.QRCodeTable[id]) {
@@ -58,73 +57,85 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             return new NextResponse(JSON.stringify({
                 error: "ID_IN_USE",
                 message: "ID already in use.",
-            }), {status:400});
+            }), {status:400, headers: { "Content-Type": "application/json" } });
         }
         id = crypto.randomUUID();
     }
 
 
-    // Check if update key is valid
-    if (!(typeof (update_key as any) == "string")) {
-        return new NextResponse(JSON.stringify({
-            error: "INVALID_UPDATE_KEY",
-            message: "update_key needs to be a string.",
-        }), {status:400});
-    }
-
     let identifier = undefined
-    if (token) {
-        // check if token is valid
-        if (!(typeof (token as any) == "string")) {
-            return new NextResponse(JSON.stringify({
-                error: "INVALID_TOKEN",
-                message: "Token needs to be a string.",
-            }), {status:400});
-        }
-        let tokenVerificationResult = await getUser(token)
-        if (!tokenVerificationResult.isAuthenticated) {
-            return new NextResponse(JSON.stringify({
-                error: "INVALID_TOKEN",
-                message: "Invalid token.",
-            }), {status:400});
-        }
-        
-        identifier = tokenVerificationResult.user.id
+    if (!token) {
+        return new NextResponse(JSON.stringify({
+            error: "NO_TOKEN",
+            message: "No token provided.",
+        }), {status:401, headers: { "Content-Type": "application/json" } });
     }
+    // check if token is valid
+    if (!(typeof (token as any) == "string")) {
+        return new NextResponse(JSON.stringify({
+            error: "INVALID_TOKEN",
+            message: "Token needs to be a string.",
+        }), {status:400, headers: { "Content-Type": "application/json" } });
+    }
+    let tokenVerificationResult = await getUser(token, {
+        required_permission: "qrcode:create",
+    })
+    if (!tokenVerificationResult.isAuthenticated) {
+        if (tokenVerificationResult.reason) {
+            switch (tokenVerificationResult.reason) {
+                case "invalid_perms":
+                    return new NextResponse(JSON.stringify({
+                        error: "INVALID_PERMISSIONS",
+                        message: "This API token does not have the required permissions to create a QRCode.",
+                    }), {status:403, headers: { "Content-Type": "application/json" } });
+                case "invalid_owner":
+                    return new NextResponse(JSON.stringify({
+                        error: "INVALID_OWNER",
+                        message: "The owner of this API token does not exist.",
+                    }), {status:400, headers: { "Content-Type": "application/json" } });
+            }
+        }
+        return new NextResponse(JSON.stringify({
+            error: "INVALID_TOKEN",
+            message: "Invalid token.",
+        }), {status:400, headers: { "Content-Type": "application/json" } });
+    }
+    
+    identifier = tokenVerificationResult.user.id
 
     // Check if type is valid
     if (!type) {
         return new NextResponse(JSON.stringify({
             error: "NO_TYPE",
             message: "No type provided.",
-        }),{status:400});
+        }),{status:400, headers: { "Content-Type": "application/json" } });
     }
     if (!(typeof (type as any) == "string")) {
         return new NextResponse(JSON.stringify({
             error: "INVALID_TYPE",
             message: "Type needs to be a string.",
-        }),{status:400});
+        }),{status:400, headers: { "Content-Type": "application/json" } });
     }
     if (!global.supportedTypes.includes(type)) {
         return new NextResponse(JSON.stringify({
             error: "UNSUPPORTED_TYPE",
             message:
             "Type not supported. Supported types: " + global.supportedTypes.join(", "),
-        }), {status: 400});
+        }), {status: 400, headers: { "Content-Type": "application/json" } });
     }
     if (name) {
         if (!(typeof (name as any) == "string")) {
             return new NextResponse(JSON.stringify({
                 error: "INVALID_NAME",
                 message: "Name needs to be a string.",
-            }),{status:400});
+            }),{status:400, headers: { "Content-Type": "application/json" } });
         }
         // no longer than 50
         if (name.length > 50) {
             return new NextResponse(JSON.stringify({
                 error: "INVALID_NAME",
                 message: "Name needs to be less than 50 characters.",
-            }),{status:400});
+            }),{status:400, headers: { "Content-Type": "application/json" } });
         }
     }
     if (description) {
@@ -132,14 +143,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             return new NextResponse(JSON.stringify({
                 error: "INVALID_DESCRIPTION",
                 message: "Description needs to be a string.",
-            }), {status:400});
+            }), {status:400, headers: { "Content-Type": "application/json" } });
         }
         // no longer than 200
         if (description.length > 200) {
             return new NextResponse(JSON.stringify({
                 error: "INVALID_DESCRIPTION",
                 message: "Description needs to be less than 200 characters.",
-            }), {status:400});
+            }), {status:400, headers: { "Content-Type": "application/json" } });
         }
     }
     
@@ -148,14 +159,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         return new NextResponse(JSON.stringify({
             error: "NO_DATA",
             message: "No data provided.",
-        }), {status:400});
+        }), {status:400, headers: { "Content-Type": "application/json" } });
     }
     const dataValidity = await checkDataValidity(type, data, id);
     if (!dataValidity.valid) {
         return new NextResponse(JSON.stringify({
             error: dataValidity.error,
             message: dataValidity.message,
-        }), {status:400});
+        }), {status:400, headers: { "Content-Type": "application/json" } });
     }
     
 
@@ -169,7 +180,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 return new NextResponse(JSON.stringify({
                     error: "INVALID_EXPIRES",
                     message: "expires needs to be a date or null.",
-                }), {status:400});
+                }), {status:400, headers: { "Content-Type": "application/json" } });
             }
 
         if (body.timezone) {   
@@ -186,7 +197,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             return new NextResponse(JSON.stringify({
                 error: "INVALID_SETTINGS",
                 message: "settings needs to be an object.",
-            }), {status:400});
+            }), {status:400, headers: { "Content-Type": "application/json" } });
         }
         // if settings.scanData.sendToURL is true, settings.scanData.JWTEncryptionKey needs to be a string and not empty
         if (settings.scanData.sendToURL) {
@@ -197,7 +208,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                     return new NextResponse(JSON.stringify({
                         error: "INVALID_JWT_ENCRYPTION_KEY",
                         message: "JWTEncryptionKey needs to be a string and not empty.",
-                    }), {status:400});
+                    }), {status:400, headers: { "Content-Type": "application/json" } });
                 }
         }
         
@@ -207,7 +218,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     global.QRCodeTable[id] = new QRCode({
         type,
         data: (dataValidity.newData ?? data) as unknown as Types.RedirectQRCodeData | Types.ScheduleQRCodeData | Types.LocationQRCodeData,
-        update_key,
         created: new Date(),
         updated: new Date(),
         name: name ? name : null,
@@ -244,20 +254,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         
     return new NextResponse(JSON.stringify({
         id,
-        update_key,
         type,
         data,
         svg: (qrcode as string).trim(),
-    }), {status:201}); 
-}
-    
-async function randomString(length: number) {
-    return new Promise<string>((resolve, reject) => {
-        crypto.randomBytes(length, function (err, buffer) {
-            if (err) {
-                reject(err);
-            }
-            resolve(buffer.toString("hex"));
-        });
-    });
+    }), {status:201, headers: { "Content-Type": "application/json" } });
 }
