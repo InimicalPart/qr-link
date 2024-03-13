@@ -2,6 +2,7 @@ import { MongoClient } from "mongodb";
 import { QRCodeTable } from "./QRCode";
 
 interface QRLinkGlobal extends Global {
+    debugMode: boolean;
     QRBackupFilePath: string;
     mongoConnectionString: string;
     QRCodeTable: QRCodeTable;

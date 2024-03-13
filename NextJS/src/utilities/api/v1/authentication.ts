@@ -1,5 +1,6 @@
 import { jwtVerify } from "jose";
 import WorkOS from "@workos-inc/node";
+import { QRLinkGlobal } from "@/types/api/v1/global";
 const secret = new Uint8Array(Buffer.from(process.env.JWT_SECRET, "base64"));
 const workos = new WorkOS(process.env.WORKOS_API_KEY);
 export const cacheValidity = 5 * 60 * 1000 //! 5 minutes
@@ -9,6 +10,9 @@ export async function resolveID(id: string): Promise<{object:string, id:string, 
     console.log("[AUTH] ID resolved: " + res.email)
     return res
 }
+
+declare const global: QRLinkGlobal
+
 
 export async function getUser(token: string): Promise<{isAuthenticated: boolean, user?: {object:string, id:string, email: string, emailVerified: boolean, firstName: string | null, lastName: string | null, createdAt: Date | string, updatedAt: Date|string }}> {
     console.log("[AUTH] Verifying token: " + token.substring(0, 10) + "..." + token.substring(token.length - 10, token.length))
@@ -78,7 +82,7 @@ const cached: {
     invalidAt: 0,
 }
 export async function fetchUsersCache() {
-    console.log("[AUTH] Fetching users...")
+    if (global.debugMode) console.log("[AUTH] Fetching users...")
     cached.users = await getUsers()
     cached.timestamp = Date.now()
     cached.invalidAt = Date.now() + cacheValidity
@@ -89,15 +93,15 @@ export async function clearCache() {
     cached.invalidAt = Date.now()
 }
 export async function doesUserExist(id: string): Promise<boolean> {
-    console.log("[AUTH] Checking if user exists: " + id + (cached.invalidAt <= cached.timestamp ? "" : " ("+(cached.users.find((user) => user.id === id).email??"N/A")+")"))
+    if (global.debugMode) console.log("[AUTH] Checking if user exists: " + id + (cached.invalidAt <= cached.timestamp ? "" : " ("+(cached.users.find((user) => user.id === id).email??"N/A")+")"))
     if (cached.invalidAt <= cached.timestamp) {
         if (cached.invalidAt != 0) {
-            console.log("[AUTH] Cache is invalid. Fetching users.")
+            if (global.debugMode)  console.log("[AUTH] Cache is invalid. Fetching users.")
         } else {
-            console.log("[AUTH] Fetching users...")
+            if (global.debugMode)  console.log("[AUTH] Fetching users...")
         }
         await fetchUsersCache().then((amountOfUsers)=>{
-            console.log("[AUTH] Cached " + amountOfUsers + " users.")
+            if (global.debugMode) console.log("[AUTH] Cached " + amountOfUsers + " users.")
         })
     }
     const res = cached.users.find((user) => user.id === id)
