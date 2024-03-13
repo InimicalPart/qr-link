@@ -1,6 +1,6 @@
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
 const secret = new Uint8Array(
@@ -9,6 +9,12 @@ const secret = new Uint8Array(
 
     
 export default async function UserProfile() {
+
+    //TODO: REMOVE
+    if (process.env.NODE_ENV === "production") {
+        return notFound()
+    }
+
 
     if (cookies()?.get("token")?.value) {
         let valid = await jwtVerify(cookies().get("token").value, secret, {
