@@ -5,7 +5,7 @@ import UAParser from "ua-parser-js";
 
 export class QRCode {
 
-    id: string;
+    id: Readonly<string>;
     type: string;
     data: RedirectQRCodeDataT|ScheduleQRCodeDataT|LocationQRCodeDataT|UserAgentQRCodeDataT;
     linked_to: string | null = null;
@@ -66,20 +66,6 @@ export class QRCode {
         })
     }
 
-    // private getKeys(obj: object, prefix?: string): string[] {
-    //     let keys = Object.keys(obj) as (keyof object)[]
-    //     let rtrn = []
-    //     for (let key of keys) {
-    //         if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
-    //             console.log(key)
-    //             rtrn.push(...this.getKeys(obj[key], prefix ? prefix + "." + key : key))
-    //         } else {
-    //             rtrn.push(prefix ? prefix + "." + key : key)
-    //         }
-    //     }
-    //     return rtrn
-    // }
-
     constructor(newInformation?: Partial<QRCode> | undefined) {
         if (newInformation) Object.assign(this, newInformation)
         this.addToUpdateLog({
@@ -95,7 +81,7 @@ export class QRCode {
             .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
             .setIssuedAt()
             .setExpirationTime('1m') //! 1 minute, should be enough for the other end to verify the JWT
-            .sign(new Uint8Array(Buffer.from(this.getEncryptionKey(), 'base64'),)) : null
+            .sign(new Uint8Array(Buffer.from(this.getEncryptionKey(), 'base64'))) : null
     }
 
     hasLocationRequirement() {
