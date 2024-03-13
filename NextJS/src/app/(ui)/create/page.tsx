@@ -37,9 +37,8 @@ export default async function Home() {
     } else {
         redirect("/login")
     }
-    console.log("valid")
 
-    const createSubmit = submit.bind(null, "create", {}, moment.tz.guess())
+    const createSubmit = submit.bind(null, "create", {})
     
     return (
       <div>

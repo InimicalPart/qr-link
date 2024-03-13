@@ -65,20 +65,15 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>, t
             updated.linked_to = tokenVerificationResult.user.id;
             break;
         case "expires":
-            if (global.QRCodeTable[id].expires == update.expires) break; //! no need to update if expires is the same
-            
+
             //! Needs to be a date or null
             if (((new Date(update.expires) as any) == "Invalid Date" || !(typeof (update.expires as any) == "string")) && update.expires != null) return new NextResponse(JSON.stringify({error: "INVALID_EXPIRES", message: "'update.expires' needs to be a date or null."}), {status:400});
             
-            if (update.expires) {
-                // Adjust to UTC
-                const minuteOffset = moment.tz(timezone).utcOffset()
-                const currentOffset = moment.tz().utcOffset()
-
-                const difference = minuteOffset - currentOffset
-
-                update.expires = moment(update.expires).subtract(difference, "minutes").toDate() // convert to UTC
-            }
+            //! Adjust to UTC if server's timezone isn't null or undefined
+            if (update.expires && timezone) {
+                update.expires = moment.tz(new Date(update.expires).toISOString().replace(/:[0-9]{2}\.[0-9]{3}Z.*$/gm, ""), timezone).toDate()
+            }            
+            if (global.QRCodeTable[id].expires == update.expires) break; //! no need to update if expires is the same
 
             updated.expires = update.expires;
             break;

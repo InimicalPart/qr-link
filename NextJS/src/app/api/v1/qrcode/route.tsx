@@ -159,7 +159,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
     
 
-
     if (expires) {
         // needs to be a date or null
         if (
@@ -173,13 +172,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 }), {status:400});
             }
 
-        // Adjust to UTC
-        const minuteOffset = moment.tz(request.nextUrl.searchParams.get("timezone")).utcOffset()
-        const currentOffset = moment.tz().utcOffset()
-
-        const difference = minuteOffset - currentOffset
-
-        expires = moment(expires).subtract(difference, "minutes").toDate() // convert to UTC
+        if (body.timezone) {   
+            // Adjust to server's timezone
+            expires = moment.tz(new Date(expires).toISOString().replace(/:[0-9]{2}\.[0-9]{3}Z.*$/gm, ""), body.timezone).toDate()
+        } else {
+            expires = new Date(expires)
+        }
     }
         
     if (settings) {
@@ -215,7 +213,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         name: name ? name : null,
         description: description ? description : null,
         linked_to: identifier ? identifier : null,
-        expires: expires ? new Date(expires) : null,
+        expires: expires ? expires : null,
         scanCount: 0,
         scanData: [],
         settings: {

@@ -49,11 +49,12 @@ const createSchema = z.object({
         required_error: "Timezone needs to be specified"
     }).nullable(),
     location_zones: z.string().nullable(),
-    user_agents: z.string().nullable()
+    user_agents: z.string().nullable(),
+    timezone: z.string()
     
 })
 
-export async function submit(submitType="create", qrCodeInfo:any={}, timezone:string, prevState: any, form:FormData) {
+export async function submit(submitType="create", qrCodeInfo:any={}, prevState: any, form:FormData) {
     "use server"
 
     const validatedFields = createSchema.safeParse({
@@ -78,7 +79,8 @@ export async function submit(submitType="create", qrCodeInfo:any={}, timezone:st
         schedule: form.get('schedule'),
         schedule_timezone: form.get('schedule_timezone'),
         location_zones: form.get('location_zones'),
-        user_agents: form.get('userAgents')
+        user_agents: form.get('userAgents'),
+        timezone: form.get('timezone') //! used for 'expires'
     })
 
     const additionalCheck = await additionalChecks(form)
@@ -126,7 +128,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, timezone:st
             }
         }
     })();
-
+    const timezone = validatedFields.data.timezone
 
     const JSONBody: Partial<QRCode> = {
         id: ID,
@@ -155,14 +157,19 @@ export async function submit(submitType="create", qrCodeInfo:any={}, timezone:st
         data: data
     }
 
-    // make request to process.env.API_URL + "/qrcode" (POST) with JSONBody, and if a token is available, add it to the headers under Authorization
-    const response = await fetch(`${(process.env.API_URL ?? "http://localhost:8080/api/v1")}/qrcode` + (submitType=="update"?"/"+qrCodeInfo.id:"") + "?timezone" + timezone, {
+    //! If we are updating the QR code, we need to provide the update key and send it to (PATCH) /qrcode/:id
+    //! If we are creating a new QR code, we need to send it to (POST) /qrcode
+    const response = await fetch(`${(process.env.API_URL ?? "http://localhost:8080/api/v1")}/qrcode` + (submitType=="update"?"/"+qrCodeInfo.id:""), {
         method: submitType=="update"?"PATCH":"POST",
         headers: {
             "Content-Type": "application/json",
             "Authorization": `${cookies().get("token").value}`
         },
-        body: JSON.stringify(submitType=="update"?{update_key:qrCodeInfo.update_key,update:JSONBody}:JSONBody),
+        body: JSON.stringify(
+            submitType == "update"
+                ? { update_key: qrCodeInfo.update_key, update: {...JSONBody, timezone}}
+                : {...JSONBody, timezone}
+            ),
         cache: "no-cache"
     })
     const responseData = await response.json()
@@ -372,6 +379,13 @@ async function additionalChecks(form: FormData) {
         }
     }
 
+
+    if (moment.tz.zone(form.get("timezone") as string) == null) {
+        returnData = {
+            ...returnData,
+            timezone: ["Invalid timezone"]
+        }
+    }
 
 
     if (Object.keys(returnData).length === 0) return {success: true}

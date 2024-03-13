@@ -81,7 +81,7 @@ export default async function Update({
     }
 
 
-    const updateSubmit = submit.bind(null, "update", qrCodeDetails, moment.tz.guess())
+    const updateSubmit = submit.bind(null, "update", qrCodeDetails)
     
     return (
         <div>
