@@ -14,6 +14,9 @@ export async function register(){
         const { MongoClient, MongoError } = await import("mongodb");
         const fs = await import("fs");
         console.log("[QRLI] Setting up backend...")
+
+        global.debugMode = process.env.NODE_ENV == "development"
+
         global.supportedUpdateKeys = [
             "type",
             "data",

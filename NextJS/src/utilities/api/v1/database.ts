@@ -292,7 +292,7 @@ export async function readQRCodeTable(storage=global.storageMethod) {
 export async function deleteQR(id: string) {
     return new Promise<void>(async (resolve, reject) => {
         if (global.storageMethod == "file") {
-            console.log(`[QR] Deleting QRCodeTable entry '${id}' from '${global.QRBackupFilePath}'...`);
+            if (global.debugMode) console.log(`[QR] Deleting QRCodeTable entry '${id}' from '${global.QRBackupFilePath}'...`);
             const {promises:fs} = await import("fs")
             let data = await readQRCodeTable("file")
             delete data[id]
@@ -300,7 +300,7 @@ export async function deleteQR(id: string) {
             );
             resolve()
         } else {
-            console.log("[DATA] Deleting QR-code " + id + " from the database...")
+            if (global.debugMode) console.log("[DATA] Deleting QR-code " + id + " from the database...")
             global.mongoClient.db("QRLink").collection("qrcodes").deleteOne({id: id}).then((status) => {
                 if (status.deletedCount == 0) {
                     console.log("[DATA] Failed to delete QR-code " + id + " from the database.")
@@ -315,7 +315,7 @@ export async function deleteQR(id: string) {
 export async function saveQR(id: string = null, obj: QRCode = new QRCode(), update:boolean=false) {
     return new Promise<void>(async (resolve, reject) => {
         if (global.storageMethod == "file") {
-            console.log(`[QR] Saving QRCodeTable to '${global.QRBackupFilePath}'...`);
+            if (global.debugMode) console.log(`[QR] Saving QRCodeTable to '${global.QRBackupFilePath}'...`);
             const {promises:fs} = await import("fs")
             await fs.writeFile(
                 global.QRBackupFilePath,
@@ -324,7 +324,7 @@ export async function saveQR(id: string = null, obj: QRCode = new QRCode(), upda
             resolve()
         } else {
             if (update) {
-                console.log("[DATA] Updating QR-code " + id + " in the database...")
+                if (global.debugMode) console.log("[DATA] Updating QR-code " + id + " in the database...")
                 global.mongoClient.db("QRLink").collection("qrcodes").updateOne({id: id}, {$set: Object.assign({},obj)}).then((status) => {
                     if (status.modifiedCount == 0) {
                         console.log("[DATA] Failed to update QR-code " + id + " in the database.")
@@ -332,7 +332,7 @@ export async function saveQR(id: string = null, obj: QRCode = new QRCode(), upda
                     resolve()
                 })
             } else {
-                console.log("[DATA] Inserting QR-code " + id + " into the database...");
+                if (global.debugMode) console.log("[DATA] Inserting QR-code " + id + " into the database...");
                 (obj as MongoQRCodeInformation).id = id 
                 global.mongoClient.db("QRLink").collection("qrcodes").insertOne(Object.assign({},obj)).then((status) => {
                     if (!status.acknowledged) {
