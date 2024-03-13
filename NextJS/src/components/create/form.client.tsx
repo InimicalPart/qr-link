@@ -7,14 +7,12 @@ import Actions from './actions.client';
 import Settings from './settings.client';
 import FormSubmit from './form-submit.client';
 import { useEffect, useState } from 'react';
-import { redirect } from 'next/navigation';
 import Swal from "sweetalert2-ql";
 import "@sweetalert2/theme-dark"
 import moment from 'moment-timezone';
 
 
 const initialState: {
-    id: string | null,
     name: string | null,
     description: string | null,
     expires: string | Date | null,
@@ -37,7 +35,6 @@ const initialState: {
     submit_button: string | null
 
 } = {
-    id: null,
     name: null,
     description: null,
     expires: null,
@@ -73,9 +70,6 @@ export default function Form({
     delQR?: () => any
 }) {
     const [state, formAction] = useFormState(submit, initialState)
-
-    const [updateKeyShown, setUpdateKeyShown] = useState(false)
-
 
     const updating = qrCodeInfo?.id ? true : false
     useEffect(()=>{
@@ -125,24 +119,6 @@ export default function Form({
     
     }
 
-    function handleIDChange(evt: { target: { value: string; }; }) {
-        //is space? cancel
-        if (evt.target.value.includes(" ")) {
-            evt.target.value = evt.target.value.replace(/ /g, "")
-            return
-        }
-        // if longer than 50, cancel
-        if (evt.target.value.length > 50) {
-            evt.target.value = evt.target.value.substring(0, 50)
-            return
-        }
-
-        if ((!/^[a-zA-Z0-9_.-]*$/.test(evt.target.value))) {
-            evt.target.value = evt.target.value.replace(/[^a-zA-Z0-9_.-]/g, "")
-            return
-        }
-    }
-
     function toDTFormat(date: Date) {
         var padDate = function (num: number) {
             return (num < 10 ? "0" : "") + num;
@@ -164,25 +140,6 @@ export default function Form({
         <form id="create-form" action={formAction} style={{
             position:"relative"
         }}>
-        <div id="qr-id-cntr" className="QRL-container">
-            <p className="qr-info-label flex justify-center items-center flex-wrap"><b>ID</b> <span style={{
-                fontSize: '8pt',
-                flexBasis: '100%',
-                marginTop: -5
-            }}>(optional)</span></p>
-            <input className="create" id="qr-id" name="id" style={{
-                width: 300,
-                border: state?.id ? "1px red solid" : '1px black solid',
-                borderRadius: 8,
-                fontSize: 13,
-                textAlign: 'center'
-            }} autoCapitalize="false" spellCheck="false" type="text" placeholder="Leave blank for random" maxLength={50} onChange={handleIDChange} defaultValue={qrCodeInfo.id}/>
-            <p className="qr-info-label flex justify-center items-center flex-wrap" style={{
-                fontSize: "9pt",
-                color: "red",
-                display: state?.id ? "block" : "none"
-            }}>{state?.id}</p>
-        </div>
         <div id="qr-name-cntr" className="QRL-container">
             <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Name</b><span style={{
                 fontSize: '8pt',
@@ -248,7 +205,7 @@ export default function Form({
                 return new Promise((resolve, reject) => {
                     Swal.fire({
                         title: "Are you sure?",
-                        text: "You're about to delete QRLink-code with ID " + (document.getElementById("qr-id") as HTMLInputElement).value + ". This action is irreversible. Are you sure you want to continue?",
+                        text: "You're about to delete QRLink-code with ID " + qrCodeInfo.id + ". This action is irreversible. Are you sure you want to continue?",
                         icon: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#3085d6",
@@ -278,7 +235,6 @@ export default function Form({
             var toastMixin = Swal.mixin({
                 toast: true,
                 icon: 'success',
-                title: 'General Title',
                 animation: false,
                 position: 'top-right',
                 showConfirmButton: false,
@@ -292,7 +248,7 @@ export default function Form({
 
             toastMixin.fire({
                 animation: true,
-                title: 'QRLink-code with ID '+(document.getElementById("qr-id") as HTMLInputElement).value+' was deleted successfully'
+                title: 'QRLink-code with ID '+qrCodeInfo.id+' was deleted successfully'
             })
         }} >
             <button type="submit" className="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Delete QR-code</button>

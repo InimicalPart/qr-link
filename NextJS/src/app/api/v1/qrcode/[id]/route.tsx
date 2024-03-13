@@ -206,14 +206,14 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
       }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
   
+    const timezone = update.timezone ?? null
+    delete update.timezone
     if (Object.keys(update).filter((key) => !global.supportedUpdateKeys.includes(key)).length != 0) {
       return new NextResponse(JSON.stringify({
         error: "INVALID_ARGUMENTS",
         message: "Invalid arguments provided: " + Object.keys(update).filter((key) => !global.supportedUpdateKeys.includes(key)).join(", "),
       }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
-    const timezone = update.timezone ?? null
-    delete update.timezone
     const wasAnytingUpdated = await validateAndDoUpdate(id, update, timezone)
     if (wasAnytingUpdated instanceof NextResponse) {
         //! validateAndDoUpdate had an error

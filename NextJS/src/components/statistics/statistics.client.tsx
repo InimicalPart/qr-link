@@ -608,9 +608,6 @@ export function StatisticsPage(
                         case "today":
                             rtrn.push("Today");
                             break;
-                        case "id":
-                            rtrn.push("ID was changed");
-                            break;
                         default:
                             rtrn.push(key);
                             break;

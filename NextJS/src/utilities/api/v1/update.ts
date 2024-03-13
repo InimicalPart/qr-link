@@ -22,7 +22,7 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>, t
                 if (!global.supportedTypes.includes(update.type)) return new NextResponse(JSON.stringify({error: "UNSUPPORTED_TYPE", message: "Type not supported. Supported types: " + global.supportedTypes.join(", ")}), {status: 400, headers: { "Content-Type": "application/json" } });
                 //! Needs to contain a valid data object
                 if (!update.data) return new NextResponse(JSON.stringify({ error: "NO_DATA", message: "No data provided." }), {status: 400, headers: { "Content-Type": "application/json" } });
-                if (!(typeof (update.data as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_DATA", message: "'update.data' needs to be an object.",}), {status: 400, headers: { "Content-Type": "application/json" } });
+                if (!(typeof (update.data as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_DATA", message: "'data' needs to be an object.",}), {status: 400, headers: { "Content-Type": "application/json" } });
                 const dataValidity = await checkDataValidity(update.type, update.data, id);
                 //! Return error if data is invalid for specified type
                 if (!dataValidity.valid) return new NextResponse(JSON.stringify({ error: dataValidity.error, message: dataValidity.message }), {status: 400, headers: { "Content-Type": "application/json" } });
@@ -34,7 +34,7 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>, t
             if (JSON.stringify(global.QRCodeTable[id].data) == JSON.stringify({...global.QRCodeTable[id].data,...update.data})) break; //! no need to update if data is the same
             
             //! Needs to be an object
-            if (!(typeof (update.data as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_DATA", message: "'update.data' needs to be an object.",}), {status: 400, headers: { "Content-Type": "application/json" } });
+            if (!(typeof (update.data as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_DATA", message: "'data' needs to be an object.",}), {status: 400, headers: { "Content-Type": "application/json" } });
             //! Needs to be valid for specified type
             const dataValidity2 = await checkDataValidity(global.QRCodeTable[id].type, update.data, id);
             if (!dataValidity2.valid) return new NextResponse(JSON.stringify({error: dataValidity2.error, message: dataValidity2.message }), {status: 400, headers: { "Content-Type": "application/json" } });
@@ -43,7 +43,7 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>, t
         case "linked_to":
             
             //! Needs to be a string
-            if (!(typeof (update.linked_to as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_LINKED_TO", message: "'update.linked_to' needs to be a string."}), {status: 400, headers: { "Content-Type": "application/json" } });
+            if (!(typeof (update.linked_to as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_LINKED_TO", message: "'linked_to' needs to be a string."}), {status: 400, headers: { "Content-Type": "application/json" } });
             
             let token = update.linked_to
             let tokenVerificationResult = await getUser(token)
@@ -59,7 +59,7 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>, t
         case "expires":
 
             //! Needs to be a date or null
-            if (((new Date(update.expires) as any) == "Invalid Date" || !(typeof (update.expires as any) == "string")) && update.expires != null) return new NextResponse(JSON.stringify({error: "INVALID_EXPIRES", message: "'update.expires' needs to be a date or null."}), {status: 400, headers: { "Content-Type": "application/json" } });
+            if (((new Date(update.expires) as any) == "Invalid Date" || !(typeof (update.expires as any) == "string")) && update.expires != null) return new NextResponse(JSON.stringify({error: "INVALID_EXPIRES", message: "'expires' needs to be a date or null."}), {status: 400, headers: { "Content-Type": "application/json" } });
             
             //! Adjust to UTC if server's timezone isn't null or undefined
             if (update.expires && timezone) {
@@ -69,25 +69,11 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>, t
 
             updated.expires = update.expires;
             break;
-        case "id":
-            if (id == update.id) break; //! no need to update if id is the same
-            
-            //! Needs to be a string
-            if (!(typeof (update.id as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_ID", message: "'update.id' needs to be a string."}), {status: 400, headers: { "Content-Type": "application/json" } });
-            
-            if (!/^[a-zA-Z0-9_.-]*$/.test(update.id)) return new NextResponse(JSON.stringify({error: "INVALID_ID", message: "'update.id' can only contain alphanumeric characters, underscores and dashes and periods."}), {status: 400, headers: { "Content-Type": "application/json" } });
-            
-            
-            //! Needs to be a valid ID
-            if (global.QRCodeTable[update.id]) return new NextResponse(JSON.stringify({error: "ID_IN_USE", message: "ID already in use."}), {status: 400, headers: { "Content-Type": "application/json" } });
-            
-            updated.id = update.id;
-            break;
         case "description":
             if (global.QRCodeTable[id].description == update.description) break; //! no need to update if description is the same
             
             //! Needs to be a string
-            if (!(typeof (update.description as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_DESCRIPTION", message: "'update.description' needs to be a string."}), {status: 400, headers: { "Content-Type": "application/json" } });
+            if (!(typeof (update.description as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_DESCRIPTION", message: "'description' needs to be a string."}), {status: 400, headers: { "Content-Type": "application/json" } });
             
             //! no longer than 200
             if (update.description.length > 200) return new NextResponse(JSON.stringify({error: "INVALID_DESCRIPTION", message: "Description needs to be less than 200 characters."}), {status: 400, headers: { "Content-Type": "application/json" } });
@@ -98,7 +84,7 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>, t
             if (global.QRCodeTable[id].name == update.name) break; //! no need to update if name is the same
             
             //! Needs to be a string
-            if (!(typeof (update.name as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_NAME", message: "'update.name' needs to be a string."}), {status: 400, headers: { "Content-Type": "application/json" } });
+            if (!(typeof (update.name as any) == "string")) return new NextResponse(JSON.stringify({error: "INVALID_NAME", message: "'name' needs to be a string."}), {status: 400, headers: { "Content-Type": "application/json" } });
             
             //! no longer than 50
             if (update.name.length > 50) return new NextResponse(JSON.stringify({error: "INVALID_NAME", message: "Name needs to be less than 50 characters."}), {status: 400, headers: { "Content-Type": "application/json" } });
@@ -107,58 +93,58 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>, t
             break;
         case "settings":
             //! Needs to be an object
-            if (!(typeof (update.settings as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings' needs to be an object."}), {status: 400, headers: { "Content-Type": "application/json" } });
+            if (!(typeof (update.settings as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings' needs to be an object."}), {status: 400, headers: { "Content-Type": "application/json" } });
             
             if (JSON.stringify(global.QRCodeTable[id].settings) == JSON.stringify(update.settings)) break; //! no need to update if settings are the same
             
             //settings cannot be empty
-            if (Object.keys(update.settings).length == 0) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings' cannot be empty."}), {status: 400, headers: { "Content-Type": "application/json" } });
+            if (Object.keys(update.settings).length == 0) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings' cannot be empty."}), {status: 400, headers: { "Content-Type": "application/json" } });
             
             //! Needs to be a valid settings object
             if (update.settings.getScanData) {
                 //! Needs to be a boolean
-                if (!(typeof (update.settings.getScanData as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.getScanData' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
+                if (!(typeof (update.settings.getScanData as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings.getScanData' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
             }
             if (update.settings.scanData) {
                 //! Needs to be an object
-                if (!(typeof (update.settings.scanData as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData' needs to be an object."}), {status: 400, headers: { "Content-Type": "application/json" } });
+                if (!(typeof (update.settings.scanData as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings.scanData' needs to be an object."}), {status: 400, headers: { "Content-Type": "application/json" } });
                 //! Needs to be a valid scanData object
                 if (update.settings.scanData.information.fingerprint) {
                     //! Needs to be a boolean
-                    if (!(typeof (update.settings.scanData.information.fingerprint as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.fingerprint' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
+                    if (!(typeof (update.settings.scanData.information.fingerprint as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings.scanData.information.fingerprint' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
                 }
                 if (update.settings.scanData.information["user-agent"]) {
                     //! Needs to be a boolean
-                    if (!(typeof (update.settings.scanData.information["user-agent"] as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.user-agent' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
+                    if (!(typeof (update.settings.scanData.information["user-agent"] as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings.scanData.information.user-agent' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
                 }
                 if (update.settings.scanData.information.ip) {
                     //! Needs to be a boolean
-                    if (!(typeof (update.settings.scanData.information.ip as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.ip' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
+                    if (!(typeof (update.settings.scanData.information.ip as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings.scanData.information.ip' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
                 }
                 if (update.settings.scanData.information.location) {
                     //! Needs to be a boolean
-                    if (!(typeof (update.settings.scanData.information.location as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.information.location' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
+                    if (!(typeof (update.settings.scanData.information.location as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings.scanData.information.location' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
                 }
             }
             if (update.settings.requirements) {
                 //! Needs to be an object
-                if (!(typeof (update.settings.requirements as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.requirements' needs to be an object."}), {status: 400, headers: { "Content-Type": "application/json" } });
+                if (!(typeof (update.settings.requirements as any) == "object")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings.requirements' needs to be an object."}), {status: 400, headers: { "Content-Type": "application/json" } });
                 //! Needs to be a valid requirements object
                 if (update.settings.requirements.location) {
                     //! Needs to be a boolean
-                    if (!(typeof (update.settings.requirements.location as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.requirements.location' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
+                    if (!(typeof (update.settings.requirements.location as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings.requirements.location' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
                 }
                 if (update.settings.requirements["user-agent"]) {
                     //! Needs to be a boolean
-                    if (!(typeof (update.settings.requirements["user-agent"] as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.requirements.user-agent' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
+                    if (!(typeof (update.settings.requirements["user-agent"] as any) == "boolean")) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings.requirements.user-agent' needs to be a boolean."}), {status: 400, headers: { "Content-Type": "application/json" } });
                 }
             }
             if (update.settings.scanData.sendToURL == true) {
                 // needs to also contain a valid JWT encryption key if sendToURL is true
                 //! JWTEncryptionKey needs to be provided or already defined
-                if (!update.settings.scanData.JWTEncryptionKey && !global.QRCodeTable[id].settings.scanData.JWTEncryptionKey) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.JWTEncryptionKey' needs to be provided."}), {status: 400, headers: { "Content-Type": "application/json" } });
+                if (!update.settings.scanData.JWTEncryptionKey && !global.QRCodeTable[id].settings.scanData.JWTEncryptionKey) return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings.scanData.JWTEncryptionKey' needs to be provided."}), {status: 400, headers: { "Content-Type": "application/json" } });
                 //! Needs to be a string and not empty
-                if (!(typeof (update.settings.scanData.JWTEncryptionKey as any) == "string") || update.settings.scanData.JWTEncryptionKey.trim() == "") return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'update.settings.scanData.JWTEncryptionKey' needs to be a non-empty string."}), {status: 400, headers: { "Content-Type": "application/json" } });
+                if (!(typeof (update.settings.scanData.JWTEncryptionKey as any) == "string") || update.settings.scanData.JWTEncryptionKey.trim() == "") return new NextResponse(JSON.stringify({error: "INVALID_SETTINGS", message: "'settings.scanData.JWTEncryptionKey' needs to be a non-empty string."}), {status: 400, headers: { "Content-Type": "application/json" } });
             }
 
 
