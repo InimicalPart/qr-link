@@ -79,10 +79,6 @@ const qrCodeHTML = `<div style="font-family: 'Inter', sans-serif;min-height:100%
     <p style="margin:0px 0px 5px 0px;max-width:500px;text-align:center;position:relative;left:50%;transform:translateX(-50%);overflow-wrap:break-word" id="qr-id-cntr">ID:<br><b>
         <span id="qr-id">${id}</span>
     </b></p>
-    ${qrcode.update_key ? `
-    <p style="margin:0px 0px 5px 0px;max-width:500px;text-align:center;position:relative;left:50%;transform:translateX(-50%);overflow-wrap:break-word" id="qr-id-cntr">Update Key:<br><b>
-        <span id="qr-updatekey">${qrcode.update_key}</span>
-    </b></p>` : ""}
     <p style="margin:0px 0px 5px 0px;max-width:500px;text-align:center;position:relative;left:50%;transform:translateX(-50%);overflow-wrap:break-word" id="qr-name-cntr">Name:<br><b>
         <span id="qr-name">${qrcode.name ? qrcode.name : "---"}</span>
     </b></p>

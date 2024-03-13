@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
       return new NextResponse(JSON.stringify({
         error: "INVALID_ID",
         message: "Invalid ID provided.",
-      }), { status: 400 });
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     // Make sure request is fresh
     if (!request.nextUrl.searchParams.get("_")) {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
       const then = new Date(parseInt(Buffer.from(request.nextUrl.searchParams.get("_") as string, "base64").toString("utf-8").split("").reverse().join("")))
       const now = new Date().getTime()
       if (now - then.getTime() > 2000 || then.getTime() - now > 0) { 
-        return new NextResponse(JSON.stringify({error: "INVALID", message: "This request is invalid."}), {status: 400})
+        return new NextResponse(JSON.stringify({error: "INVALID", message: "This request is invalid."}), {status: 400, headers: { "Content-Type": "application/json" } });
       }
     }
     console.log("[-QR-] QR-code was scanned: " + id);
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
             <body>
                 <p>This QR-code has expired.</p>
             </body>
-            </html>`, { status: 400 });
+            </html>`, { status: 400, headers: { "Content-Type": "text/html" } });
         }
     }
     
@@ -343,7 +343,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
             <body>
                 <p>Something went wrong when we tried to redirect you. This error has been logged.</p>
             </body>
-            </html>`, { status: 500 });
+            </html>`, { status: 500, headers: { "Content-Type": "text/html" } });
     
     }
 }

@@ -234,8 +234,9 @@ export async function ensureDBSetup(clientORmCS: MongoClient | string) {
     try {
         const db = dbClient.db("QRLink");
         const collections = (await db.listCollections().toArray()).map((collection) => collection.name);
-        if (!collections.includes("qrcodes")) {
+        if (!collections.includes("qrcodes") || !collections.includes("apikeys")) {
             await db.createCollection("qrcodes");
+            await db.createCollection("apikeys");
             console.log("[DATA] Database and collection setup was successful.")
         } else {
             console.log("[DATA] Database and collection are already set up correctly.")
@@ -311,6 +312,95 @@ export async function deleteQR(id: string) {
     });
 
 }
+export async function getAPIKeys() {
+    return new Promise<{
+        [key: string]: {
+            belongs_to: string,
+            created: Date,
+            last_used: Date,
+            permissions: Array<"create"|"update"|"delete"|"read">
+        }
+    }>(async (resolve, reject) => {
+        if (global.storageMethod == "file") {
+            if (global.debugMode) console.log(`[DATA] Reading APIKeys from '${global.APIBackupFilePath}'...`);
+            const {promises:fs} = await import("fs")
+            const data = await fs.readFile(global.APIBackupFilePath, "utf8");
+            const parsed = parseJSONC(data)
+            resolve(parsed);
+        } else {
+            if (global.debugMode) console.log("[DATA] Reading APIKeys from the database...")
+            global.mongoClient.db("QRLink").collection("apikeys").find({}).toArray().then((results) => {
+                resolve(results.reduce((acc:{
+                    [key:string]: any
+                }, cur) => {
+                    acc[cur.id] = cur
+                    delete acc[cur.id]._id
+                    delete acc[cur.id].id
+                    return acc
+                }, {}))
+            })
+        }
+    });
+}
+
+export async function createAPIKey(name: string, owner: string, permissions: Array<"create"|"update"|"delete"|"read">) {
+
+    //make sure id doesnt already exist, Object.keys(global.APIKeys)
+    let id = await randomString(32)
+    while (Object.keys(global.APIKeyTable).includes(id)) {
+        id = await randomString(32)
+    }
+    let key = await randomString(64)
+    global.APIKeyTable[id] = {
+        key: key,
+        name: name,
+        belongs_to: owner,
+        created: new Date(),
+        last_used: null,
+        permissions: permissions
+    }
+
+    if (global.storageMethod == "file") {
+        if (global.debugMode) console.log(`[DATA] Saving APIKeys to '${global.APIBackupFilePath}'...`);
+        const {promises:fs} = await import("fs")
+        await fs.writeFile(global.APIBackupFilePath, JSON.stringify(global.APIKeyTable));
+    } else {
+        if (global.debugMode) console.log("[DATA] Inserting APIKey " + id + " into the database...");
+        global.mongoClient.db("QRLink").collection("apikeys").insertOne({
+            id: id,
+            ...global.APIKeyTable[id]
+        })
+    }
+
+    return {id, ...global.APIKeyTable[id]}
+}
+
+export async function deleteAPIKey(id: string) {
+    const copy = {...global.APIKeyTable[id]}
+    delete global.APIKeyTable[id]
+    if (global.storageMethod == "file") {
+        if (global.debugMode) console.log(`[DATA] Deleting APIKey '${id}' from '${global.APIBackupFilePath}'...`);
+        const {promises:fs} = await import("fs")
+        await fs.writeFile(global.APIBackupFilePath, JSON.stringify(global.APIKeyTable));
+    } else {
+        if (global.debugMode) console.log("[DATA] Deleting APIKey " + id + " from the database...")
+        global.mongoClient.db("QRLink").collection("apikeys").deleteOne({id: id})
+    }
+    return copy
+}
+
+export async function updateAPIKeyName(id: string, name: string) {
+    //! You will only be able to update the name of the API key, nothing else.
+    global.APIKeyTable[id].name = name
+    if (global.storageMethod == "file") {
+        if (global.debugMode) console.log(`[DATA] Updating APIKey '${id}' in '${global.APIBackupFilePath}'...`);
+        const {promises:fs} = await import("fs")
+        await fs.writeFile(global.APIBackupFilePath, JSON.stringify(global.APIKeyTable));
+    } else {
+        if (global.debugMode) console.log("[DATA] Updating APIKey " + id + " in the database...")
+        global.mongoClient.db("QRLink").collection("apikeys").updateOne({id: id}, {$set: {name: name}})
+    }
+} 
 
 export async function saveQR(id: string = null, obj: QRCode = new QRCode(), update:boolean=false) {
     return new Promise<void>(async (resolve, reject) => {
@@ -347,7 +437,7 @@ export async function saveQR(id: string = null, obj: QRCode = new QRCode(), upda
 
 }
 
-export async function convertFile2MongoDB() {
+export async function syncMongoWithFile() {
     if (global.storageMethod == "file") return
     let fileData: QRCodeTable = await readQRCodeTable("file")
     let mongoData: QRCodeTable = global.QRCodeTable

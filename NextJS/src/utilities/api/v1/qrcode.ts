@@ -8,7 +8,6 @@ export class QRCode {
     id: string;
     type: string;
     data: RedirectQRCodeDataT|ScheduleQRCodeDataT|LocationQRCodeDataT|UserAgentQRCodeDataT;
-    update_key: string;
     linked_to: string | null = null;
     created: Date = new Date();
     updated: Date = new Date();

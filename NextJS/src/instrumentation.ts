@@ -7,7 +7,7 @@ declare const global: QRLinkGlobal
 
 export async function register(){
     if (process.env.NEXT_RUNTIME === 'nodejs') {
-        const { bareBonesConnection, convertFile2MongoDB, ensureDBSetup, readQRCodeTable } = await import("./utilities/api/v1/database");
+        const { bareBonesConnection, syncMongoWithFile, ensureDBSetup, readQRCodeTable, getAPIKeys } = await import("./utilities/api/v1/database");
         const { saveQR } = await import("./utilities/api/v1/database");
         const { doesUserExist, fetchUsersCache } = await import("./utilities/api/v1/authentication");
 
@@ -20,7 +20,6 @@ export async function register(){
         global.supportedUpdateKeys = [
             "type",
             "data",
-            "update_key",
             "linked_to",
             "expires",
             "id",
@@ -31,10 +30,15 @@ export async function register(){
         global.supportedTypes = ["redirect", "schedule", "location", "user-agent"]
         global.storageMethod = "file";
         global.QRBackupFilePath = process.platform == "win32" ? process.env.USERPROFILE + "\\Documents\\QRLink\\qrcodes.jsonc" : "/srv/QRLink/qrcodes.jsonc";
+        global.APIBackupFilePath = process.platform == "win32" ? process.env.USERPROFILE + "\\Documents\\QRLink\\apikeys.jsonc" : "/srv/QRLink/apikeys.jsonc";
         // create the backup file/folders if they don't exist
         if (!fs.existsSync(global.QRBackupFilePath)) {
             fs.mkdirSync(process.platform == "win32" ? global.QRBackupFilePath.split("\\").slice(0, -1).join("\\") : global.QRBackupFilePath.split("/").slice(0, -1).join("/"), { recursive: true });
             fs.writeFileSync(global.QRBackupFilePath, JSON.stringify({}));
+        }
+        if (!fs.existsSync(global.APIBackupFilePath)) {
+            fs.mkdirSync(process.platform == "win32" ? global.APIBackupFilePath.split("\\").slice(0, -1).join("\\") : global.APIBackupFilePath.split("/").slice(0, -1).join("/"), { recursive: true });
+            fs.writeFileSync(global.APIBackupFilePath, JSON.stringify({}));
         }
         global.mongoConnectionString = process.env.MONGO_URL ? `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_URL}/${process.env.MONGO_USE_TLS=="true" ? "?tls=true" : ""}` : "mongodb://qrlink:unknown@localhost:27017/"
         console.log("[QRLI] Connection String: " + global.mongoConnectionString.replace(process.env.MONGO_PASSWORD, "[REDACTED]"))
@@ -89,14 +93,14 @@ export async function register(){
             }
         }
         global.QRCodeTable = await readQRCodeTable()
-        
-        await convertFile2MongoDB()
+        await syncMongoWithFile()
+        global.APIKeyTable = await getAPIKeys()
 
 
         if (process.env.NODE_ENV == "production") { 
             //! Skip doing this in development, so we don't somehow overload WorkOS/AuthKit
-            console.log("[QRLI] Removing QR-codes that have a non-existing user linked to them... (background)");
-            let allLinkedIDs = Object.values(global.QRCodeTable as QRCodeTable).map(a=>a.linked_to)
+            console.log("[QRLI] Removing QR-codes & API-keys that have a non-existing user linked to them... (background)");
+            let allLinkedIDs = [...Object.values(global.QRCodeTable as QRCodeTable).map(a=>a.linked_to),...Object.values(global.APIKeyTable as APIKeys).map(a=>a.belongs_to)]
             let uniqueLinkedIDs = allLinkedIDs.filter((a, b) => allLinkedIDs.indexOf(a) === b)
             //! Cache all users, so that we don't call AuthKit for every single user
             await fetchUsersCache().then((amountOfUsers)=>{
@@ -105,11 +109,17 @@ export async function register(){
             for (let linked_user_id of uniqueLinkedIDs) {
                 doesUserExist(linked_user_id).then((exists) => {
                     if (!exists) {
-                        console.log("[AUTH] User with ID '"+linked_user_id+"' does not exist.")
+                        if (global.debugMode) console.log("[AUTH] User with ID '"+linked_user_id+"' does not exist.")
                         for (let key of Object.keys(global.QRCodeTable)) {
                             if (global.QRCodeTable[key].linked_to == linked_user_id) {
                                 delete global.QRCodeTable[key]
-                                console.log("[QRLI] Removed QR-code " + key + " as it was linked to a non-existing user. (ID: " + linked_user_id + ")")
+                                if (global.debugMode) console.log("[QRLI] Removed QR-code " + key + " as it was linked to a non-existing user. (ID: " + linked_user_id + ")")
+                            }
+                        }
+                        for (let key of Object.keys(global.APIKeyTable)) {
+                            if (global.APIKeyTable[key].belongs_to == linked_user_id) {
+                                delete global.APIKeyTable[key]
+                                if (global.debugMode) console.log("[QRLI] Removed API-key " + key + " as it was linked to a non-existing user. (ID: " + linked_user_id + ")")
                             }
                         }
                     } else console.log("[AUTH] User with ID '"+linked_user_id+"' does exist.")

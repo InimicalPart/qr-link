@@ -23,6 +23,8 @@ type SearchParamProps = {
     searchParams: Record<string, string> | null | undefined
 }
 
+const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
+
 export default async function Home({
     searchParams
 }:SearchParamProps) {
@@ -69,8 +71,8 @@ export default async function Home({
                     message: res.error == "INVALID_ID" ? "The scanned QRLink code has a non-existant ID. Please try again..." : "Your session has expired. Please log in again."
                 }
             } else {
-                // if we can see the update key (meaning we have the authorization to manage)
-                if (res.update_key) {
+                // if we can see the update settings (meaning we have the authorization to manage) we redirect to the manage page
+                if (res.settings) {
                     return {
                         valid: true,
                         redirect_to: `/manage/${ID}`
@@ -94,12 +96,12 @@ export default async function Home({
 
 
     if (cookies()?.get("token")?.value) {
-        let valid = false
-        await jwtVerify(cookies().get("token").value, secret).then(()=>{
-            valid = true
-        }).catch(()=>{
-            valid = false
-        })
+        let valid = await jwtVerify(cookies().get("token").value, secret, {
+            audience: strippedBaseURL,
+            issuer: strippedBaseURL,
+            algorithms: ["HS256"],
+            requiredClaims: ["exp", "iat", "iss", "aud"],
+        }).then(()=>true).catch(()=>false)
         if (!valid) redirect("/login")
     } else {
         redirect("/login")

@@ -12,38 +12,41 @@ const workos = new WorkOS(process.env.WORKOS_API_KEY);
 const clientId = process.env.WORKOS_CLIENT_ID;
 
 export async function GET(req: NextRequest) {
-  // The authorization code returned by AuthKit
-  const code = req.nextUrl.searchParams.get('code');
 
-  const { user } = await workos.userManagement.authenticateWithCode({
-    code,
-    clientId,
-  });
+    //! The authorization code returned by AuthKit
+    const code = req.nextUrl.searchParams.get('code');
 
-  // Cleanup params and redirect to homepage
+    const { user } = await workos.userManagement.authenticateWithCode({
+        code,
+        clientId,
+    });
+
+    //! Cleanup params and redirect to homepage
     const response = NextResponse.redirect(new URL('/dashboard', process.env.BASE_URL))
+    const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
+  
+    //! Create a JWT with the user's information
 
-  // Create a JWT with the user's information
-  const token = await new SignJWT({
-    // Here you might lookup and retrieve user details from your database
-    user,
-  })
-    .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-    .setIssuedAt()
-    .setExpirationTime('1w')
-    .sign(secret);
+    const token = await new SignJWT({
+        user,
+    })
+        .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+        .setIssuedAt()
+        .setIssuer(strippedBaseURL)
+        .setAudience(strippedBaseURL)
+        .setExpirationTime('1w')
+        .sign(secret);
 
 
-  // Store in a cookie
-  response.cookies.set({
-    name: 'token',
-    value: token,
-    path: '/',
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-
-  });
+    // Store in a cookie
+    response.cookies.set({
+        name: 'token',
+        value: token,
+        path: '/',
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+    });
 
   return response;
 }

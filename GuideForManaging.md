@@ -95,7 +95,6 @@ Below is an example of what a QRLink-code's object looks like:
       }
     ]
   },
-  "update_key": "80970bdf5309ffec408383bd48d8f6d76e6181f1898ae0b6956d9f90325b5aeb", // The secret key that is used to update the QR-code, this property is optional. If this property is not provided, QRLink will automatically generate one for you.
   "expires": null, // The date and time at which the QRLink-code expires (in the YYYY-MM-DDTHH:mm:ss.sssZ format (ISO 8601 format)), this property is optional. If this property is not provided, the QRLink-code will never expire.
   "id": "08cc49d5-5ab2-45d2-a26f-a4abf53ca7c9" // The ID of the QRLink-code. This property is optional. If this property is not provided, QRLink will automatically generate one for you.
 }
