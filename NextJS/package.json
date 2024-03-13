@@ -1,6 +1,6 @@
 {
   "name": "qrlink-nextjs",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "private": true,
   "scripts": {
     "dev": "npx next dev -p 8080",

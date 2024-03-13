@@ -16,7 +16,7 @@ export const metadata: Metadata = {
  
 
 export default function Home() {
-    if (process.env.NODE_ENV !== "development") {
+    if (process.env.NODE_ENV === "production") {
         return notFound()
     }
 //     useEffect(() => {
