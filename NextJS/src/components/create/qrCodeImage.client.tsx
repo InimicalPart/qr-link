@@ -22,7 +22,7 @@ export default function QRCodeImage({
         generateQRCode().then((dataurl)=>{
             setDataURL(dataurl)
         }) 
-    }, [API_URL])
+    }, [API_URL, qrCodeDetails.id])
 
 
 
