@@ -297,7 +297,7 @@ export class QRCode {
 
         return this.update_log
             .filter((a: { date: Date; update: {[key:string]:any}}) => (a.date >= from && a.date <= to))
-            .filter((a: { date: Date; update: {[key:string]:any}}) => Object.keys(a.update).some(b => b.startsWith("settings.scanData") || b == "id" || b == "created")).map((a: { date: Date; update: {[key:string]:any}}) => {
+            .filter((a: { date: Date; update: {[key:string]:any}}) => Object.keys(a.update).some(b => b.startsWith("settings.scanData") || b == "created")).map((a: { date: Date; update: {[key:string]:any}}) => {
                 return {
                     date: a.date,
                     update: a.update

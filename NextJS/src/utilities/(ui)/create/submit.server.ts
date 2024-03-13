@@ -3,59 +3,52 @@ import moment from "moment-timezone"
 import { cookies } from "next/headers"
 import { z } from "zod"
 
-const createSchema = z.object({
-    id: z.string({
-            invalid_type_error: "ID must be a string"
-        }).max(50, {
-            message: "ID must be at most 50 characters"
-        }).refine(value=>/^[a-zA-Z0-9_.-]*$/.test(value),{
-            message: "ID can only contain alphanumeric characters, underscores and dashes and periods"
-        }).refine(value=>!/^-|-$|^\.|\.$|-{2,99}|\.{2,99}/g.test(value), {
-            message: "ID cannot start or end with a dash or period, or contain more than 2 dashes or periods in a row"
-        }).nullable(),
-    name: z.string().max(50, {
-        message: "Name must be at most 50 characters"
-    }).nullable(),
-    description: z.string().max(200, {
-        message: "Description must be at most 200 characters"
-    }).nullable(),
-    expires: z.string().nullable(),
-    expires_never_checkbox: z.string().nullable(),
-    grab_scan_data: z.string().nullable(),
-    grab_device_fingerprint: z.string().nullable(),
-    grab_ip_address: z.string().nullable(),
-    grab_user_agent: z.string().nullable(),
-    grab_location: z.string().nullable(),
-    require_location: z.string().nullable(),
-    require_user_agent: z.string().nullable(),
-    send_to_redirect: z.string().nullable(),
-    jwt_singing_key: z.string().max(100, {
-        message: "JWT Signing Key must be at most 100 characters"
-    }).nullable(),
-    type: z.string().min(1,{
-        message: "You need to specify an action"
-    }),
-    
-    redirect_redirect_to: z.string().min(1,{
-        message: "Redirect to must be at least 1 character"
-    }).nullable(),    
-    redirect_after_expiry: z.string().nullable(),
-
-    schedule: z.string().nullable(),
-    schedule_timezone: z.string({
-        required_error: "Timezone needs to be specified"
-    }).nullable(),
-    location_zones: z.string().nullable(),
-    user_agents: z.string().nullable(),
-    timezone: z.string()
-    
-})
 
 export async function submit(submitType="create", qrCodeInfo:any={}, prevState: any, form:FormData) {
     "use server"
 
+    const createSchema = z.object({
+        name: z.string().max(50, {
+            message: "Name must be at most 50 characters"
+        }).nullable(),
+        description: z.string().max(200, {
+            message: "Description must be at most 200 characters"
+        }).nullable(),
+        expires: z.string().nullable(),
+        expires_never_checkbox: z.string().nullable(),
+        grab_scan_data: z.string().nullable(),
+        grab_device_fingerprint: z.string().nullable(),
+        grab_ip_address: z.string().nullable(),
+        grab_user_agent: z.string().nullable(),
+        grab_location: z.string().nullable(),
+        require_location: z.string().nullable(),
+        require_user_agent: z.string().nullable(),
+        send_to_redirect: z.string().nullable(),
+        jwt_singing_key: z.string().max(100, {
+            message: "JWT Signing Key must be at most 100 characters"
+        }).nullable(),
+        type: z.string().min(1,{
+            message: "You need to specify an action"
+        }),
+        
+        redirect_redirect_to: z.string().min(1,{
+            message: "Redirect to must be at least 1 character"
+        }).nullable(),    
+        redirect_after_expiry: z.string().nullable(),
+    
+        schedule: z.string().nullable(),
+        schedule_timezone: z.string({
+            required_error: "Timezone needs to be specified"
+        }).nullable(),
+        location_zones: z.string().nullable(),
+        user_agents: z.string().nullable(),
+        timezone: z.string().refine(value=>moment.tz.zone(value) != null, {
+            message: "Invalid timezone"
+        }).nullable()
+        
+    })
+
     const validatedFields = createSchema.safeParse({
-        id: form.get('id'),
         name: form.get('name'),
         description: form.get('description'),
         expires: form.get('expires'),
@@ -88,7 +81,6 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
     }
 
     //! Correctly format all data
-    const ID = validatedFields.data.id == "" ? null : validatedFields.data.id
     const name = validatedFields.data.name == "" ? null : validatedFields.data.name
     const description = validatedFields.data.description == "" ? null : validatedFields.data.description
     const expires = validatedFields.data.expires_never_checkbox == "on" ? null : validatedFields.data.expires
@@ -126,7 +118,6 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
     const timezone = validatedFields.data.timezone
 
     const JSONBody: Partial<QRCode> = {
-        id: ID,
         name: name,
         description: description,
         expires: expires ? new Date(expires): null,
@@ -168,10 +159,6 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
     if (!response.ok) {
         if (responseData.error) {
             switch (responseData.error) {
-                case "ID_IN_USE":
-                    return {
-                        id: ["ID is already in use"]
-                    }
                 case "INVALID_TOKEN":
                     return {
                         submit_button: "Invalid token was provided. Please log in again."
@@ -217,7 +204,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
     } else {
         return {
             success: {
-                id: validatedFields.data.id ? validatedFields.data.id : responseData.id,
+                id: responseData.id,
             }
         }
     }

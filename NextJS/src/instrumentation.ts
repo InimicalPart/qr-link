@@ -22,7 +22,6 @@ export async function register(){
             "data",
             "linked_to",
             "expires",
-            "id",
             "description",
             "name",
             "settings"

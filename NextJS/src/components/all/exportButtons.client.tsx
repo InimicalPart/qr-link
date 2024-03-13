@@ -16,8 +16,7 @@ export default function ExportButtons({
     style?: any,
     className?: string
 }) {
-
-    const [qrcodeid, setId] = useState<string>(qrCodeDetails.id ?? id)
+    const qrcodeid = qrCodeDetails?.id ?? id
     const [svg, setSVG] = useState<string>("")
     useEffect(()=>{
         if (svg == "") {
@@ -41,31 +40,6 @@ export default function ExportButtons({
     },[svg, qrCodeDetails.svg])
 
     const [png, setPNG] = useState<string>(qrCodeDetails.png)
-
-    useEffect(()=>{
-        function setID(e: any) {
-            setId((e.target as HTMLInputElement).value ?? qrCodeDetails.id ?? id)
-        }
-        document.getElementById("qr-id")?.addEventListener("input", setID)
-
-        return () => {
-            document.getElementById("qr-id")?.removeEventListener("input", setID)
-        }
-    })
-
-
-    // if(!svg.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
-    //     svg = svg.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
-    // }
-    // if(!svg.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
-    //     svg = svg.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
-    // }
-    
-    // //add xml declaration
-    // svg = '<?xml version="1.0" standalone="no"?>\n' + svg;
-    
-    // //convert svg source to URI data scheme.
-    // var url = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
 
 
     function exportQR(evt:any, type:string) {

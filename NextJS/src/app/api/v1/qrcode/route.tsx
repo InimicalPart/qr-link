@@ -30,39 +30,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
 
-    let { id } = {
-        ...{
-            id: crypto.randomUUID(),
-        },
-        ...(body as Partial<{ id: string; }>),
-    };
+    const id = crypto.randomUUID()
     const { type, data, name, description, settings } = body;
     let { expires } = body;
     const token = request.headers.get("Authorization");
     
-
-    // Check if ID is valid
-    if (!(typeof (id as any) == "string")) {
-        return new NextResponse(JSON.stringify({
-            error: "INVALID_ID",
-            message: "ID needs to be a string.",
-        }), {status:400, headers: { "Content-Type": "application/json" } });
-    }
     
-    if (!/^[a-zA-Z0-9_.-]*$/.test(id)) return new NextResponse(JSON.stringify({error: "INVALID_ID", message: "'id' can only contain alphanumeric characters, underscores and dashes and periods."}), {status:400, headers: { "Content-Type": "application/json" } });
-
-    // Check if ID is already in use, as well as if it's user-specified, if both are true, return an error, otherwise, if it's only in use, generate a new ID until it is not in use
-    while (global.QRCodeTable[id]) {
-        if ((await request.json()).id) {
-            return new NextResponse(JSON.stringify({
-                error: "ID_IN_USE",
-                message: "ID already in use.",
-            }), {status:400, headers: { "Content-Type": "application/json" } });
-        }
-        id = crypto.randomUUID();
-    }
-
-
     let identifier = undefined
     if (!token) {
         return new NextResponse(JSON.stringify({
@@ -216,6 +189,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         
     
     global.QRCodeTable[id] = new QRCode({
+        id,
         type,
         data: (dataValidity.newData ?? data) as unknown as Types.RedirectQRCodeData | Types.ScheduleQRCodeData | Types.LocationQRCodeData,
         created: new Date(),

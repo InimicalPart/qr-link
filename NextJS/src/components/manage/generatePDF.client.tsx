@@ -16,12 +16,12 @@ export default function PDFButton({
         style?: object,
         className?: string
 }) {
-    const [disabled, setDisabled] = useState(false)
-
-
-    "use client"
+        const [disabled, setDisabled] = useState(false)
+        const [pdf, setPDF] = useState("")
         console.log(id)
         function clicked() {
+            if (disabled) return;
+            if (pdf != "") return;
             setDisabled(true);
             document.getElementById("genPDF").innerText = "Generating PDF...";
             fetch(`${apiURL}/qrcode/${id}?export=pdf`, {
@@ -33,6 +33,7 @@ export default function PDFButton({
                 document.getElementById("genPDF").setAttribute("href", res.pdf)
                 document.getElementById("genPDF").setAttribute("download", "qrcode-"+id+".pdf")
                 document.getElementById("genPDF").innerText = `Download PDF`
+                setPDF(res.pdf)
                 setDisabled(false);
             })
         }
