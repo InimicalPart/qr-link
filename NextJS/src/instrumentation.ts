@@ -26,6 +26,10 @@ export async function register(){
             "name",
             "settings"
         ]
+        if (!process.env.API_URL) {
+            process.env.API_URL = "http://localhost:8080/api/v1"
+        }
+
         global.supportedTypes = ["redirect", "schedule", "location", "user-agent"]
         global.storageMethod = "file";
         global.QRBackupFilePath = process.platform == "win32" ? process.env.USERPROFILE + "\\Documents\\QRLink\\qrcodes.jsonc" : "/srv/QRLink/qrcodes.jsonc";

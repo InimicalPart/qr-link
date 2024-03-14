@@ -400,6 +400,7 @@ export async function updateAPIKeyName(id: string, name: string) {
         if (global.debugMode) console.log("[DATA] Updating APIKey " + id + " in the database...")
         global.mongoClient.db("QRLink").collection("apikeys").updateOne({id: id}, {$set: {name: name}})
     }
+    return true
 } 
 
 export async function saveQR(id: string = null, obj: QRCode = new QRCode(), update:boolean=false) {

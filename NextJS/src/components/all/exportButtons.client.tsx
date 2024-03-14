@@ -61,7 +61,7 @@ export default function ExportButtons({
                     a.click();
                     a.remove();
                 } else {
-                    fetch(`${process.env.API_URL ?? "http://localhost:8080/api/v1"}/qrcode/${qrcodeid}?export=png,svg`, {
+                    fetch(`${process.env.API_URL}/qrcode/${qrcodeid}?export=png,svg`, {
                         headers: {
                             Accept: "application/json",
                             Authorization: token
@@ -119,7 +119,7 @@ export default function ExportButtons({
                     a.click();
                     a.remove();
                 } else {
-                    fetch(`${process.env.API_URL ?? "http://localhost:8080/api/v1"}/qrcode/${qrcodeid}?export=png,svg`, {
+                    fetch(`${process.env.API_URL}/qrcode/${qrcodeid}?export=png,svg`, {
                         headers: {
                             Accept: "application/json",
                             Authorization: token
@@ -169,7 +169,7 @@ export default function ExportButtons({
         marginTop:20,
         gap: 5
     }}>
-        <PDFButton token={token} apiURL={process.env.API_URL ?? "http://localhost:8080/api/v1"} id={qrcodeid} className={className}/>
+        <PDFButton token={token} apiURL={process.env.API_URL} id={qrcodeid} className={className}/>
         <a id="png" onClick={(e)=>exportQR(e,"png")} href={"#"} className={className}>Download PNG</a>
         <a id="svg" onClick={(e)=>exportQR(e,"svg")} href={"#"} className={className}>Download SVG</a>
     </div>

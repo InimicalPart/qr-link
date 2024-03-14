@@ -8,33 +8,21 @@ export const metadata: Metadata = {
 
 import "./create.css"
 import { cookies } from "next/headers";
-import { jwtVerify } from "jose";
 import { redirect } from "next/navigation";
 import { submit } from "@/utilities/(ui)/create/submit.server";
 
 import Form from "@/components/create/form.client";
 import React from 'react'
 import QRCodeImage from "@/components/create/qrCodeImage.client";
+import { getUser } from '@/utilities/api/v1/authentication';
 
-
-const API_URL = (process.env.API_URL ?? "http://localhost:8080/api/v1")
-const secret = new Uint8Array(
-    Buffer.from(process.env.JWT_SECRET, 'base64'),
-    );
-const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
+const API_URL = (process.env.API_URL)
 
 export default async function Home() {
-    if (cookies()?.get("token")?.value) {
-        let valid = await jwtVerify(cookies().get("token").value, secret, {
-            audience: strippedBaseURL,
-            issuer: strippedBaseURL,
-            algorithms: ["HS256"],
-            requiredClaims: ["exp", "iat", "iss", "aud"],
-        }).then(()=>true).catch(()=>false)
-        if (!valid) redirect("/login")
-    } else {
-        redirect("/login")
-    }
+    //! Make sure the user is logged in
+    if (!cookies()?.get("token")?.value) redirect("/login")
+    const user = await getUser(cookies().get("token").value, { allowAPIKey:false })
+    if (!user.isAuthenticated) redirect("/login")
 
     const createSubmit = submit.bind(null, "create", {})
     

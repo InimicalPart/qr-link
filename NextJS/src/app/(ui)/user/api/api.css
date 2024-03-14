@@ -1,0 +1,170 @@
+.api-key {
+    position:relative;
+    width:100%;
+    height:118px;
+    min-height: 118px;
+}
+
+.api-key > .name {
+    position:relative;
+    left:10px;
+    top:5px;
+    font-size: 13pt;
+    font-weight: bold;
+
+
+    max-width: calc(100% - 140px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: horizontal;
+    flex: 1;
+    white-space: nowrap;
+}
+
+.api-key > .api-badges {
+    margin-left:10px;
+    display: flex;
+    flex-wrap: nowrap;
+    max-height: 20px;
+    white-space: nowrap;
+    margin-top:4px;
+    margin-bottom:4px;
+}
+
+.api-key > .name.no-name {
+    color: #9a9a9a;
+    font-weight: medium;
+}
+
+
+.api-key > .token-preview {
+    position:relative;
+    left:10px;
+    top:2px;
+    font-size: 10pt;
+    color: #666;
+
+    max-width: calc(100% - 140px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: horizontal;
+    flex: 1;
+    white-space: nowrap;
+}
+
+.api-key > .token-preview > span {
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    padding: 5px;
+}
+
+.api-key > .last-used,
+.api-key > .created {
+    position:absolute;
+    left:10px;
+    font-size: 10pt;
+    color: #666;
+
+    max-width: calc(100% - 140px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: horizontal;
+    width: min-content;
+    flex: 1;
+    white-space: nowrap;
+}
+
+.api-key > .last-used {
+    bottom:22.5px;
+}
+
+
+.api-key > .created {
+    bottom:5px;
+}
+
+
+.api-key > .revoke-button {
+    position:absolute;
+    right:15px;
+    top:10px;
+    width: 100px;
+    height: 40px;
+    background-color: #ff0000;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12pt;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.3s;
+}
+
+.api-key > .edit-button {
+    position:absolute;
+    right:15px;
+    bottom:10px;
+    width: 100px;
+    height: 40px;
+    background-color: #277bf8;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12pt;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.3s;
+    margin-top: 5px;
+}
+
+.api-key > .revoke-button:hover {
+    background-color: #ff5555;
+}
+
+.api-key > .edit-button:hover {
+    background-color: #2788f8;
+}
+
+.api-key > .edit-button:active {
+    background-color: #226cad;
+}
+.api-key > .revoke-button:active {
+    background-color: #cc3333;
+}
+
+#api-key-container::-webkit-scrollbar-track
+{
+    margin-top:20px;
+    margin-bottom:20px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 8px;
+    background-color: #F5F5F5;
+}
+
+#api-key-container::-webkit-scrollbar
+{
+    width: 12px;
+    background-color: #F5F5F5;
+}
+
+#api-key-container::-webkit-scrollbar-thumb
+{
+    border-radius: 8px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #b3b3b3;
+}
+
+
+
+
+
+
+.api-key > div#buttons {
+    margin-right:10px;
+}

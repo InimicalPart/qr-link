@@ -4,7 +4,10 @@ import { QRLinkGlobal } from "@/types/api/v1/global";
 const secret = new Uint8Array(Buffer.from(process.env.JWT_SECRET, "base64"));
 const workos = new WorkOS(process.env.WORKOS_API_KEY);
 export const cacheValidity = 5 * 60 * 1000 //! 5 minutes
-export async function resolveID(id: string): Promise<{object:string, id:string, email: string, emailVerified: boolean, firstName: string | null, lastName: string | null, createdAt: Date | string, updatedAt: Date|string }> {
+
+
+
+export async function resolveID(id: string): Promise<User> {
     console.log("[AUTH] Resolving ID: " + id)
     const res = await workos.userManagement.getUser(id) // This doesn't need to be cached, as it might happen that the user is not in the cache at the time of the request, and this could break things
     console.log("[AUTH] ID resolved: " + res.email)
@@ -42,12 +45,35 @@ export async function getIDFromAPIToken(token: string) {
     return verifiedToken.id
 }
 
+export async function updateUser(id: string, data: Partial<User>) {
+    console.log("[AUTH] Updating user: " + id)
+    const user = await workos.userManagement.updateUser({
+        userId: id,
+        ...data
+    })
+    console.log("[AUTH] User updated: " + id)
+    const newToken = await new SignJWT({
+        user,
+    })
+        .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+        .setIssuedAt()
+        .setIssuer(strippedBaseURL)
+        .setAudience(strippedBaseURL)
+        .setExpirationTime('1w')
+        .sign(secret);
+
+
+    return newToken
+}
+
 export async function getUser(token: string,options:{
     
     allowAPIKey?:boolean,
     required_permission?:APIKeyPermissions|APIKeyPermissions[],
     verify?:(res: UserVerify | APIVerify) => boolean
-} = {}): Promise<{isAuthenticated: boolean, reason?: string, user?: {object:string, id:string, email: string, emailVerified: boolean, firstName: string | null, lastName: string | null, createdAt: Date | string, updatedAt: Date|string }}> {
+} = {}): Promise<{isAuthenticated: boolean, reason?: string, user?: {
+    profilePictureUrl: string;object:string, id:string, email: string, emailVerified: boolean, firstName: string | null, lastName: string | null, createdAt: Date | string, updatedAt: Date|string 
+}}> {
     
     //! Set default options
     options = {
@@ -110,16 +136,7 @@ export async function getUser(token: string,options:{
             requiredClaims: ["exp", "iat", "iss", "aud"],
         }) as {
             payload: {
-                user: {
-                    object: string,
-                    id: string,
-                    email: string,
-                    emailVerified: boolean,
-                    firstName: string | null,
-                    lastName: string | null,
-                    createdAt: Date | string,
-                    updatedAt: Date | string
-                }
+                user: User
             }
         }
         } catch {
@@ -136,8 +153,8 @@ export async function getUser(token: string,options:{
 
         console.log("[AUTH] Token is valid. User: " + verifiedToken.payload.user.email)
         return {
-        isAuthenticated: true,
-        user: verifiedToken.payload.user,
+            isAuthenticated: true,
+            user: verifiedToken.payload.user,
         };
     }
   }
@@ -202,7 +219,6 @@ export async function generateAPIToken(id: string) {
     })
     .setAudience(strippedBaseURL)
     .setIssuer(strippedBaseURL)
-    .setIssuedAt()
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .sign(new Uint8Array(Buffer.from(APIKeyDetails.key)))
 }

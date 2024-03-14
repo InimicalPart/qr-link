@@ -81,6 +81,7 @@ export default function GenerateQRs({
                         flexDirection: "column",
                         pointerEvents: "all",
                         overflow: "hidden",
+                        width: "302px",
                         position:"relative",
                         order: matchesSearch() ? 0 : 1,
                         
