@@ -1,6 +1,7 @@
 import { QRLinkGlobal } from "@/types/api/v1/global";
 import { generateAPIToken, getIDFromAPIToken, getUser } from "@/utilities/api/v1/authentication";
 import { deleteAPIKey, updateAPIKeyName } from "@/utilities/api/v1/database";
+import moment from "moment-timezone";
 import { NextRequest, NextResponse } from "next/server";
 
 declare const global: QRLinkGlobal
@@ -68,10 +69,12 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
             }), { status: 403, headers: { "Content-Type": "application/json" } });
         }
         const APIToken = await generateAPIToken(params.id)
+        const timezone = request.nextUrl.searchParams.get("timezone") ?? moment.tz.guess()
         return new NextResponse(JSON.stringify({
             id: params.id,
             name: global.APIKeyTable[params.id].name,
-            created_at: global.APIKeyTable[params.id].created,
+            created: moment(global.APIKeyTable[params.id].created).tz(timezone).format("YYYY-MM-DD HH:mm:ss.SSS\\Z"),
+            last_used: moment(global.APIKeyTable[params.id].last_used).tz(timezone).format("YYYY-MM-DD HH:mm:ss.SSS\\Z"),
             permissions: global.APIKeyTable[params.id].permissions,
             token: APIToken.substring(0, 7) + "..." + APIToken.substring(APIToken.length - 7, APIToken.length)
 

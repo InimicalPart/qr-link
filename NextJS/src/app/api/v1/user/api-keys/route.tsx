@@ -1,6 +1,7 @@
 import { QRLinkGlobal } from "@/types/api/v1/global";
 import { generateAPIToken, getUser } from "@/utilities/api/v1/authentication";
 import { createAPIKey } from "@/utilities/api/v1/database";
+import moment from "moment-timezone";
 import { NextRequest, NextResponse } from "next/server";
 
 declare const global: QRLinkGlobal
@@ -35,15 +36,18 @@ export async function GET(request:NextRequest) {
         }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
 
+    const timezone = request.nextUrl.searchParams.get("timezone") ?? moment.tz.guess()
+
     let UsersAPIKeys = Object.keys(global.APIKeyTable).filter((id) => global.APIKeyTable[id].belongs_to === user.user.id)
     const protectedKeys = []
     for (let APIKey of UsersAPIKeys) {
         const APIToken = await generateAPIToken(APIKey)
         protectedKeys.push({
             id: APIKey,
-            token: APIToken.substring(0, 7) + "..." + APIToken.substring(APIToken.length - 7, APIToken.length),
+            token_preview: APIToken.substring(0, 7) + "..." + APIToken.substring(APIToken.length - 7, APIToken.length),
             name: global.APIKeyTable[APIKey].name,
-            created_at: global.APIKeyTable[APIKey].created,
+            created: moment(global.APIKeyTable[APIKey].created).tz(timezone).format("YYYY-MM-DD HH:mm:ss.SSS\\Z"),
+            last_used: moment(global.APIKeyTable[APIKey].last_used).tz(timezone).format("YYYY-MM-DD HH:mm:ss.SSS\\Z"),
             permissions: global.APIKeyTable[APIKey].permissions
         })
     }
@@ -125,11 +129,13 @@ export async function POST(request: NextRequest) {
     const details = await createAPIKey(body.name??null, user.user.id, permissions)
     const APIToken = await generateAPIToken(details.id)
     console.log(APIToken)
+    const timezone = request.nextUrl.searchParams.get("timezone") ?? moment.tz.guess()
     return new NextResponse(JSON.stringify({
         id: details.id,
         name: details.name,
         token: APIToken,
-        created_at: details.created,
+        created: moment(details.created).tz(timezone).format("YYYY-MM-DD HH:mm:ss.SSS\\Z"),
+        last_used: null,
         permissions: details.permissions
     }), { status: 200, headers: { "Content-Type": "application/json" } });
 

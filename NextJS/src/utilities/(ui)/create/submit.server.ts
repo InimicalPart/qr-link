@@ -144,7 +144,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
 
     //! If we are updating the QR code, we need to send it to (PATCH) /qrcode/:id
     //! If we are creating a new QR code, we need to send it to (POST) /qrcode
-    const response = await fetch(`${(process.env.API_URL ?? "http://localhost:8080/api/v1")}/qrcode` + (submitType=="update"?"/"+qrCodeInfo.id:""), {
+    const response = await fetch(`${(process.env.API_URL)}/qrcode` + (submitType=="update"?"/"+qrCodeInfo.id:""), {
         method: submitType=="update"?"PATCH":"POST",
         headers: {
             "Content-Type": "application/json",

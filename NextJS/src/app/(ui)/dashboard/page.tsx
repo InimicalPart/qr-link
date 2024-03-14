@@ -7,23 +7,19 @@ export const metadata: Metadata = {
 
 import Image from 'next/image'
 import "./index.css";
-import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-const secret = new Uint8Array(
-    Buffer.from(process.env.JWT_SECRET, 'base64'),
-);
 
 import GenerateQRs from '@/components/index/generate.client';
 import { Modal } from '@/components/all/modal';
 import QRScannerModal from './@scanner/page';
 import { AddQR } from '@/components/index/addQR.client';
-const API_URL = process.env.API_URL ?? "http://localhost:8080/api/v1"
+import { getUser } from '@/utilities/api/v1/authentication';
+const API_URL = process.env.API_URL
 type SearchParamProps = {
     searchParams: Record<string, string> | null | undefined
 }
 
-const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
 
 export default async function Home({
     searchParams
@@ -94,18 +90,11 @@ export default async function Home({
         
     }
 
+    //! Make sure the user is logged in
+    if (!cookies()?.get("token")?.value) redirect("/login")
+    const user = await getUser(cookies().get("token").value, { allowAPIKey:false })
+    if (!user.isAuthenticated) redirect("/login")
 
-    if (cookies()?.get("token")?.value) {
-        let valid = await jwtVerify(cookies().get("token").value, secret, {
-            audience: strippedBaseURL,
-            issuer: strippedBaseURL,
-            algorithms: ["HS256"],
-            requiredClaims: ["exp", "iat", "iss", "aud"],
-        }).then(()=>true).catch(()=>false)
-        if (!valid) redirect("/login")
-    } else {
-        redirect("/login")
-    }
     return (
       <div className="dashboard main-container" style={{
         backgroundImage: "url('/res/img/newseed_background.png')",
@@ -118,7 +107,10 @@ export default async function Home({
             </Modal>
         }
         <header style={{padding:"calc(1.5em + 8px)", display:"flex", justifyContent: "space-between"}} className="dashboard">
-            <Image src="/res/img/logo.png" priority={true} width={450} height={99} alt="QRLink logo"/>
+            <Image src="/res/img/logo.png" priority={true} width={450} height={99} style={{
+                maxHeight: "99px"
+            }} alt="QRLink logo"/>
+
 
 
             <div className='topright' style={{
@@ -158,20 +150,38 @@ export default async function Home({
 
                 </div>
             </header>
-    <div id="qr-container" className="left-[50%] w-[calc(302px*1)] md:w-[calc(302px*2)] lg:w-[calc(302px*3)] xl:w-[calc(302px*4)] 2xl:w-[calc(302px*5)] relative" style={{
+    <div id="qr-container" className="left-[50%] w-[calc(301px*1)] md:w-[calc(301px*2)] lg:w-[calc(301px*3)] xl:w-[calc(301px*4)] 2xl:w-[calc(301px*5)] relative" style={{
         transform: "translateX(-50%)",
         display: "flex",
         flexWrap: "wrap",
         paddingBottom: "20px",
+        justifyContent: "center",
     }}>
         <AddQR className="mobile-only DO-flex"/>
         <GenerateQRs handleClick={manageQR} token={cookies().get("token").value} apiURL={API_URL}/>
         <AddQR className="desktop-only DO-flex"/>
     </div>
+    
+    {/* <form action={goToProfile}>
+        <button type="submit" style={{
+            position:"fixed",
+            bottom: 10,
+            left: 10,
+            height:"min-content",
+            width: "fit-content",
+            alignItems: "center",
+            borderRadius: "15px"
+        }}>
+                <ProfilePicture src={user.user.profilePictureUrl}/>
+        </button>
 
+    </form> */}
 
 
     <footer className="copyright-footer dashboard">
+        <p>
+            <a className="user-profile" href="/user/profile">User profile for {user.user.firstName}</a>
+        </p>
         <p>
             &copy; 2024 - <a className="copyright" href="https://github.com/InimicalPart" target="_blank">InimicalPart</a> & <a className="copyright" href="https://newseed.se" target="_blank">NewSeed IT Solutions AB</a> - All rights reserved.
         </p>

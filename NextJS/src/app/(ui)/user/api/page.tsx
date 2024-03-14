@@ -1,35 +1,77 @@
-import { jwtVerify } from "jose";
+import { getUser } from "@/utilities/api/v1/authentication";
 import { cookies } from "next/headers";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
+import Image from "next/image";
 
-const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
-const secret = new Uint8Array(
-    Buffer.from(process.env.JWT_SECRET, 'base64'),
-    );
+import "./api.css"
+import APIKeyGenerator from "@/components/user/profile/api/generator.client";
+import { deleteAPIKey, updateAPIKeyName } from "@/utilities/api/v1/database";
+import { QRLinkGlobal } from "@/types/api/v1/global";
+
+declare const global: QRLinkGlobal
 
 export default async function UserAPI() {
 
-    //TODO: REMOVE
-    if (process.env.NODE_ENV === "production") {
-        return notFound()
+    //! Make sure the user is logged in
+    if (!cookies()?.get("token")?.value) redirect("/login")
+    const user = await getUser(cookies().get("token").value, { allowAPIKey:false })
+    if (!user.isAuthenticated) redirect("/login")
+
+    async function revokeAPIKey(id:string) {
+        "use server";
+        const key = global.APIKeyTable[id]
+
+        if (key.belongs_to === user.user.id) {
+            return await deleteAPIKey(id)
+        }
+        return false
     }
 
-    if (cookies()?.get("token")?.value) {
-        let valid = await jwtVerify(cookies().get("token").value, secret, {
-            audience: strippedBaseURL,
-            issuer: strippedBaseURL,
-            algorithms: ["HS256"],
-            requiredClaims: ["exp", "iat", "iss", "aud"],
-        }).then(()=>true).catch(()=>false)
-        if (!valid) redirect("/login")
-    } else {
-        redirect("/login")
+    async function updateName(id:string, name:string) {
+        "use server";
+
+        const key = global.APIKeyTable[id]
+
+        if (key.belongs_to === user.user.id) {
+            return await updateAPIKeyName(id, name)
+        }
+
+        return false
     }
 
     return (
-        <div>
-            <h1>User API Settings</h1>
-            <p>This page is a work in progress.</p>
+        <div style={{
+            position:"absolute",
+            left:"50%",
+            top: "40%",
+            transform:"translate(-50%,-40%)",
+            width: "fit-content",
+            height:"fit-content",
+
+            display:"flex",
+            flexDirection:"column",
+            alignItems:"center",
+            justifyContent:"center",
+            
+        }}>
+            <p className="font-extrabold text-xl md:text-2xl lg:text-3xl mb-2">QRLink API keys for {user.user.firstName}</p>
+            <div id="api-key-container" style={{
+                display:"flex",
+                flexDirection:"column",
+                top: "40%",
+                position:"relative",
+                width: "90svw",
+                maxWidth: "900px",
+                height:"500px",
+                border:"2px solid black",
+                borderRadius:5,
+
+            }}>
+
+                <APIKeyGenerator API_URL={process.env.API_URL} token={cookies().get("token").value} onRevoke={revokeAPIKey} updateAPIName={updateName}/>
+
+            </div>
+
         </div>
     );
 }

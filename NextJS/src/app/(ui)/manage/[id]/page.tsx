@@ -27,7 +27,7 @@ import ExportButtons from "@/components/all/exportButtons.client";
 import { Metadata, ResolvingMetadata } from "next";
 
 const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
-const API_URL = (process.env.API_URL ?? "http://localhost:8080/api/v1")
+const API_URL = (process.env.API_URL)
 const secret = new Uint8Array(
     Buffer.from(process.env.JWT_SECRET, 'base64'),
     );
