@@ -113,7 +113,7 @@ export default function BrowserBar({data, width = 600, height = 300}: {
             }
         }
         
-    }, [data,scanBrowsers.current])
+    }, [data,rounded, sortedByOccurance])
 
     return <div style={{width, height}}>{Object.keys(data.info).length>0?<canvas ref={scanBrowsers}></canvas>:<p style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}><i>No data available</i></p>}</div>
 }

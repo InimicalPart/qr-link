@@ -16,6 +16,7 @@ import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose';
 import GetURL from "@/components/all/getURL.client";
 import Background from "@/components/login/background.client";
+import { getUser } from '@/utilities/api/v1/authentication';
 const secret = new Uint8Array(
     Buffer.from(process.env.JWT_SECRET, 'base64'),
     );
@@ -48,13 +49,10 @@ export default async function Home() {
         redirect(getAuthorizationUrl())
     }
 
+    //! Make sure the user is logged in
     if (cookies()?.get("token")?.value) {
-        await jwtVerify(cookies().get("token").value, secret, {
-            audience: strippedBaseURL,
-            issuer: strippedBaseURL,
-            algorithms: ["HS256"],
-            requiredClaims: ["exp", "iat", "iss", "aud"],
-        }).then(()=>redirect("/dashboard")).catch(()=>{})
+        let user = await getUser(cookies().get("token").value, { allowAPIKey:false })
+        if (user.isAuthenticated) redirect("/dashboard")
     }
     
 

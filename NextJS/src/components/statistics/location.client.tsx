@@ -56,7 +56,7 @@ export default function ScanLocation({data, showRadii=false, width = 600, height
         useEffect(() => {
             console.log("invalidateSize")
             map.invalidateSize();
-        }, []);
+        }, [map]);
         return <></>;
     }
 
@@ -73,7 +73,7 @@ export default function ScanLocation({data, showRadii=false, width = 600, height
                 }
             })
             }
-        }, []);
+        }, [map]);
         return <></>;
     }
 

@@ -120,7 +120,7 @@ export default function TimeRank({data, width = 600, height = 300}: {
             }
         }
         
-    }, [data,scanTime.current])
+    }, [data, rounded, sortedAlpha])
 
     return <div style={{width, height}}>{Object.keys(data.info).length>0?<canvas ref={scanTime}></canvas>:<p style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}><i>No data available</i></p>}</div>
 }
