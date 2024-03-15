@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef } from "react"
 
 
 import { Chart } from "chart.js/auto"
@@ -41,61 +41,62 @@ export default function TimestampGraph({data, width = 600, height = 100}: {
 
     let scanTimestamp = useRef<HTMLCanvasElement>(null)
 
-    function makeEmptyDataset() {
-        // for every day between the first and last day, if it's not in the scanData, add it with '0' scans
-        let firstDay = new Date(
-            new Date(data.important_moments.find((a:any)=>a.update.created).update.created).setUTCHours(0,0,0,0));
-        let lastDay = new Date();
-
-        let days = [];
-        for (let day = firstDay; day <= lastDay; day.setDate(day.getDate() + 1)) {
-            if (day.getUTCHours() == 23) day.setUTCHours(day.getUTCHours() + 1);
-            if (day.getUTCHours() == 1) day.setUTCHours(day.getUTCHours() - 1);
-            days.push(new Date(day));
-        }
-
-        let result = [];
-        for (let day of days) {
-            result.push({timestamp: day.toISOString(), count: 0});
-        }
-        return result;
-    }
-
-    function groupSameDayScans() {
-        // make it so that the scans that happen on the same day are grouped together into one day with the sum of the scan counts
-        let result = [];
-        let seen = new Set();
-        for (let scan of data.info) {
-            let day = new Date(new Date(scan.timestamp).setUTCHours(0,0,0,0)).toISOString();
-            if (seen.has(day)) {
-                let index = result.findIndex(a=>a.timestamp == day);
-                result[index].count += 1;
-            } else {
-                result.push({timestamp: day, count: 1});
-                seen.add(day);
-            }
-        }
-        return result;
-    }
-
-    function parseDataSet() {
-        let empty = makeEmptyDataset();
-        let grouped = groupSameDayScans();
-
-        console.log(empty, grouped)
-
-        
-        //fill empty with grouped
-        for (let scan of grouped) {
-            console.log(scan.timestamp, empty[0].timestamp)
-            let index = empty.findIndex(a=>a.timestamp == scan.timestamp);
-            empty[index].count = scan.count;
-        }
-        return empty;
-
-    }
-
     useEffect(()=>{
+
+        function makeEmptyDataset() {
+            // for every day between the first and last day, if it's not in the scanData, add it with '0' scans
+            let firstDay = new Date(
+                new Date(data.important_moments.find((a:any)=>a.update.created).update.created).setUTCHours(0,0,0,0));
+            let lastDay = new Date();
+    
+            let days = [];
+            for (let day = firstDay; day <= lastDay; day.setDate(day.getDate() + 1)) {
+                if (day.getUTCHours() == 23) day.setUTCHours(day.getUTCHours() + 1);
+                if (day.getUTCHours() == 1) day.setUTCHours(day.getUTCHours() - 1);
+                days.push(new Date(day));
+            }
+    
+            let result = [];
+            for (let day of days) {
+                result.push({timestamp: day.toISOString(), count: 0});
+            }
+            return result;
+        }
+    
+        function groupSameDayScans() {
+            // make it so that the scans that happen on the same day are grouped together into one day with the sum of the scan counts
+            let result = [];
+            let seen = new Set();
+            for (let scan of data.info) {
+                let day = new Date(new Date(scan.timestamp).setUTCHours(0,0,0,0)).toISOString();
+                if (seen.has(day)) {
+                    let index = result.findIndex(a=>a.timestamp == day);
+                    result[index].count += 1;
+                } else {
+                    result.push({timestamp: day, count: 1});
+                    seen.add(day);
+                }
+            }
+            return result;
+        }
+    
+        function parseDataSet() {
+            let empty = makeEmptyDataset();
+            let grouped = groupSameDayScans();
+    
+            console.log(empty, grouped)
+    
+            
+            //fill empty with grouped
+            for (let scan of grouped) {
+                console.log(scan.timestamp, empty[0].timestamp)
+                let index = empty.findIndex(a=>a.timestamp == scan.timestamp);
+                empty[index].count = scan.count;
+            }
+            return empty;
+    
+        }
+
         if (scanTimestamp.current && data.info.length > 0) {
             const b = parseDataSet().toSorted(
                     (a: any, b: any) => {
@@ -168,7 +169,7 @@ export default function TimestampGraph({data, width = 600, height = 100}: {
                 }
             })
         }
-    }, [scanTimestamp.current])
+    }, [data.info.length, data.important_moments, data.info])
     
     console.log(data.important_moments)
 

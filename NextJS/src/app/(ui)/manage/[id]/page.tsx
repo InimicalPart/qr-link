@@ -16,7 +16,6 @@ export async function generateMetadata(
 
 import "./manage.css"
 import { cookies } from "next/headers";
-import { jwtVerify } from "jose";
 import { redirect } from "next/navigation";
 import { submit } from "@/utilities/(ui)/create/submit.server";
 
@@ -25,27 +24,16 @@ import React from 'react'
 import QRCodeImage from "@/components/create/qrCodeImage.client";
 import ExportButtons from "@/components/all/exportButtons.client";
 import { Metadata, ResolvingMetadata } from "next";
+import { getUser } from "@/utilities/api/v1/authentication";
 
-const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
 const API_URL = (process.env.API_URL)
-const secret = new Uint8Array(
-    Buffer.from(process.env.JWT_SECRET, 'base64'),
-    );
-
 export default async function Update({
     params
 }: {params:{id:string}}) {
-    if (cookies()?.get("token")?.value) {
-        let valid = await jwtVerify(cookies().get("token").value, secret, {
-            audience: strippedBaseURL,
-            issuer: strippedBaseURL,
-            algorithms: ["HS256"],
-            requiredClaims: ["exp", "iat", "iss", "aud"],
-        }).then(()=>true).catch(()=>false)
-        if (!valid) redirect("/login")
-    } else {
-        redirect("/login")
-    }
+    //! Make sure the user is logged in
+    if (!cookies()?.get("token")?.value) redirect("/login")
+    let user = await getUser(cookies().get("token").value, { allowAPIKey:false })
+    if (!user.isAuthenticated) redirect("/login")
 
     const qrCodeDetails = await fetch(`${API_URL}/qrcode/${params.id}?export=png,svg`, {
         headers: {

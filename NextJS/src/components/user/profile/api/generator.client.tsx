@@ -57,7 +57,7 @@ export default function APIKeyGenerator({
             useEffect(() => {
                 const currentContainerWidth = document.getElementById("api-key-container")?.clientWidth
                 if (containerWidth !== currentContainerWidth) setContainerWidth(currentContainerWidth ?? Infinity)
-            }, [windowWidth])
+            }, [windowWidth,containerWidth])
             
 
 
