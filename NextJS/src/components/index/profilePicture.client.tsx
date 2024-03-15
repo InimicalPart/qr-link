@@ -6,7 +6,7 @@ export default function ProfilePicture({src,width=75,height=75}:{src:string,widt
 
 
     return (
-        <Image loader={() => src} src={src} unoptimized width={width} height={height} alt="Profile picture" style={{
+        <Image loader={() => src} src={src} unoptimized priority={true} width={width} height={height} alt="Profile picture" style={{
             borderRadius: "50%",
             position: "relative",
         }}/>

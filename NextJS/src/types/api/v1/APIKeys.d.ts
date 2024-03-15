@@ -7,8 +7,8 @@ interface APIKey {
     name: string;
     belongs_to: string;
     permissions: [APIKeyPermissions]
-    created: Date;
-    last_used: Date;
+    created: string;
+    last_used: string;
 }
 
 type APIKeyPermissions = "qrcode:read" | "qrcode:create" | "qrcode:update" | "qrcode:delete" | "api:update-self" | "api:delete-self"

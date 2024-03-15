@@ -9,9 +9,9 @@ export class QRCode {
     type: string;
     data: RedirectQRCodeDataT|ScheduleQRCodeDataT|LocationQRCodeDataT|UserAgentQRCodeDataT;
     linked_to: string | null = null;
-    created: Date = new Date();
-    updated: Date = new Date();
-    expires: Date | null;
+    created: string = new Date().toISOString();
+    updated: string = new Date().toISOString();
+    expires: string | null;
     description: string | null = null;
     name: string | null = null;
     settings: {
@@ -51,29 +51,43 @@ export class QRCode {
     scanCount: number = 0;
     scanData: (ScanDataT | object)[] = [];
     update_log: {
-        date: Date;
+        date: string;
         update: {
             [key:string]: any
         };
     }[] = [];
 
 
-
-    addToUpdateLog(update: Partial<QRCode>, time: Date = new Date()) {
+    /**
+     * Add an update to the update log
+     * @param update The update to add, only the fields that are updated should be included
+     * @param time The time of the update, defaults to the current time
+     */
+    addToUpdateLog(update: Partial<QRCode>, time: string = new Date().toISOString()) {
         this.update_log.push({
             date: time,
             update: Object.assign({},update as object)
         })
     }
 
+    /**
+     * Create a new QR code
+     * @param newInformation The information to create the QR code with, if any 
+     */
     constructor(newInformation?: Partial<QRCode> | undefined) {
         if (newInformation) Object.assign(this, newInformation)
-        this.addToUpdateLog({
-            created: this.created
-        }, this.created)
+        if (!this.update_log.find(a=>a.update.created)) {
+            this.addToUpdateLog({
+                created: this.created
+            }, this.created)
+        }
     }
 
-
+    /**
+     * Signs the scan data with the JWT encryption key provided by the user in the settings
+     * @param scanData The scan data to sign
+     * @returns The signed JWT or null if the QR code does not have a JWT encryption key
+     */
     async signScanData(scanData: ScanDataT) {
         return this.hasSendToURL() ? await new SignJWT({
             scanData
@@ -84,42 +98,85 @@ export class QRCode {
             .sign(new Uint8Array(Buffer.from(this.getEncryptionKey(), 'base64'))) : null
     }
 
+    /**
+     * Checks if the QR code needs to have location data for the user to get redirected
+     * @returns True if the QR code requires location data, false otherwise
+     */
     hasLocationRequirement() {
         return this.settings.requirements.location && this.settings.getScanData && this.settings.scanData.information.location 
     }
 
+    /**
+     * Checks if the QR code needs to have user agent data for the user to get redirected
+     * @returns True if the QR code requires user agent data, false otherwise
+     */
     hasUserAgentRequirement() {
         return this.settings.getScanData && this.settings.scanData.information["user-agent"] && this.settings.requirements["user-agent"]
     }
 
+    /**
+     * Checks if the QR code has a JWT encryption key and a send to URL property set
+     * @returns True if the QR code has a JWT encryption key and a send to URL property set, false otherwise
+     */
     hasSendToURL() {
         return this.settings.scanData.sendToURL && this.settings.scanData.JWTEncryptionKey
     }
     
+    /**
+     * Get the QR code's JWT encryption key
+     * @returns True if the QR code has a JWT encryption key and a send to URL property set, false otherwise
+     */
     getEncryptionKey() {
         return this.hasSendToURL() ? this.isBase64(this.settings.scanData.JWTEncryptionKey) ? this.settings.scanData.JWTEncryptionKey : Buffer.from(this.settings.scanData.JWTEncryptionKey).toString("base64") : null
     }
 
+    /**
+     * Checks if the string is base64
+     * @param str The string to check
+     * @returns True if the string is base64, false otherwise
+     */
     private isBase64(str: string) {
         return Buffer.from(str, 'base64').toString('base64') === str;
     }
     
+    /**
+     * Get the QR code's scan data settings
+     * @returns The scan data settings
+     */
     getScanDataSettings() {
         return {...this.settings.scanData.information,location_required: this.hasLocationRequirement(), user_agent_required: this.hasUserAgentRequirement()}
     }
     
+    /**
+     * Checks if the QR code wants scan data
+     * @returns True if the QR code wants scan data, false otherwise
+     */
     wantsScanData() {
         return this.settings.getScanData
     }
 
+
+    /**
+     * Checks if the QR code has expired
+     * @returns True if the QR code has expired, false otherwise
+     */
     isExpired() {
         return this.expires ? new Date() > new Date(this.expires) : false
     }
 
+    /**
+     * Checks if the QR code has after expiry property in its data object
+     * @returns True if the QR code has after expiry property in its data object, false otherwise
+     */
     hasAfterExpiry() {
         return JSON.stringify(this.data).includes("after_expiry")
     }
 
+    /**
+     * Get the redirect URL for the QR code
+     * @param scanData The scan data to use for the redirect
+     * @returns The redirect URL or after expiry URL if the QR code has expired, if it has one, otherwise null
+     */
     getRedirectTo(scanData?: {
         latitude: number;
         longitude: number;
@@ -134,7 +191,7 @@ export class QRCode {
             const data = this.data as unknown as ScheduleQRCodeDataT
             console.log(data.timezone)
 
-            let day = moment().tz(data.timezone ?? moment.tz.guess()).format("dddd").toLowerCase() as "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday"
+            let day = moment.tz(data.timezone ?? moment.tz.guess()).format("dddd").toLowerCase() as "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday"
             let time = getPassedTime(Object.keys(data[day]), data.timezone ?? moment.tz.guess())
             if (!time) {
                 let currentDay = moment().tz(data.timezone ?? moment.tz.guess())
@@ -253,37 +310,55 @@ export class QRCode {
 
     }
 
-
+    /**
+     * Get all browsers that have scanned the QR code
+     * @returns An object with the browsers and the amount of times they have scanned the QR code 
+    */
     private getBrowsers() {
-        return this.scanData.filter((a: ScanDataT) => a["user-agent"]).map((a: ScanDataT) => new UAParser(a["user-agent"]).getBrowser().name).reduce((a: { [key: string]: number }, b: string) => {
+        return this.scanData.filter((a: ScanDataT) => a["user-agent"]).map((a: ScanDataT) => new UAParser(a["user-agent"]).getBrowser().name).map(a=>a==undefined?"Other":a).reduce((a: { [key: string]: number }, b: string) => {
             a[b] = (a[b] || 0) + 1
             return a
         }, {}) // Add an empty object as the initial value for the accumulator
     }
 
+    /**
+     * Get all operating systems that have scanned the QR code
+     * @returns An object with the operating systems and the amount of times they have scanned the QR code
+    */
     private getOSs() {
-        return this.scanData.filter((a: ScanDataT) => a["user-agent"]).map((a: ScanDataT) => new UAParser(a["user-agent"]).getOS().name).reduce((a: { [key: string]: number }, b: string) => {
+        return this.scanData.filter((a: ScanDataT) => a["user-agent"]).map((a: ScanDataT) => new UAParser(a["user-agent"]).getOS().name).map(a=>a==undefined?"Other":a).reduce((a: { [key: string]: number }, b: string) => {
             a[b] = (a[b] || 0) + 1
             return a
         }, {}) // Add an empty object as the initial value for the accumulator
     }
 
 
+    /**
+     * Get the amount of scans that have happened in the last timeInSeconds seconds
+     * @param timeInSeconds The amount of seconds to look back
+     * @param since The date to look back to
+     * @returns The amount of scans that have happened in the last timeInSeconds seconds
+    */
     private getScannedLast(timeInSeconds: number, since = new Date()) {
         let timeAgo = new Date(since.getTime() - timeInSeconds * 1000)
         let scans = this.scanData.filter((a: ScanDataT) => a.timestamp).filter((a: ScanDataT) => new Date(a.timestamp) > timeAgo && new Date(a.timestamp) < since)
         return scans
     }
 
-    
-    getImportantMoments(from:Date, to: Date): {
-        date: Date,
+    /**
+     * Gets important updates that have happened in the last timeInSeconds seconds
+     * @param from The date to look back to
+     * @param to The date to look forward to
+     * @returns An array of important updates that have happened in the last timeInSeconds seconds
+    */
+    getImportantMoments(from:string, to: string): {
+        date: string,
         update: {[key:string]:any},
     }[] {
 
         return this.update_log
-            .filter((a: { date: Date; update: {[key:string]:any}}) => (a.date >= from && a.date <= to))
-            .filter((a: { date: Date; update: {[key:string]:any}}) => Object.keys(a.update).some(b => b.startsWith("settings.scanData") || b == "created")).map((a: { date: Date; update: {[key:string]:any}}) => {
+            .filter((a: { date: string; update: {[key:string]:any}}) => (new Date(a.date) >= new Date(from) && new Date(a.date) <= new Date(to)))
+            .filter((a: { date: string; update: {[key:string]:any}}) => Object.keys(a.update).some(b => b.startsWith("settings.scanData") || b == "created")).map((a: { date: string; update: {[key:string]:any}}) => {
                 return {
                     date: a.date,
                     update: a.update
@@ -292,16 +367,36 @@ export class QRCode {
         
     }
 
+    /**
+     * Get the locations of where the QR code has been scanned
+     * @returns An array of the locations of where the QR code has been scanned
+     */
     private getWhereScanned() {
         let rtrn = []
         for (let scan of this.scanData as ScanDataT[]) {
             if (scan?.location) {
-                rtrn.push([scan.location.latitude, scan.location.longitude, scan.location.accuracy])
+                rtrn.push({
+                    timestamp: scan.timestamp,
+                    latitude: scan.location.latitude,
+                    longitude: scan.location.longitude,
+                    accuracy: scan.location.accuracy,
+                    ...(
+                        scan["user-agent"] ? {
+                            browser: new UAParser(scan["user-agent"]).getBrowser().name ?? "Unknown",
+                            os: new UAParser(scan["user-agent"]).getOS().name ?? "Unknown"
+                        } : {}
+                    )
+                })
             }
         }
         return rtrn
     }
 
+    /**
+     * Get the amount of scans that have happened on each day of the week
+     * @param timezone The timezone to use
+     * @returns An object with the amount of scans that have happened on each day of the week
+     */
     private getScannedDayRank(timezone: string) {
         // get all scans, show how many happened on each day of the week
         let rtrn = {
@@ -321,6 +416,11 @@ export class QRCode {
         return rtrn
     }
 
+    /**
+     * Get the amount of scans that have happened at each hour of the day
+     * @param timezone The timezone to use
+     * @returns An object with the amount of scans that have happened at each hour of the day
+     */
     private getScannedTimeRank(timezone: string) {
         // get all scans, show how many happened at each hour of the day
         let rtrn: { [key: string]: number } = {};
@@ -338,13 +438,42 @@ export class QRCode {
         return rtrn;
     }
 
+    /**
+     * Get the amount of scans that have happened at each hour of the day
+     * @param timezone The timezone to use
+     * @returns An object with the amount of scans that have happened at each hour of the day
+     */
+    private getScannedTimeRank12(timezone: string) {
+        let rtrn: { [key: string]: number | null } = {};
+        for (let i = 0; i < 12; i++) {
+            let amLabel = i === 0 ? "12:00 AM" : i.toString().padStart(2, '0') + ":00 AM";
+            let pmLabel = i === 0 ? "12:00 PM" : i.toString().padStart(2, '0') + ":00 PM";
+            rtrn[amLabel] = 0;
+            rtrn[pmLabel] = 0;
+        }
+    
+        for (let scan of this.scanData as ScanDataT[]) {
+            if (scan.timestamp) {
+                let hour = moment(scan.timestamp).tz(timezone).hour();
+                let label = hour >= 12 ? ((hour === 12 ? "12:00 PM" : (hour - 12).toString().padStart(2, '0') + ":00 PM")) : (hour === 0 ? "12:00 AM" : hour.toString().padStart(2, '0') + ":00 AM");
+                rtrn[label]++;
+            }
+        }
+        return rtrn;
+    }
+    
 
+    /**
+     * Get the amount of scans that have happened in a timeInSeconds period
+     * @param timeInSeconds The amount of seconds to look back
+     * @returns The amount of scans that have happened in a timeInSeconds period
+     */
     private getScannedEach(timeInSeconds: number) {
         // for every timeInSeconds back, get the amount of scans, then average it out
         let time = new Date()
         let totalScans = 0;
         let count = 0;
-        while (time.getTime() > this.created.getTime()) {
+        while (time.getTime() > new Date(this.created).getTime()) {
             totalScans += this.getScannedLast(timeInSeconds,time).length;
             count++;
             time = new Date(time.getTime() - timeInSeconds*1000);
@@ -353,6 +482,16 @@ export class QRCode {
         return Math.floor(averageScans);
     }
 
+    /**
+     * Get the QRcode's statistics
+     * @param settings The settings to use
+     * @param settings.type The type of statistics to get
+     * @param settings.time The time to get the statistics for
+     * @param settings.multiplier The multiplier to use for the time
+     * @param settings.timezone The timezone to use
+     * @param settings.onlyFields The fields to get the statistics for
+     * @returns The QRcode's statistics
+     */
     async getStatistics({
         type,
         time,
@@ -368,7 +507,7 @@ export class QRCode {
     
     }): Promise<{
         important_moments: {
-            date: Date;
+            date: string;
             update: {
                 [key:string]: any
             }
@@ -431,56 +570,92 @@ export class QRCode {
             message: "No type provided in request."
         }
 
+        /**
+         * Get only the wanted fields from the info
+         * @param info The info to get the wanted fields from
+         * @returns The info with only the wanted fields
+         */
         const GetOnlyWantedFields = (info:any)=>wantedFields ? (wantedFields as any).map((wantedField: any)=>{ return {[wantedField]:info[wantedField]} }).reduce((addition: any,total: any)=>total={...total, ...addition},{}) : info
 
+        /**
+         * Clear undefined fields from the info
+         * @param info The info to clear the undefined fields from
+         * @returns The info with the undefined fields cleared
+         */
         const clearUndefined = (info: any) => JSON.parse(JSON.stringify(info))
 
         switch (type) {
             case "ScannedLastX":
                 return {
                     info: this.getScannedLast(timeInSeconds).map(GetOnlyWantedFields).map(clearUndefined),
-                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000), new Date())
+                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000).toISOString(), new Date().toISOString())
                 }
             case "ScannedEachX":
                 return {
                     info: this.getScannedEach(timeInSeconds),
-                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000), new Date())
+                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000).toISOString(), new Date().toISOString())
                 }
             case "ScannedWhere":
                 return {
                     info: this.getWhereScanned(),
-                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000), new Date())
+                    important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000).toISOString(), new Date().toISOString()),
+                    ...(
+                        this.type == "location" ? {
+                            zones: (this.data as unknown as LocationQRCodeDataT).zones.map((a) => {
+                                return {
+                                    type: a.type,
+                                    ...(
+                                        a.type == "circle" ? {
+                                            center: a.center,
+                                            radius: a.radius
+                                        } : {}
+                                    ),
+                                    ...(
+                                        a.type == "polygon" ? {
+                                            positions: a.positions
+                                        } : {}
+                                    )
+
+                                }
+                            })
+                        } : {}
+                    )
                 }
             case "ScannedCount":
                 return {
                     info: this.scanCount,
-                    important_moments: this.getImportantMoments(this.created, new Date())
+                    important_moments: this.getImportantMoments(this.created, new Date().toISOString())
                 }
             case "Scanned":
                 return {
                     info: this.scanData.map(GetOnlyWantedFields).map(clearUndefined),
-                    important_moments: this.getImportantMoments(this.created, new Date())
+                    important_moments: this.getImportantMoments(this.created, new Date().toISOString())
                 }
 
             case "ScannedDayRank":
                 return {
                     info: this.getScannedDayRank(timezone),
-                    important_moments: this.getImportantMoments(this.created, new Date())
+                    important_moments: this.getImportantMoments(this.created, new Date().toISOString())
                 }
             case "ScannedTimeRank":
                 return {
                     info: this.getScannedTimeRank(timezone),
-                    important_moments: this.getImportantMoments(this.created, new Date())
+                    important_moments: this.getImportantMoments(this.created, new Date().toISOString())
                 }
+            case "ScannedTimeRank12H":
+                return {
+                    info: this.getScannedTimeRank12(timezone),
+                    important_moments: this.getImportantMoments(this.created, new Date().toISOString())
+                }    
             case "OS":
                 return {
                     info: this.getOSs(),
-                    important_moments: this.getImportantMoments(this.created, new Date())
+                    important_moments: this.getImportantMoments(this.created, new Date().toISOString())
                 }
             case "Browser":
                 return {
                     info: this.getBrowsers(),
-                    important_moments: this.getImportantMoments(this.created, new Date())
+                    important_moments: this.getImportantMoments(this.created, new Date().toISOString())
                 }
             default:
                 return null
@@ -491,7 +666,12 @@ export class QRCode {
 
 
 
-
+    /**
+     * Checks if a point is inside a polygon
+     * @param locationData The location data to check
+     * @param positions The positions of the polygon
+     * @returns True if the point is inside the polygon, false otherwise
+     */
     private isPointInPolygon(locationData: { latitude: number; longitude: number; accuracy: number; }, positions: number[][]): boolean {
         let x = locationData.latitude, y = locationData.longitude
         let inside = false
@@ -573,17 +753,21 @@ export namespace Types {
 }
 
 
-function getDistanceFromLatLonInMeters(latitude: number, longitude: number, arg2: number, arg3: number) {
-    var lat1 = latitude;
-    var lon1 = longitude;
-    var lat2 = arg2;
-    var lon2 = arg3;
+/**
+ * Get the distance between two points
+ * @param p1Lat The latitude of the first point
+ * @param p1Lon The longitude of the first point
+ * @param p2Lat The latitude of the second point
+ * @param p2Lon The longitude of the second point
+ * @returns The distance between the two points
+ */
+function getDistanceFromLatLonInMeters(p1Lat: number, p1Lon: number, p2Lat: number, p2Lon: number) {
     var R = 6371; // Radius of the earth in km
-    var dLat = deg2rad(lat2 - lat1);  // deg2rad below
-    var dLon = deg2rad(lon2 - lon1);
+    var dLat = deg2rad(p2Lat - p1Lat);  // deg2rad below
+    var dLon = deg2rad(p2Lon - p1Lon);
     var a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.cos(deg2rad(p1Lat)) * Math.cos(deg2rad(p2Lat)) *
         Math.sin(dLon / 2) * Math.sin(dLon / 2)
         ;
     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
@@ -591,7 +775,12 @@ function getDistanceFromLatLonInMeters(latitude: number, longitude: number, arg2
     return d;
 }
 
-function deg2rad(arg0: number) {
-    return arg0 * (Math.PI / 180)
+/**
+ * Convert degrees to radians
+ * @param degrees The degrees to convert
+ * @returns The degrees in radians
+ */
+function deg2rad(degrees: number) {
+    return degrees * (Math.PI / 180)
 }
 

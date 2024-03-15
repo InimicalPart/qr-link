@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2-ql";
 import "@sweetalert2/theme-dark"
+import moment from "moment-timezone";
 
 export default function APIKeyGenerator({
     API_URL,
@@ -57,7 +58,9 @@ export default function APIKeyGenerator({
                 const currentContainerWidth = document.getElementById("api-key-container")?.clientWidth
                 if (containerWidth !== currentContainerWidth) setContainerWidth(currentContainerWidth ?? Infinity)
             }, [windowWidth])
-        
+            
+
+
         function onEditClicked(e:any) {
             
                 let keyContainer = null
@@ -78,6 +81,10 @@ export default function APIKeyGenerator({
                     title: "Edit API key",
                     html: "You can edit the name of the API key here.",
                     input: "text",
+                    inputPlaceholder: "New name",
+                    inputAttributes: {
+                        maxLength: "75"
+                    },
                     inputValue: apikeys.find(a=>a.id==id).name,
                     showCancelButton: true,
                     confirmButtonText: "Save",
@@ -85,6 +92,8 @@ export default function APIKeyGenerator({
                     preConfirm: async (name) => {
                         const newName = name == "" ? null : name;
                         //update the name of the API key
+
+                        if (newName == apikeys.find(a=>a.id==id).name) return true
 
                         const result = await updateAPIName(id, newName)
                         
@@ -96,17 +105,10 @@ export default function APIKeyGenerator({
                         } else {
 
                             
-                            const newAPIKeys = apikeys.map((key) => {
-                                if (key.id === e) {
-                                    return {
-                                        ...key,
-                                        name: newName
-                                    }
-                                }
-                                return key
-                            })
-                            console.log(newAPIKeys)
-                            setAPIKeys(newAPIKeys)
+                            let newAPIKey = apikeys.find(a=>a.id==id)
+                            newAPIKey.name = newName
+                            console.log([...apikeys.filter(a=>a.id!=id), newAPIKey])
+                            setAPIKeys([...apikeys.filter(a=>a.id!=id), newAPIKey])
                             
                             const toast = Swal.mixin({
                                 toast: true,
@@ -138,7 +140,7 @@ export default function APIKeyGenerator({
                 const diffInSeconds = diff / 1000;
                 const diffInMinutes = Math.floor(diffInSeconds / 60);
                 const diffInHours = Math.floor(diffInMinutes / 60);
-            
+
                 if (diffInHours < 24 && now.getDate() === date.getDate()) {
                     const hours = date.getHours() % 12 || 12;
                     const minutes = String(date.getMinutes()).padStart(2, "0");
@@ -151,6 +153,7 @@ export default function APIKeyGenerator({
                     return `Yesterday at ${hours}:${minutes} ${period}`;
                 } else {
                     const month = date.toLocaleString("default", { month: "short" });
+                    if (month === "Invalid Date") return "Unknown";
                     const day = date.getDate();
                     const year = date.getFullYear();
                     const hours = date.getHours() % 12 || 12;
@@ -163,7 +166,7 @@ export default function APIKeyGenerator({
             function onRevokeConfirmation(id:string) {
                 Swal.fire({
                     title: "Are you sure?",
-                    html: "You're about to permanentely revoke API key with token:<br/><br/><b>"+apikeys.find(a=>a.id==id).token_preview+"</b><br/><br/>You will not be able to recover this API key, and any applications using it will stop working.",
+                    html: "You're about to <span style=\"text-decoration: underline\">permanentely</span> revoke the API key "+(apikeys.find(a=>a.id==id).name ? "known as" : "with token") +":<br/><br/>'<b>"+(apikeys.find(a=>a.id==id).name ?? apikeys.find(a=>a.id==id).token_preview) + "</b>'<br/><br/>You will not be able to recover this API key, and any applications using it will stop working.",
                     icon: "warning",
                     showCancelButton: true,
                     confirmButtonText: "Yes, revoke it!",
@@ -185,20 +188,30 @@ export default function APIKeyGenerator({
                                 confirmButton.innerText = previousText
                             }
                         }, 1000)
+                    },
+                    preConfirm: async (res) => {
+                        await (onRevoke(id) as any).then(()=>true).catch((e:string)=>e)
                     }
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        (onRevoke(id) as any).then(()=>{
-                            Swal.fire({
-                                title: "Revoked!",
-                                text: "The API key has been revoked.",
-                                icon: "success",
-                                didClose: () => setAPIKeys(apikeys.filter(a=>a.id!=id))
-                            })
-                        })
-                    }
+                    Swal.fire({
+                        title: "Revoked!",
+                        text: "The API key has been revoked.",
+                        icon: "success",
+                        didClose: () => setAPIKeys(apikeys.filter(a=>a.id!=id))
+                    })
+                    return true
                 });
             }
+
+            useEffect(() => {
+                function addToAPIKeys(newKeyEvent: any) {
+                    const newKey = newKeyEvent.detail
+                    setAPIKeys([...apikeys, newKey])
+                }
+                window.addEventListener("addToAPIKeys", addToAPIKeys)
+
+                return () => window.removeEventListener("addToAPIKeys", addToAPIKeys)
+            })
 
             function updateBadges(key: APIKeyOutput) {
 
@@ -253,10 +266,16 @@ export default function APIKeyGenerator({
                             return <span key={perm} className="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">{perm}</span>
                         })
                         
-                        if (key.permissions.length > howManyBadges) {
+                        const leftovers = sorted.slice(howManyBadges)
+
+                        if (leftovers.length > 0) {
                             //! Add a '+X more' badge if there are more permissions than the amount of badges shown, or show how many permissions there are if only 1 badge fits
                             result.push(
-                                <span className="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">{howManyBadges > 0 ? "+" + (key.permissions.length - howManyBadges).toString() + " more": key.permissions.length.toString() + " permissions" }</span>
+                                <span title={
+                                    leftovers.length > 1 ? 
+                                    leftovers.join("\n") : 
+                                    leftovers[0]
+                                } className="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">{howManyBadges > 0 ? "+" + (key.permissions.length - howManyBadges).toString() + " more": key.permissions.length.toString() + " permissions" }</span>
                             )
                         }
 
@@ -279,7 +298,7 @@ export default function APIKeyGenerator({
 
             return (<div key={key.id}>
                 <div id={"api-key-"+key.id}  className="api-key">
-                    <p className={"name " + (!key.name ? "no-name":"")}>{key.name ?? <i>No name</i>}</p>
+                    <p onDoubleClick={onEditClicked} className={"name " + (!key.name ? "no-name":"")}>{key.name ?? <i>No name</i>}</p>
                     <p className="token-preview">{key.token_preview}</p>
                     <div className="api-badges">
                             {updateBadges(key)}

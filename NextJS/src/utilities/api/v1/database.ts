@@ -14,6 +14,13 @@ export class DatabaseError extends Error {
     }
 }
 
+/**
+ * Attempts to connect to the database without credentials and then sets up the database to be protected from unauthorized access.
+ * @param mongoConnectionString The connection string to the MongoDB database.
+ * @param res A function to call when the connection is successful.
+ * @param rej A function to call when the connection fails, with a reason as the first argument.
+ * @returns A promise that resolves when the connection is successful and rejects when the connection fails.
+ */
 export async function bareBonesConnection(mongoConnectionString: string, res:()=>void=undefined, rej:(reason:string)=>string=undefined) {
     const child_process = await import("child_process")
     return new Promise<void>(async (resolve, reject) => {
@@ -187,6 +194,10 @@ export async function bareBonesConnection(mongoConnectionString: string, res:()=
     })
 }
 
+/**
+ * Restarts the database.
+ * If it fails, it will print an error message and then sleep forever.
+ */
 export async function restartDatabase() {
     console.log("[DATA] Restarting the database...")
     const util = await import("util")
@@ -205,9 +216,12 @@ export async function restartDatabase() {
         await new Promise(() => {}) // sleep forever
     })
     console.log("[DATA] Database restarted.")
-    return
 }
 
+/**
+ * Edits the database configuration file to force authorization.
+ * @param configLoc The location of the configuration file.
+ */
 async function editConfiguration(configLoc: string) {
     const {promises:fs} = await import("fs")
     let config = yaml.parse(await fs.readFile(configLoc, "utf8"))
@@ -221,6 +235,10 @@ async function editConfiguration(configLoc: string) {
 }
 
 
+/**
+ * Makes sure the database has the correct databases and collections, and creates them if they don't exist.
+ * @param clientORmCS The MongoClient object or the connection string to the MongoDB database.
+ */
 export async function ensureDBSetup(clientORmCS: MongoClient | string) {
     return new Promise<void>(async (resolve, reject) => {
     let dbClient = clientORmCS ?? null
@@ -250,6 +268,10 @@ export async function ensureDBSetup(clientORmCS: MongoClient | string) {
     })
 }
 
+/**
+ * Shows the user how to set up the database correctly.
+ * @param isDocker Whether the database is running in a Docker container.
+ */
 function showDBSetupInstructions(isDocker: boolean) {
     console.log()
     console.log()
@@ -269,6 +291,11 @@ function showDBSetupInstructions(isDocker: boolean) {
     console.log("-------")
 }
 
+/**
+ * Reads the QRCodeTable from the database or file.
+ * @param storage The storage method to use. "file" for file storage, "mongo" for database storage.
+ * @returns A promise that resolves with the QRCodeTable.
+ */
 export async function readQRCodeTable(storage=global.storageMethod) {
     return new Promise<QRCodeTable>(async (resolve, reject) => {
       if (storage == "file") {
@@ -290,6 +317,10 @@ export async function readQRCodeTable(storage=global.storageMethod) {
     });
   }
 
+/**
+ * Deletes the QRCode with the specified ID from the database or file.
+ * @param id The ID of the QRCode to delete.
+ */
 export async function deleteQR(id: string) {
     return new Promise<void>(async (resolve, reject) => {
         if (global.storageMethod == "file") {
@@ -310,8 +341,12 @@ export async function deleteQR(id: string) {
             })
         }
     });
-
 }
+
+/**
+ * Reads the APIKeys from the database or file.
+ * @returns A promise that resolves with the APIKeys.
+ */
 export async function getAPIKeys() {
     return new Promise<{
         [key: string]: {
@@ -343,8 +378,14 @@ export async function getAPIKeys() {
     });
 }
 
-export async function createAPIKey(name: string, owner: string, permissions: Array<"create"|"update"|"delete"|"read">) {
-
+/**
+ * Creates an API key.
+ * @param name The name of the API key.
+ * @param owner The owner of the API key.
+ * @param permissions The permissions of the API key.
+ * @returns A promise that resolves with the ID and the API key.
+ */
+export async function createAPIKey(name: string, owner: string, permissions: Array<APIKeyPermissions>) {
     //make sure id doesnt already exist, Object.keys(global.APIKeys)
     let id = await randomString(32)
     while (Object.keys(global.APIKeyTable).includes(id)) {
@@ -355,7 +396,7 @@ export async function createAPIKey(name: string, owner: string, permissions: Arr
         key: key,
         name: name,
         belongs_to: owner,
-        created: new Date(),
+        created: new Date().toISOString(),
         last_used: null,
         permissions: permissions
     }
@@ -375,6 +416,10 @@ export async function createAPIKey(name: string, owner: string, permissions: Arr
     return {id, ...global.APIKeyTable[id]}
 }
 
+/**
+ * Deletes the API key with the specified ID from the database or file.
+ * @param id The ID of the API key to delete.
+ */
 export async function deleteAPIKey(id: string) {
     const copy = {...global.APIKeyTable[id]}
     delete global.APIKeyTable[id]
@@ -389,6 +434,11 @@ export async function deleteAPIKey(id: string) {
     return copy
 }
 
+/**
+ * Updates the name of the API key with the specified ID.
+ * @param id The ID of the API key to update.
+ * @param name The new name of the API key.
+ */
 export async function updateAPIKeyName(id: string, name: string) {
     //! You will only be able to update the name of the API key, nothing else.
     global.APIKeyTable[id].name = name
@@ -403,6 +453,13 @@ export async function updateAPIKeyName(id: string, name: string) {
     return true
 } 
 
+/**
+ * Saves a QRCode to the database or file.
+ * @param id The ID of the QRCode to save.
+ * @param obj The QRCode to save.
+ * @param update Whether to update the QRCode or insert a new one.
+ * @returns A promise that resolves when the QRCode is saved.
+ */
 export async function saveQR(id: string = null, obj: QRCode = new QRCode(), update:boolean=false) {
     return new Promise<void>(async (resolve, reject) => {
         if (global.storageMethod == "file") {
@@ -438,6 +495,11 @@ export async function saveQR(id: string = null, obj: QRCode = new QRCode(), upda
 
 }
 
+/**
+ * Synchronizes the MongoDB with the file storage method.
+ * Essentially, this function will insert all QR-codes from the file storage method into the MongoDB.
+ * @returns A promise that resolves when the synchronization is complete.
+ */
 export async function syncMongoWithFile() {
     if (global.storageMethod == "file") return
     let fileData: QRCodeTable = await readQRCodeTable("file")
@@ -462,6 +524,11 @@ export async function syncMongoWithFile() {
     }
 }
 
+/**
+ * Converts from MongoDB format to QRCodeTable format.
+ * @param data An array of QRCode objects in MongoDB format.
+ * @returns A promise that resolves with the QRCodeTable format.
+ */
 export async function convertToQRCTFormat(data: Array<MongoQRCodeInformation>): Promise<QRCodeTable> {
     return new Promise<QRCodeTable>((resolve, reject) => {
         let result: QRCodeTable = {}

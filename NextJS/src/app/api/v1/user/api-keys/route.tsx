@@ -36,8 +36,7 @@ export async function GET(request:NextRequest) {
         }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
 
-    const timezone = request.nextUrl.searchParams.get("timezone") ?? moment.tz.guess()
-
+    
     let UsersAPIKeys = Object.keys(global.APIKeyTable).filter((id) => global.APIKeyTable[id].belongs_to === user.user.id)
     const protectedKeys = []
     for (let APIKey of UsersAPIKeys) {
@@ -46,8 +45,8 @@ export async function GET(request:NextRequest) {
             id: APIKey,
             token_preview: APIToken.substring(0, 7) + "..." + APIToken.substring(APIToken.length - 7, APIToken.length),
             name: global.APIKeyTable[APIKey].name,
-            created: moment(global.APIKeyTable[APIKey].created).tz(timezone).format("YYYY-MM-DD HH:mm:ss.SSS\\Z"),
-            last_used: moment(global.APIKeyTable[APIKey].last_used).tz(timezone).format("YYYY-MM-DD HH:mm:ss.SSS\\Z"),
+            created: global.APIKeyTable[APIKey].created ? global.APIKeyTable[APIKey].created : null,
+            last_used: global.APIKeyTable[APIKey].last_used ? global.APIKeyTable[APIKey].last_used : null,
             permissions: global.APIKeyTable[APIKey].permissions
         })
     }
@@ -111,6 +110,16 @@ export async function POST(request: NextRequest) {
         }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
+
+    if (body.name && body.name.trim().length > 75) {
+        return new NextResponse(JSON.stringify({
+            error: "INVALID_NAME",
+            message: "Name too long, must be 75 characters or less."
+        }), { status: 400, headers: { "Content-Type": "application/json" } });
+    }
+
+    body.name = body.name.trim() == "" ? null : body.name.trim() 
+
     //! Check if permissions are valid, ("create","read","update","delete")
     if (!permissions.every((permission: APIKeyPermissions) => [
         "qrcode:create",
@@ -134,7 +143,7 @@ export async function POST(request: NextRequest) {
         id: details.id,
         name: details.name,
         token: APIToken,
-        created: moment(details.created).tz(timezone).format("YYYY-MM-DD HH:mm:ss.SSS\\Z"),
+        created: details.created ? details.created : null,
         last_used: null,
         permissions: details.permissions
     }), { status: 200, headers: { "Content-Type": "application/json" } });

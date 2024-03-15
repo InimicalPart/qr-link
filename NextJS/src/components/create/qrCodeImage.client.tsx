@@ -16,13 +16,13 @@ export default function QRCodeImage({
     
     useEffect(() => {
         const generateQRCode = async () => {
-            const qrCodeDataURL = await QRCode.toDataURL(`${API_URL}/qrcode/${qrCodeDetails.id??"NO-ID"}/handler`, { errorCorrectionLevel: "H", width:250 });
+            const qrCodeDataURL = await QRCode.toDataURL(`${API_URL}/qrcode/${qrCodeDetails?.id??"NO-ID"}/handler`, { errorCorrectionLevel: "H", width:250 });
             return qrCodeDataURL;
         }
         generateQRCode().then((dataurl)=>{
             setDataURL(dataurl)
         }) 
-    }, [API_URL, qrCodeDetails.id])
+    }, [API_URL, qrCodeDetails?.id])
 
 
 

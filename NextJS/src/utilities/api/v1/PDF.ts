@@ -2,6 +2,10 @@ import puppeteer, { Page } from "puppeteer";
 
 let page: Page;
 
+/**
+ * Creates a puppeteer page instance, if it's already created, it returns the existing one
+ * @returns A puppeteer page instance
+ */
 export const getPage = async () => {
   if (page) return page;
 
