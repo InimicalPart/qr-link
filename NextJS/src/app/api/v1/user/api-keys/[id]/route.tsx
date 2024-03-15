@@ -43,7 +43,8 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
             return new NextResponse(JSON.stringify({
                 id: APIDetails.id,
                 name: APIDetails.name,
-                created_at: APIDetails.created,
+                created_at: APIDetails.created ? APIDetails.created : null,
+                last_used: APIDetails.last_used ? APIDetails.last_used : null,
                 permissions: APIDetails.permissions,
                 token: token.replace("Bearer ","").substring(0, 7) + "..." + token.replace("Bearer ","").substring(token.replace("Bearer ","").length - 7, token.replace("Bearer ","").length)
             }), { status: 200, headers: { "Content-Type": "application/json" } });
@@ -69,12 +70,11 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
             }), { status: 403, headers: { "Content-Type": "application/json" } });
         }
         const APIToken = await generateAPIToken(params.id)
-        const timezone = request.nextUrl.searchParams.get("timezone") ?? moment.tz.guess()
         return new NextResponse(JSON.stringify({
             id: params.id,
             name: global.APIKeyTable[params.id].name,
-            created: moment(global.APIKeyTable[params.id].created).tz(timezone).format("YYYY-MM-DD HH:mm:ss.SSS\\Z"),
-            last_used: moment(global.APIKeyTable[params.id].last_used).tz(timezone).format("YYYY-MM-DD HH:mm:ss.SSS\\Z"),
+            created: global.APIKeyTable[params.id].created ? global.APIKeyTable[params.id].created : null,
+            last_used: global.APIKeyTable[params.id].last_used ? global.APIKeyTable[params.id].last_used : null,
             permissions: global.APIKeyTable[params.id].permissions,
             token: APIToken.substring(0, 7) + "..." + APIToken.substring(APIToken.length - 7, APIToken.length)
 
@@ -110,7 +110,7 @@ export async function DELETE(request: NextRequest, {params}: {params: {id: strin
                 case "invalid_perms":
                     return new NextResponse(JSON.stringify({
                         error: "INVALID_PERMISSIONS",
-                        message: "This API key does not have the required permissions to delete itself."
+                        message: "The token provided does not have the required permissions to access this resource."
                     }), { status: 403, headers: { "Content-Type": "application/json" } });
             }
         }
@@ -168,7 +168,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
                 case "invalid_perms":
                     return new NextResponse(JSON.stringify({
                         error: "INVALID_PERMISSIONS",
-                        message: "This API key does not have the required permissions to update itself."
+                        message: "The token provided does not have the required permissions to access this resource."
                     }), { status: 403, headers: { "Content-Type": "application/json" } });
                 }
         }
@@ -188,7 +188,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
         }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
-    const { name } = body;
+    let { name } = body;
 
     if (params.id === "@me" && token.startsWith("Bearer ")) {
         params.id = await getIDFromAPIToken(token)
@@ -208,12 +208,14 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
         }), { status: 403, headers: { "Content-Type": "application/json" } });
     }
 
-    if (name && name.length > 50) {
+    if (name && name.trim().length > 75) {
         return new NextResponse(JSON.stringify({
             error: "INVALID_NAME",
-            message: "Name too long, must be 50 characters or less."
+            message: "Name too long, must be 75 characters or less."
         }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
+
+    name = name.trim() == "" ? null : name.trim()
 
     await updateAPIKeyName(params.id, name)
     return new NextResponse(JSON.stringify({

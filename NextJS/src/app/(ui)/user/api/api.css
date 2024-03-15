@@ -87,7 +87,7 @@
 .api-key > .revoke-button {
     position:absolute;
     right:15px;
-    top:10px;
+    top:15px;
     width: 100px;
     height: 40px;
     background-color: #ff0000;
@@ -106,7 +106,7 @@
 .api-key > .edit-button {
     position:absolute;
     right:15px;
-    bottom:10px;
+    bottom:15px;
     width: 100px;
     height: 40px;
     background-color: #277bf8;
@@ -122,6 +122,35 @@
     transition: 0.3s;
     margin-top: 5px;
 }
+
+.user-api.add-api-key {
+    padding: 10px;
+    max-width: 220px;
+    width: 90vw;
+    position: relative;
+    height: 40px;
+    background-color: rgb(67, 43, 255);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12pt;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.3s;
+    margin-top: 15px;
+}
+
+.user-api.add-api-key:hover {
+    background-color: rgb(83, 62, 247);
+}
+
+.user-api.add-api-key:active {
+    background-color: rgb(58, 36, 221);
+}
+
 
 .api-key > .revoke-button:hover {
     background-color: #ff5555;

@@ -35,7 +35,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
                 case "invalid_perms":
                     return new NextResponse(JSON.stringify({
                         error: "INVALID_PERMISSIONS",
-                        message: "This API token does not have the required permissions to get QRCodes.",
+                        message: "The token provided does not have the required permissions to access this resource.",
                     }), {status:403, headers: { "Content-Type": "application/json" } });
                 case "invalid_owner":
                     return new NextResponse(JSON.stringify({

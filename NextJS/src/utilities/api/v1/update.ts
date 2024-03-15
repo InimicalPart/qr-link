@@ -10,7 +10,14 @@ import { NextResponse } from "next/server";
 declare const global: QRLinkGlobal;
 
 
-export async function validateAndDoUpdate(id: string, update: Partial<QRCode>, timezone: string) {
+/**
+ * Check the validity of the data object for a specified type and return a new data object if necessary
+ * @param id The ID of the QRCode
+ * @param update The update that needs to be checked
+ * @param timezone The timezone of the user (if applicable)
+ * @returns An object with the updated fields, or null if no fields were updated
+ */
+export async function validateAndDoUpdate(id: string, update: Partial<QRCode>) {
     let updated: Partial<QRCode> = {}
     for (let key of Object.keys(update)) {
         switch (key) {
@@ -57,15 +64,10 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>, t
             updated.linked_to = tokenVerificationResult.user.id;
             break;
         case "expires":
+            if (global.QRCodeTable[id].expires == update.expires) break; //! no need to update if expires is the same
 
             //! Needs to be a date or null
             if (((new Date(update.expires) as any) == "Invalid Date" || !(typeof (update.expires as any) == "string")) && update.expires != null) return new NextResponse(JSON.stringify({error: "INVALID_EXPIRES", message: "'expires' needs to be a date or null."}), {status: 400, headers: { "Content-Type": "application/json" } });
-            
-            //! Adjust to UTC if server's timezone isn't null or undefined
-            if (update.expires && timezone) {
-                update.expires = moment.tz(new Date(update.expires).toISOString().replace(/:[0-9]{2}\.[0-9]{3}Z.*$/gm, ""), timezone).toDate()
-            }            
-            if (global.QRCodeTable[id].expires == update.expires) break; //! no need to update if expires is the same
 
             updated.expires = update.expires;
             break;
@@ -183,13 +185,19 @@ export async function validateAndDoUpdate(id: string, update: Partial<QRCode>, t
         Object.assign(global.QRCodeTable[id], updated)
     }
 
-    const updateTime = new Date()
+    const updateTime = new Date().toISOString()
     global.QRCodeTable[id].updated = updateTime
     global.QRCodeTable[id].addToUpdateLog(updated, updateTime)
 
     return Object.keys(updated).length > 0 ? updated : null
 }
 
+/**
+ * Checks if the data is valid for the 'redirect' type
+ * @param data The data to check
+ * @param id The ID of the QRCode
+ * @returns An object with a boolean 'valid' and a 'newData' object if the data is valid, or an error message if the data is invalid
+ */
 async function checkRedirectDataValidity(data: Types.RedirectQRCodeData, id: string) {
 
     if (!data.redirect_to) {
@@ -252,6 +260,12 @@ async function checkRedirectDataValidity(data: Types.RedirectQRCodeData, id: str
     return { valid: true, newData: (data as unknown as Types.Data) };
 }
 
+/**
+ * Checks if the data is valid for the 'schedule' type
+ * @param data The data to check
+ * @param id The ID of the QRCode
+ * @returns An object with a boolean 'valid' and a 'newData' object if the data is valid, or an error message if the data is invalid
+ */
 async function checkScheduleDataValidity(data: Types.ScheduleQRCodeData | null, id: string) {
     
     if (!(typeof (data as any) == "object")) {
@@ -381,6 +395,12 @@ async function checkScheduleDataValidity(data: Types.ScheduleQRCodeData | null, 
     return { valid: true, newData: (data as unknown as Types.Data) };
 }
 
+/**
+ * Checks if the data is valid for the 'location' type
+ * @param data The data to check
+ * @param id The ID of the QRCode
+ * @returns An object with a boolean 'valid' and a 'newData' object if the data is valid, or an error message if the data is invalid
+ */
 export async function checkLocationDataValidity(data: Types.LocationQRCodeData, id: string) {
 
     const zones = data.zones
@@ -471,6 +491,12 @@ export async function checkLocationDataValidity(data: Types.LocationQRCodeData, 
     return { valid: true, newData: (data as unknown as Types.Data) };
 }
 
+/**
+ * Checks if the data is valid for the 'user-agent' type
+ * @param data The data to check
+ * @param id The ID of the QRCode
+ * @returns An object with a boolean 'valid' and a 'newData' object if the data is valid, or an error message if the data is invalid
+ */
 export async function checkUserAgentDataValidity(data: Types.UserAgentQRCodeData, id: string) {
     for (let userAgentInfo of data.userAgents) {
 
@@ -527,6 +553,13 @@ export async function checkUserAgentDataValidity(data: Types.UserAgentQRCodeData
 }
 
 
+/**
+ * Check the validity of the data object for a specified type and return a new data object if necessary
+ * @param type The type of the QRCode
+ * @param data The data to check
+ * @param id The ID of the QRCode
+ * @returns An object with a boolean 'valid' and a 'newData' object if the data is valid, or an error message if the data is invalid
+ */
 export async function checkDataValidity(
     type: string,
     data: any,
@@ -544,4 +577,4 @@ export async function checkDataValidity(
         default:
             return { valid: false, error: "INVALID_TYPE", message: "Invalid type." };
     }
-  }
+}

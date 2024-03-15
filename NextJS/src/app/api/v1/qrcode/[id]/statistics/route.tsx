@@ -33,17 +33,22 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
     const qrcode = global.QRCodeTable[id]
 
     const user = await getUser(token,{
-        allowAPIKey: false, //TODO: Change to true 
+        required_permission: "qrcode:read"
     })
     if (!user.isAuthenticated) {
         if (user.reason) {
             switch (user.reason) {
-                case "api_key":
+                case "invalid_perms":
                     return new NextResponse(JSON.stringify({
-                        error: "NOT_ALLOWED",
-                        message: "This endpoint does not allow API keys."
-                    }), { status: 401, headers: { "Content-Type": "application/json" } })
-            }
+                        error: "INVALID_PERMISSIONS",
+                        message: "The token provided does not have the required permissions to access this resource."
+                    }), { status: 403, headers: { "Content-Type": "application/json" } });
+                case "invalid_owner":
+                    return new NextResponse(JSON.stringify({
+                        error: "INVALID_OWNER",
+                        message: "The owner of this API token does not exist.",
+                    }), {status:400, headers: { "Content-Type": "application/json" } });
+                }
         }
         return new NextResponse(JSON.stringify({
             error: "INVALID_TOKEN",
@@ -64,8 +69,8 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
     const type = query.get("type")
     const multiplier = query.get("period_length") // optional // 1 (Month), 3 (Weeks)
     const period = query.get("period_unit") // optional // (1) Month, (3) Weeks
-    const timezone = query.get("timezone") ?? moment.tz.guess()
     const wantedFields = query.get("fields")?.split(",") // optional
+    const timezone = query.get("timezone") ?? moment.tz.guess()
 
 
     if (!type) {

@@ -12,13 +12,13 @@ export default async function UserProfile() {
 
     //! Make sure the user is logged in
     if (!cookies()?.get("token")?.value) redirect("/login")
-    const user = await getUser(cookies().get("token").value, { allowAPIKey:false })
+    let user = await getUser(cookies().get("token").value, { allowAPIKey:false })
     if (!user.isAuthenticated) redirect("/login")
 
     async function updateUserInformation(prevState:any, form: FormData) {
         "use server";
         const firstName = form.get("firstName").toString().trim()
-        const lastName = form.get("lastName").toString().trim() === "" ? null : form.get("lastName").toString().trim()
+        const lastName = form.get("lastName").toString().trim()
         const email = form.get("email").toString().trim()
 
         if (firstName == "" || email == "") {
@@ -36,14 +36,19 @@ export default async function UserProfile() {
         }
 
         if (firstName !== user.user.firstName || lastName !== user.user.lastName || email !== user.user.email) {
-            const newToken = await updateUser(user.user.id,{
+            const {token: newToken, user: newUser} = await updateUser(user.user.id,{
                 firstName,
                 lastName,
                 email
             })
 
+            
             if (newToken) {
                 cookies().set("token", newToken)
+                user = {
+                    isAuthenticated: true,
+                    user: newUser
+                }
                 return {
                     success: "User updated"
                 }

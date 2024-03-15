@@ -83,7 +83,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
     //! Correctly format all data
     const name = validatedFields.data.name == "" ? null : validatedFields.data.name
     const description = validatedFields.data.description == "" ? null : validatedFields.data.description
-    const expires = validatedFields.data.expires_never_checkbox == "on" ? null : validatedFields.data.expires
+    const expires = validatedFields.data.expires_never_checkbox == "on" ? null : moment.tz(validatedFields.data.expires,validatedFields.data.timezone).tz("UTC").toISOString()
     const grabScanData = validatedFields.data.grab_scan_data == "on"
     const grabDeviceFingerprint = validatedFields.data.grab_device_fingerprint == "on"
     const grabIpAddress = validatedFields.data.grab_ip_address == "on"
@@ -115,12 +115,11 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
             }
         }
     })();
-    const timezone = validatedFields.data.timezone
 
     const JSONBody: Partial<QRCode> = {
         name: name,
         description: description,
-        expires: expires ? new Date(expires): null,
+        expires: expires ? new Date(expires).toISOString() : null,
         settings: {
             getScanData: grabScanData,
             scanData: {
@@ -150,7 +149,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
             "Content-Type": "application/json",
             "Authorization": `${cookies().get("token").value}`
         },
-        body: JSON.stringify({...JSONBody, timezone}),
+        body: JSON.stringify(JSONBody),
         cache: "no-cache"
     })
     const responseData = await response.json()

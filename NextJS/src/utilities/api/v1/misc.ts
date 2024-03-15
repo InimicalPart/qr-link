@@ -9,6 +9,11 @@ import { getPage } from "./PDF";
 declare const global: QRLinkGlobal
 
 
+/**
+ * Generate a random string of a specified length
+ * @param length Length of the string
+ * @returns A promise that resolves to a string
+ */
 export async function randomString(length: number) {
     return new Promise<string>((resolve, reject) => {
       crypto.randomBytes(length, function (err, buffer) {
@@ -22,6 +27,12 @@ export async function randomString(length: number) {
 
 
 
+/**
+ * Convert a QRCode to a PDF
+ * @param qrcode The QRCode to convert
+ * @param id The ID of the QRCode
+ * @returns A promise that resolves to a string
+*/
 export async function QRCode2PDF(qrcode: QRCode, id: string) {
     function settings2HTML(settings: { getScanData: boolean; scanData: {information:{
         fingerprint:boolean;
@@ -121,14 +132,20 @@ const qrCodeHTML = `<div style="font-family: 'Inter', sans-serif;min-height:100%
     return "data:application/pdf;base64," + pdf.toString("base64");
 }
 
+/**
+ * Get the time that has passed since the last change
+ * @param times The times to check
+ * @param timezone The timezone to use
+ * @returns A string
+ */
 export function getPassedTime(times: string[], timezone: string) {
     if (times.includes("ALL_DAY")) {
         return "ALL_DAY";
     }
     let diffs: number[] = []
     for (let time of times) {
-        let nextChange = moment("1970-01-02T" + time).tz(timezone)
-        let now = moment("1970-01-02T"+(new Date().toLocaleString("en-us", { hour: "numeric", minute: "numeric", second:"numeric", hour12: false }))).tz(timezone)
+        let nextChange = moment.tz("1970-01-02T" + time,timezone)
+        let now = moment.tz("1970-01-02T"+(new Date().toLocaleString("en-us", { hour: "numeric", minute: "numeric", second:"numeric", hour12: false })),timezone)
         let diff = nextChange.diff(now, "seconds")
         if (diff > 0) diff += 86400 //! not really needed, but eh *shrug*, cant afford for it to break, so better safe than sorry
         diffs.push(diff)

@@ -7,6 +7,7 @@ import "./api.css"
 import APIKeyGenerator from "@/components/user/profile/api/generator.client";
 import { deleteAPIKey, updateAPIKeyName } from "@/utilities/api/v1/database";
 import { QRLinkGlobal } from "@/types/api/v1/global";
+import AddAPIKeyButton from "@/components/user/profile/api/addAPIKey.client";
 
 declare const global: QRLinkGlobal
 
@@ -19,24 +20,41 @@ export default async function UserAPI() {
 
     async function revokeAPIKey(id:string) {
         "use server";
-        const key = global.APIKeyTable[id]
 
-        if (key.belongs_to === user.user.id) {
-            return await deleteAPIKey(id)
-        }
-        return false
+        return await fetch(process.env.API_URL+"/user/api-keys/"+id, {
+            method: "DELETE",
+            headers: {
+                "Authorization": cookies().get("token").value
+            }
+        }).then((res) => res.json())
     }
 
     async function updateName(id:string, name:string) {
         "use server";
 
-        const key = global.APIKeyTable[id]
+        return await fetch(process.env.API_URL+"/user/api-keys/"+id, {
+            method: "PATCH",
+            headers: {
+                "Authorization": cookies().get("token").value,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name
+            })
+        }).then((res) => res.json())
+    }
 
-        if (key.belongs_to === user.user.id) {
-            return await updateAPIKeyName(id, name)
-        }
+    async function createAPIKey(data: {name:string,permissions:string[]}) {
+        "use server";
 
-        return false
+        return await fetch(process.env.API_URL+"/user/api-keys", {
+            method: "POST",
+            headers: {
+                "Authorization": cookies().get("token").value,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        }).then((res) => res.json())
     }
 
     return (
@@ -65,12 +83,13 @@ export default async function UserAPI() {
                 height:"500px",
                 border:"2px solid black",
                 borderRadius:5,
+                overflowY:"auto",
 
             }}>
 
                 <APIKeyGenerator API_URL={process.env.API_URL} token={cookies().get("token").value} onRevoke={revokeAPIKey} updateAPIName={updateName}/>
-
             </div>
+            <AddAPIKeyButton createAPIKey={createAPIKey}/>
 
         </div>
     );

@@ -53,7 +53,7 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
                         case "invalid_perms":
                             return new NextResponse(JSON.stringify({
                                 error: "INVALID_PERMISSIONS",
-                                message: "This API token does not have the required permissions to get QRCodes.",
+                                message: "The token provided does not have the required permissions to access this resource.",
                             }), {status:403, headers: { "Content-Type": "application/json" } });
                         case "invalid_owner":
                             return new NextResponse(JSON.stringify({
@@ -176,7 +176,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
                 case "invalid_perms":
                     return new NextResponse(JSON.stringify({
                         error: "INVALID_PERMISSIONS",
-                        message: "This API token does not have the required permissions to update a QRCode.",
+                        message: "The token provided does not have the required permissions to access this resource.",
                     }), {status:403, headers: { "Content-Type": "application/json" } });
                 case "invalid_owner":
                     return new NextResponse(JSON.stringify({
@@ -206,7 +206,6 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
       }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
   
-    const timezone = update.timezone ?? null
     delete update.timezone
     if (Object.keys(update).filter((key) => !global.supportedUpdateKeys.includes(key)).length != 0) {
       return new NextResponse(JSON.stringify({
@@ -214,7 +213,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
         message: "Invalid arguments provided: " + Object.keys(update).filter((key) => !global.supportedUpdateKeys.includes(key)).join(", "),
       }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
-    const wasAnytingUpdated = await validateAndDoUpdate(id, update, timezone)
+    const wasAnytingUpdated = await validateAndDoUpdate(id, update)
     if (wasAnytingUpdated instanceof NextResponse) {
         //! validateAndDoUpdate had an error
         return wasAnytingUpdated
@@ -289,7 +288,7 @@ export async function DELETE(request: NextRequest, {params}: {params: {id: strin
                 case "invalid_perms":
                     return new NextResponse(JSON.stringify({
                         error: "INVALID_PERMISSIONS",
-                        message: "This API token does not have the required permissions to delete a QRCode.",
+                        message: "The token provided does not have the required permissions to access this resource.",
                     }), {status:403, headers: { "Content-Type": "application/json" } });
                 case "invalid_owner":
                     return new NextResponse(JSON.stringify({

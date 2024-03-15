@@ -59,7 +59,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 case "invalid_perms":
                     return new NextResponse(JSON.stringify({
                         error: "INVALID_PERMISSIONS",
-                        message: "This API token does not have the required permissions to create a QRCode.",
+                        message: "The token provided does not have the required permissions to access this resource."
                     }), {status:403, headers: { "Content-Type": "application/json" } });
                 case "invalid_owner":
                     return new NextResponse(JSON.stringify({
@@ -192,8 +192,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         id,
         type,
         data: (dataValidity.newData ?? data) as unknown as Types.RedirectQRCodeData | Types.ScheduleQRCodeData | Types.LocationQRCodeData,
-        created: new Date(),
-        updated: new Date(),
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
         name: name ? name : null,
         description: description ? description : null,
         linked_to: identifier ? identifier : null,

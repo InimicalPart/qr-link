@@ -155,7 +155,6 @@ export default async function Home({
         display: "flex",
         flexWrap: "wrap",
         paddingBottom: "20px",
-        justifyContent: "center",
     }}>
         <AddQR className="mobile-only DO-flex"/>
         <GenerateQRs handleClick={manageQR} token={cookies().get("token").value} apiURL={API_URL}/>
