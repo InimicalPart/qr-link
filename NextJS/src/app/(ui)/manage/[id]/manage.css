@@ -1,18 +1,129 @@
-a.manage.button {
+button.manage.button {
     text-align: center;
     width: 200px;
     border: 1px solid black;
+    background-color: white;
     /* padding: 0px 30px; */
     border-radius: 8px;
 }
 
-a.manage.button:hover {
-    background-color: gainsboro;
+button.manage.button:hover {
+    background-color: gainsboro !important;
 }
-a.manage.button[aria-disabled="true"] {
-    background-color: darkgray;
+button.manage.button:disabled {
+    background-color: darkgray !important;
     cursor: not-allowed;
 }
+
+.header.main-button {
+    align-items: center;
+    background-color: rgba(240, 240, 240, 0.26);
+    border: 1px solid #686868;
+    border-radius: 16px;
+    box-sizing: border-box;
+    color: #000000;
+    cursor: pointer;
+    font-family: Inter, sans-serif;
+    font-size: 18px;
+    line-height: 28px;
+    max-width: 100%;
+    padding: 8px 12px;
+    text-decoration: none;
+    transition: all .2s;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    display: flex;
+    justify-content: center;
+}
+
+@media (min-width: 768px) {
+.header.main-button {
+    font-size: 20px;
+    min-width: 200px;
+    padding: 14px 16px;
+  }
+}
+
+
+.header.buttons {
+    position: relative;
+    display: flex;
+    flex-wrap: nowrap;
+    gap:5px;
+    height: min-content;
+}
+
+.header.main-button:active,
+.header.main-button:hover {
+  outline: 0;
+}
+
+.header.main-button:hover {
+  background-color: #FFFFFF;
+  border-color: rgba(0, 0, 0, 0.204);
+}
+
+@media screen and (max-width: 1280px){
+    .header.topright {
+        flex-wrap: wrap;
+        max-width: 600px;
+    }
+}
+
+
+
+
+@media screen and (max-width: 1023px){
+
+    header.header {
+        flex-wrap:wrap;
+        padding-bottom: 0 !important;
+    }
+
+
+
+    .header.topright {
+        margin-top:20px;
+        gap:10px;
+        left:50%;
+        transform: translateX(-50%);
+        position: relative;
+    }
+
+    .header.buttons {
+        flex-basis: 100%;
+        justify-content: center;
+        align-items: center;
+
+    }
+
+    @media (min-width: 768px) {
+        .header.topright {
+            max-width: unset !important;
+            margin-bottom: 10px;
+        }
+        .header.buttons {
+            width: calc(302px * 2);
+        }
+        .header.buttons > form {
+            width: calc(302px * 1);
+        }
+    }
+
+    @media (max-width: 767px) {
+        .header.buttons {
+            max-width: calc(302px * 1);
+            left:50%;
+            transform: translateX(-50%);
+            flex-wrap:wrap;
+        }
+        .header.buttons > form {
+            width: calc(302px * 1);
+        }
+    }
+}
+
 
 .QRL-container {
     margin-top:5px;
@@ -41,7 +152,71 @@ ul.moveover {
     background-color: rgb(149,149,149) !important;
 } */
 
-input.create:not([type="submit"]):not([type="checkbox"]) {
+input.manage:not([type="submit"]):not([type="checkbox"]) {
     height:30px
 }
+
+footer.manage.copyright-footer {
+    display:flex;
+    justify-content: center;
+    position: relative;
+    bottom: 0;
+    left:50%;
+    margin-top:60px;
+    width: min-content;
+    flex-wrap: wrap;
+    overflow: hidden;
+    transform: translateX(-50%);
+    margin-bottom:10px;
+}
+footer.manage.copyright-footer > p {
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    font-size: 12pt;
+    margin: 0;
+    text-align: center;
+    color: #575656;
+    width: max-content;
+    /* background: rgba(0,0,0,0.5);  */
+}
+footer.manage.copyright-footer > p > a.copyright {
+    color:#1f1f1f;
+}
+
+footer.manage.copyright-footer > p > a.copyright:hover {
+    text-decoration: underline;
+}
+@media screen and (max-width: 600px){
+    footer.manage.copyright-footer > p {
+        font-size: 9pt;
+    }
+}
+
+.manage.main-container {
+    background-size: 40vh;
+    background-position: right bottom;
+    height: 100vh;
+}
+
+.manage.main-container::-webkit-scrollbar-track
+{
+    margin-top:20px;
+    margin-bottom:20px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 8px;
+    background-color: #F5F5F5;
+}
+
+.manage.main-container::-webkit-scrollbar
+{
+    width: 12px;
+    background-color: #F5F5F5;
+}
+
+.manage.main-container::-webkit-scrollbar-thumb
+{
+    border-radius: 8px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #b3b3b3;
+}
+
 

@@ -372,7 +372,7 @@ export function SOCKET(
             if (!redirectRequiresInfoFromUser) {
                 console.log("[-WS-] Sending client to after_expiry URL...")
                 const after_expiry = global.QRCodeTable[id].getRedirectTo() //! .getRedirectTo() will return the after_expiry URL if the QR-code is expired   
-                console.log("<", JSON.stringify({type: "redirect", data: after_expiry}))
+                if (global.debugMode) console.log("[-WS-] <", JSON.stringify({type: "redirect", data: after_expiry}))
                 client.send(JSON.stringify({type: "redirect", data: after_expiry}))
                 client.close()
                 return
@@ -428,7 +428,7 @@ export function SOCKET(
 
 
 
-    console.log("<", JSON.stringify({type: "scanData", data: {
+    if (global.debugMode) console.log("[-WS-] <", JSON.stringify({type: "scanData", data: {
             fingerprint: scanDataSettings.fingerprint ?? false,
             ip: scanDataSettings.ip ?? false,
             location: scanDataSettings.location,
@@ -460,19 +460,19 @@ export function SOCKET(
     client.on('message', async (message) => {
         try {
             const parsed = JSON.parse(message.toString())
-            console.log(">", message.toString())
+            if (global.debugMode) console.log("[-WS-] >", message.toString())
             if (parsed.type == "scanData") {
                 console.log('[-WS-] The client has sent scan data for QR-code ' + id);
                 if (!parsed.data.location && (scanDataSettings.location_required)) {
                     console.log('[-WS-] The client tried to send scan data without location for a QR-code that requires it');
-                    console.log("<", JSON.stringify({error: "LOCATION_REQUIRED", message: "Location is required for this QR-code."}))
+                    if (global.debugMode) console.log("[-WS-] <", JSON.stringify({error: "LOCATION_REQUIRED", message: "Location is required for this QR-code."}))
                     client.send(JSON.stringify({error: "LOCATION_REQUIRED", message: "Location is required for this QR-code."}))
                     client.close()
                     return
                 }
                 if (!parsed.data["user-agent"] && scanDataSettings.user_agent_required) {
                     console.log('[-WS-] The client tried to send scan data without user-agent for a QR-code that requires it');
-                    console.log("<", JSON.stringify({error: "USER_AGENT_REQUIRED", message: "User-Agent is required for this QR-code."}))
+                    if (global.debugMode) console.log("[-WS-] <", JSON.stringify({error: "USER_AGENT_REQUIRED", message: "User-Agent is required for this QR-code."}))
                     client.send(JSON.stringify({error: "USER_AGENT_REQUIRED", message: "User-Agent is required for this QR-code."}))
                     client.close()
                     return
@@ -530,7 +530,7 @@ export function SOCKET(
                         }
                     }
                         
-                    console.log("<", JSON.stringify({type: "redirect", qrType: global.QRCodeTable[id].type, data: "nil", ...(Object.keys(potentialReason).length > 0 ? {potential_reasons:potentialReason} : {}) }))
+                    if (global.debugMode) console.log("[-WS-] <", JSON.stringify({type: "redirect", qrType: global.QRCodeTable[id].type, data: "nil", ...(Object.keys(potentialReason).length > 0 ? {potential_reasons:potentialReason} : {}) }))
                     client.send(JSON.stringify({type: "redirect", qrType: global.QRCodeTable[id].type, data: "nil", ...(Object.keys(potentialReason).length > 0 ? {potential_reasons:potentialReason} : {}) }))
                     if (client.readyState == client.OPEN) client.close()
                     return
@@ -538,12 +538,13 @@ export function SOCKET(
 
 
                 if (redirect_to) {
-                    const addition = (encryptedScanData ? "?ql_scan="+encodeURIComponent(encryptedScanData) : "")
+                    const redirectToHasQuery = redirect_to.includes("?")
+                    const addition = (encryptedScanData ? (redirectToHasQuery?"&":"?") +"ql_scan="+encodeURIComponent(encryptedScanData) : "")
                     const isVCard = redirect_to.toLowerCase().startsWith("begin:vcard") && redirect_to.toLowerCase().endsWith("end:vcard")
-                    console.log("<", JSON.stringify({type: "redirect", data: redirect_to + (isVCard ? "" : addition)}))
+                    if (global.debugMode) console.log("[-WS-] <", JSON.stringify({type: "redirect", data: redirect_to + (isVCard ? "" : addition)}))
                     client.send(JSON.stringify({type: "redirect", data: redirect_to + (isVCard ? "" : addition)}))
                 } else {
-                    console.log("<", JSON.stringify({error: "NO_REDIRECT", message: "No redirect URL provided."}))
+                    if (global.debugMode) console.log("[-WS-] <", JSON.stringify({error: "NO_REDIRECT", message: "No redirect URL provided."}))
                     client.send(JSON.stringify({error: "NO_REDIRECT", message: "No redirect URL provided."}))
                 }
                 
@@ -553,7 +554,7 @@ export function SOCKET(
             }
         } catch (e) {
             console.log('[-WS-] The client tried to send invalid JSON');
-            console.log("<", JSON.stringify({error: "INVALID_JSON", message: "Invalid JSON."}))
+            if (global.debugMode) console.log("[-WS-] <", JSON.stringify({error: "INVALID_JSON", message: "Invalid JSON."}))
             client.send(JSON.stringify({error: "INVALID_JSON", message: "Invalid JSON."}))
             client.close()
         }

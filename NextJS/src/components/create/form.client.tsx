@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import Swal from "sweetalert2-ql";
 import "@sweetalert2/theme-dark"
 import moment from 'moment-timezone';
+import { redirect } from 'next/navigation';
 
 
 const initialState: {
@@ -73,7 +74,6 @@ export default function Form({
 
     const updating = qrCodeInfo?.id ? true : false
     useEffect(()=>{
-        console.log(state)
         if (state?.success) {
             if (updating) {
                 Swal.fire({
@@ -135,7 +135,28 @@ export default function Form({
             ":" +
             padDate(date.getMinutes())
         );
+    }
+    
+        const isCreating = qrCodeInfo.id ? false : true
+
+        function cancelConfirmationDialog() {
+
+            
+            Swal.fire({
+                title: "Are you sure?",
+                html: "You're about to cancel your " + (isCreating ? "creation" : "update") + " of a QRLink-code. This action is irreversible. Are you sure you want to continue?<br/><br/><b>All unsaved changes will be lost.</b>", 
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, cancel it!",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = "/dashboard"
+                }
+            });
         }
+        
     return (<>
         <form id="create-form" action={formAction} style={{
             position:"relative"
@@ -220,9 +241,7 @@ export default function Form({
 
                 e.preventDefault()
                 
-                
                 let res = (await confirm())
-                console.log(res)
                 if (!res) {
                     console.log("cancelled")
                     return false
@@ -251,8 +270,11 @@ export default function Form({
                 title: 'QRLink-code with ID '+qrCodeInfo.id+' was deleted successfully'
             })
         }} >
-            <button type="submit" className="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Delete QR-code</button>
-        </form>:<></>}</>
+            <button type="submit" className="outline-none text-white bg-red-700 hover:bg-red-800 font-medium rounded-lg text-sm w-[205px] py-2.5 mt-2">Delete QR-code</button>
+        </form>:<></>}
+        
+        <button type="button" onClick={()=>cancelConfirmationDialog()} className={"outline-none text-white bg-red-700 hover:bg-red-800 font-medium rounded-lg text-sm w-[205px] py-2.5 disabled:text-white disabled:bg-blue-300 disabled:hover:bg-blue-300 " + (isCreating?"mt-2":"mt-5")}>Cancel</button>
+        </>
     )
 }
 

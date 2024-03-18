@@ -1,13 +1,10 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 
 import { Chart } from "chart.js/auto"
 import 'chartjs-adapter-moment';
-import zoomPlugin from 'chartjs-plugin-zoom';
-
-Chart.register(zoomPlugin);
 
 //! const data = (await global.QRCodeTable[params.id].getStatistics({
 //!     type:"ScannedDayRank",
@@ -23,7 +20,7 @@ Chart.register(zoomPlugin);
 //! })
 
 
-export default function StatisticsPage({data, width = 600, height = 300}: {
+export default function DayRank({data}: {
     data:{
         info: {
             [key:string]:number
@@ -34,14 +31,11 @@ export default function StatisticsPage({data, width = 600, height = 300}: {
                 [key: string]: any
             }
         }[]
-    },
-    width?: number,
-    height?: number
+    }
 }) {
 
     let scanDay = useRef<HTMLCanvasElement>(null)
-
-    console.log(data)
+    let [finishedLoading, setFinishedLoading] = useState(false);
     /*
         {
             info: { monday: 46, tuesday: 19, ... },
@@ -57,13 +51,19 @@ export default function StatisticsPage({data, width = 600, height = 300}: {
         acc[key] = data.info[key] || 0;
         return acc;
     }, {} as {[key:string]:number})
-    
+
     useEffect(()=>{
+        const zoomPlugin = require('chartjs-plugin-zoom');
+        Chart.register(zoomPlugin.default);
+    },[])
+
+    useEffect(()=>{
+        let chart: Chart<"bar", number[], string> = null
         // bar
         if (scanDay.current && Object.keys(data.info).length>0) {
             let ctx = scanDay.current.getContext('2d');
             if (ctx) {
-                let chart = new Chart(ctx, {
+                chart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: Object.keys(sortedByOccurance).map((a)=>a[0].toUpperCase() + a.slice(1)),
@@ -81,6 +81,8 @@ export default function StatisticsPage({data, width = 600, height = 300}: {
                         
                     },
                     options: {
+                        devicePixelRatio: 2,
+                        maintainAspectRatio: false,
                         scales: {
                             y: {
                                 beginAtZero: true,
@@ -109,13 +111,28 @@ export default function StatisticsPage({data, width = 600, height = 300}: {
                                     mode: 'x'
                                 }
                             }
-                        }
+                        } as any
                     }
                 });
+            }
+        }
+        setFinishedLoading(true);
+        return ()=>{
+            if (chart) {
+                chart.destroy();
             }
         }
         
     }, [data, rounded, sortedByOccurance])
 
-    return <div style={{width, height}}>{Object.keys(data.info).length>0?<canvas ref={scanDay}></canvas>:<p style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}><i>No data available</i></p>}</div>
+    return Object.keys(data.info).length > 0 ?
+    <>
+        <p hidden={!!finishedLoading} style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}>
+            Graphing your data... 🛠
+        </p>
+        <canvas ref={scanDay}></canvas>
+    </> :
+    <p style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}>
+        <i>No data available</i>
+    </p>
 }

@@ -28,6 +28,7 @@ export default function Settings({
         position: "relative",
         left: "50%",
         transform: "translateX(-50%)",
+        backgroundColor: "white",
       }}>
         <p style={{
             textAlign: "center",

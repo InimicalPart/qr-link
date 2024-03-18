@@ -189,7 +189,6 @@ export class QRCode {
             currentAction = data;
         } else if (this.type == "schedule") {
             const data = this.data as unknown as ScheduleQRCodeDataT
-            console.log(data.timezone)
 
             let day = moment.tz(data.timezone ?? moment.tz.guess()).format("dddd").toLowerCase() as "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday"
             let time = getPassedTime(Object.keys(data[day]), data.timezone ?? moment.tz.guess())
@@ -418,20 +417,19 @@ export class QRCode {
 
     /**
      * Get the amount of scans that have happened at each hour of the day
-     * @param timezone The timezone to use
      * @returns An object with the amount of scans that have happened at each hour of the day
      */
-    private getScannedTimeRank(timezone: string) {
+    private getScannedTimeRank() {
         // get all scans, show how many happened at each hour of the day
         let rtrn: { [key: string]: number } = {};
         for (let i = 0; i < 24; i++) {
-            let label = i.toString().padStart(2, '0') + ":00";
+            let label = i.toString().padStart(2, '0') + ":00"
             rtrn[label] = 0;
         }
         for (let scan of this.scanData as ScanDataT[]) {
             if (scan.timestamp) {
-                let hour = moment(scan.timestamp).tz(timezone).hour();
-                let label = hour.toString().padStart(2, '0') + ":00";
+                let hour = new Date(scan.timestamp).getUTCHours();
+                let label = hour.toString().padStart(2, '0') + ":00"
                 rtrn[label]++;
             }
         }
@@ -454,7 +452,7 @@ export class QRCode {
     
         for (let scan of this.scanData as ScanDataT[]) {
             if (scan.timestamp) {
-                let hour = moment(scan.timestamp).tz(timezone).hour();
+                let hour = new Date(scan.timestamp).getUTCHours();
                 let label = hour >= 12 ? ((hour === 12 ? "12:00 PM" : (hour - 12).toString().padStart(2, '0') + ":00 PM")) : (hour === 0 ? "12:00 AM" : hour.toString().padStart(2, '0') + ":00 AM");
                 rtrn[label]++;
             }
@@ -497,12 +495,14 @@ export class QRCode {
         time,
         multiplier = 1,
         timezone,
+        last,
         onlyFields: wantedFields
     }:{
         type: string,
         time: string,
-        timezone: string,
         multiplier?: number,
+        timezone: string,
+        last?: number,
         onlyFields?: string | string[]
     
     }): Promise<{
@@ -596,8 +596,9 @@ export class QRCode {
                     important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000).toISOString(), new Date().toISOString())
                 }
             case "ScannedWhere":
+                let scanned = this.getWhereScanned()
                 return {
-                    info: this.getWhereScanned(),
+                    info: last ? scanned.slice(0, last) : scanned,
                     important_moments: this.getImportantMoments(new Date(new Date().getTime() - timeInSeconds*1000).toISOString(), new Date().toISOString()),
                     ...(
                         this.type == "location" ? {
@@ -639,7 +640,7 @@ export class QRCode {
                 }
             case "ScannedTimeRank":
                 return {
-                    info: this.getScannedTimeRank(timezone),
+                    info: this.getScannedTimeRank(),
                     important_moments: this.getImportantMoments(this.created, new Date().toISOString())
                 }
             case "ScannedTimeRank12H":

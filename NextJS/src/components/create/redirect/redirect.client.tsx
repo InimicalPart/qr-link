@@ -18,7 +18,8 @@ export default function Redirect({
             width:300,
             position: "relative",
             left: "50%",
-            transform: "translateX(-50%)"
+            transform: "translateX(-50%)",
+            backgroundColor: "white"
         }}>
             <p className="qr-info-label flex justify-center items-center flex-wrap">
                 <b>Redirect to</b>

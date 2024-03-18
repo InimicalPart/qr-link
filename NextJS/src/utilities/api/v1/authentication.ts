@@ -118,7 +118,6 @@ export async function getUser(token: string,options:{
     }
     
     if (isAPIKey(token)) {
-        console.log(options)
         if (!options.allowAPIKey) {
             console.log("[AUTH] API tokens are not allowed.")
             return { isAuthenticated: false, reason: "api_key" };

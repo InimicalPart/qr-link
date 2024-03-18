@@ -158,10 +158,10 @@ export async function bareBonesConnection(mongoConnectionString: string, res:()=
                                 if (answer.toLowerCase() == "y") {
                                     readline.close()
                                     console.log("[DATA] Configurating...")
-                                    console.log("> sudo chown " + process.env.USER + " " + configLoc)
+                                    console.log("[-SH-] > sudo chown " + process.env.USER + " " + configLoc)
                                     child_process.execSync("sudo chown " + process.env.USER + " " + configLoc)
                                     await editConfiguration(configLoc)
-                                    console.log("> sudo chown " + currentFileOwner + " " + configLoc)
+                                    console.log("[-SH-] > sudo chown " + currentFileOwner + " " + configLoc)
                                     child_process.execSync("sudo chown " + currentFileOwner + " " + configLoc)
                                     await restartDatabase()
                                     
@@ -209,7 +209,7 @@ export async function restartDatabase() {
         await new Promise(() => {}) // sleep forever
         return
     }
-    console.log("> " + restartcommand)
+    console.log("[-SH-] > " + restartcommand)
     await exec(restartcommand).catch(async (err: any) => {
         console.error(err)
         console.error("[DATA] An error occurred, please restart the database manually and then restart QRLink.")
@@ -347,16 +347,9 @@ export async function deleteQR(id: string) {
  * Reads the APIKeys from the database or file.
  * @returns A promise that resolves with the APIKeys.
  */
-export async function getAPIKeys() {
-    return new Promise<{
-        [key: string]: {
-            belongs_to: string,
-            created: Date,
-            last_used: Date,
-            permissions: Array<"create"|"update"|"delete"|"read">
-        }
-    }>(async (resolve, reject) => {
-        if (global.storageMethod == "file") {
+export async function getAPIKeys(storage=global.storageMethod) {
+    return new Promise<APIKeys>(async (resolve, reject) => {
+        if (storage == "file") {
             if (global.debugMode) console.log(`[DATA] Reading APIKeys from '${global.APIBackupFilePath}'...`);
             const {promises:fs} = await import("fs")
             const data = await fs.readFile(global.APIBackupFilePath, "utf8");
@@ -497,20 +490,29 @@ export async function saveQR(id: string = null, obj: QRCode = new QRCode(), upda
 
 /**
  * Synchronizes the MongoDB with the file storage method.
- * Essentially, this function will insert all QR-codes from the file storage method into the MongoDB.
+ * Essentially, this function will insert all QR-codes & API-keys from the file storage method into the MongoDB.
  * @returns A promise that resolves when the synchronization is complete.
  */
 export async function syncMongoWithFile() {
     if (global.storageMethod == "file") return
-    let fileData: QRCodeTable = await readQRCodeTable("file")
-    let mongoData: QRCodeTable = global.QRCodeTable
-    let keysFile = Object.keys(fileData)
-    let keysMongo = Object.keys(mongoData)
-    // check which keys are not in the mongoDB
-    let keysNotInMongo = keysFile.filter((key) => !keysMongo.includes(key))
+    //! QR-codes
+    let fileDataQR: QRCodeTable = await readQRCodeTable("file")
+    let mongoDataQR: QRCodeTable = global.QRCodeTable
+    let keysFileQR = Object.keys(fileDataQR)
+    let keysMongoQR = Object.keys(mongoDataQR)
 
-    let dataToInsert = keysNotInMongo.map((key) => {
-        let data = fileData[key] as QRCode
+    //! API-keys
+    let fileDataAPI: APIKeys = await getAPIKeys("file")
+    let mongoDataAPI: APIKeys = global.APIKeyTable
+    let keysFileAPI = Object.keys(fileDataAPI)
+    let keysMongoAPI = Object.keys(mongoDataAPI)
+    
+    // check which keys are not in the mongoDB
+    let QRkeysNotInMongo = keysFileQR.filter((key) => !keysMongoQR.includes(key))
+    let APIkeysNotInMongo = keysFileAPI.filter((key) => !keysMongoAPI.includes(key))
+
+    let QRsToInsert = QRkeysNotInMongo.map((key) => {
+        let data = fileDataQR[key] as QRCode
         let id = key
         return {
             id: id,
@@ -518,9 +520,23 @@ export async function syncMongoWithFile() {
         }
     })
 
-    if (dataToInsert.length != 0) {
-        await global.mongoClient.db("QRLink").collection("qrcodes").insertMany(dataToInsert)
-        console.log("[DATA] " + dataToInsert.length + " QR-codes were converted from file storage to MongoDB.")
+    let APIKeysToInsert = APIkeysNotInMongo.map((key) => {
+        let data = fileDataAPI[key]
+        let id = key
+        return {
+            id: id,
+            ...data
+        }
+    })
+
+
+    if (QRsToInsert.length != 0) {
+        await global.mongoClient.db("QRLink").collection("qrcodes").insertMany(QRsToInsert)
+        console.log("[DATA] " + QRsToInsert.length + " QR-codes were converted from file storage to MongoDB.")
+    }
+    if (APIKeysToInsert.length != 0) {
+        await global.mongoClient.db("QRLink").collection("apikeys").insertMany(APIKeysToInsert)
+        console.log("[DATA] " + APIKeysToInsert.length + " API-keys were converted from file storage to MongoDB.")
     }
 }
 

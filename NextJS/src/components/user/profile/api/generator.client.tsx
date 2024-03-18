@@ -39,7 +39,6 @@ export default function APIKeyGenerator({
                     });
                 }
                 fetchAPIs().then((codes) => {
-                    console.log(codes)
                     setAPIKeys(codes)
                 });
             }, [API_URL, token]);

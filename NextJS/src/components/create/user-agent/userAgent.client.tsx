@@ -182,7 +182,8 @@ export default function UserAgent({
      width:350,
      position: "relative",
      left: "50%",
-     transform: "translateX(-50%)"
+     transform: "translateX(-50%)",
+     backgroundColor: "white"
  }}>
      {/* Allow the user to specify a week day (Monday, Tuesday, ...), and a time in HH:MM:SS format (use <input className="create">) or "All day", then allow the user to specify actions like redirect_to and after_expiry */}
      <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Browser</b></p>

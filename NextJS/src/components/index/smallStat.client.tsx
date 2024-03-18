@@ -17,14 +17,18 @@ export default function SmallStat({
     height=100,
     dataKey="count",
     className,
-    style
+    style,
+    title,
+    onClick: onClickURL
 }:{
     data: {timestamp: string|Date, count?: number}[],
     width?: number,
     height?: number,
     dataKey?: string,
     className?: string
-    style?: any
+    style?: any,
+    title?: string,
+    onClick?: string
 }) {
 
     if (!data) return <></>
@@ -79,12 +83,13 @@ export default function SmallStat({
     //   <ResponsiveContainer width={width} height={height} >
         
         <LineChart
-            title={"Scans during the last 2 months"}
+            title={title}
             width={width}
             height={height}
             data={data}
             style={style}
             className={className}
+            onClick={(e)=>onClickURL?window.location.href = onClickURL:null}
         >
             <defs>
                 <linearGradient

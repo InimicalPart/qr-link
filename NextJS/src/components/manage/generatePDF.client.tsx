@@ -18,10 +18,15 @@ export default function PDFButton({
 }) {
         const [disabled, setDisabled] = useState(false)
         const [pdf, setPDF] = useState("")
-        console.log(id)
         function clicked() {
             if (disabled) return;
-            if (pdf != "") return;
+            if (pdf != "") {
+                const a = document.createElement('a');
+                a.href = pdf;
+                a.download = "qrcode-"+id+".pdf";
+                a.click();
+                a.remove();
+            };
             setDisabled(true);
             document.getElementById("genPDF").innerText = "Generating PDF...";
             fetch(`${apiURL}/qrcode/${id}?export=pdf`, {
@@ -30,8 +35,15 @@ export default function PDFButton({
                     Authorization: token
                 },
             }).then((res) => res.json()).then((res) => {
-                document.getElementById("genPDF").setAttribute("href", res.pdf)
-                document.getElementById("genPDF").setAttribute("download", "qrcode-"+id+".pdf")
+
+                //add an anchor tag to the document and click it
+                const a = document.createElement('a');
+                a.href = res.pdf;
+                a.download = "qrcode-"+id+".pdf";
+                a.click();
+                a.remove();
+
+
                 document.getElementById("genPDF").innerText = `Download PDF`
                 setPDF(res.pdf)
                 setDisabled(false);
@@ -40,7 +52,7 @@ export default function PDFButton({
 
       return (
         <>
-        <a id="genPDF" style={style} aria-disabled={disabled} onClick={clicked} href={"#"} className={className}>Generate PDF</a>
+        <button id="genPDF" style={style} disabled={disabled} onClick={clicked} className={className}>Download PDF</button>
         </>
       );
 }

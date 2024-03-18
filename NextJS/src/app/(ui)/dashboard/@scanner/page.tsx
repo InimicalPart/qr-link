@@ -178,8 +178,6 @@ export default function QRScannerModal({
                 message?: string,
                 redirect_to?: string
             })=>{
-                console.log(response)
-
                 if (response.valid) {
                     if (response.redirect_to) {
                         setErrored(false)
@@ -190,7 +188,6 @@ export default function QRScannerModal({
                     setErrored(true)
                     setStatus(response.message)
                     cooldown[Buffer.from(result.text).toString("hex")] = new Date(new Date().setSeconds(new Date().getSeconds()+5))
-                    console.log(cooldown)
                     document.getElementById("overlay").style.display = "none"
                     Array.from(document.getElementById("scannedPoints").children).forEach((child: Element) => {
                         child.remove()
