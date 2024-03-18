@@ -8,11 +8,6 @@
   border-color: rgba(0, 0, 0, 0.204);
 }
 
-.dashboard.main-container {
-    background-size: 30svw;
-    background-position: right bottom;
-    height: 100vh;
-}
 
 #qr-search::-webkit-search-cancel-button{
     position:relative;
@@ -26,6 +21,12 @@
     -o-transition: background-color .25s, color .25s;
     -ms-transition: background-color .25s, color .25s;
     transition: background-color .25s, color .25s;
+}
+
+.dashboard.main-container {
+    background-size: 40vh;
+    background-position: right bottom;
+    height: 100vh;
 }
 
 .dashboard.main-container::-webkit-scrollbar-track

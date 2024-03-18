@@ -137,8 +137,6 @@ export async function POST(request: NextRequest) {
 
     const details = await createAPIKey(body.name??null, user.user.id, permissions)
     const APIToken = await generateAPIToken(details.id)
-    console.log(APIToken)
-    const timezone = request.nextUrl.searchParams.get("timezone") ?? moment.tz.guess()
     return new NextResponse(JSON.stringify({
         id: details.id,
         name: details.name,

@@ -67,6 +67,11 @@ export default async function UserProfile() {
         redirect("/user/api")
     }
 
+    async function backToDashboard() {
+        "use server";
+        redirect("/dashboard")
+    }
+
     return (
         <div style={{
             position:"relative",
@@ -87,7 +92,7 @@ export default async function UserProfile() {
                 maxWidth: 220,
                 maxHeight: 220,
 
-                borderRadius: "10vh",
+                borderRadius: "100vh",
             }}>
                 <ProfilePicture src={user.user.profilePictureUrl??
                 "https://ui-avatars.com/api/?name="+user.user.firstName+(user.user.lastName ? "+"+user.user.lastName : "")+"&background=random"
@@ -114,7 +119,10 @@ export default async function UserProfile() {
                 gap: "10px",
             }}>
                 <form action={goToManageAPIKeys}>
-                    <button type="submit" className="text-gray-900 bg-white border border-gray-400 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-10 py-2.5">Manage API Keys</button>
+                    <button type="submit" className="text-gray-900 bg-white border border-gray-400 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm w-[210px] py-2.5">Manage API Keys</button>
+                </form>
+                <form action={backToDashboard}>
+                    <button type="submit" className="text-gray-900 bg-white border border-gray-400 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm w-[210px] py-2.5">Back to Dashboard</button>
                 </form>
             </div>
         </div>

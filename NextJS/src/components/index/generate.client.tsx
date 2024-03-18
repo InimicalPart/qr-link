@@ -142,12 +142,12 @@ export default function GenerateQRs({
                                     WebkitBoxOrient: "vertical",
 
                                 }}>{ qrcodeJSON.description ?? <i style={{color:"#696969"}}>No Description</i>}</span></p>
-                                <p className="information" id="qr-expires-cntr"><b>Expires:</b><br/><span id="qr-expires" style={{color:qrcodeJSON.expires ? new Date(qrcodeJSON.expires) > new Date() ? "darkgreen" : "darkred" : "darkgreen"}}><b>{qrcodeJSON.expires ? new Date(qrcodeJSON.expires).toLocaleString() : "Never"}</b></span></p>
+                                <p className="information" id="qr-expires-cntr"><b>Expires:</b><br/><span id="qr-expires" style={{color:qrcodeJSON.expires ? new Date(qrcodeJSON.expires) > new Date() ? "darkgreen" : "darkred" : "darkgreen"}}><b>{qrcodeJSON.expires ? new Date(qrcodeJSON.expires).toLocaleString([],{day:"numeric", year:"numeric", month:"numeric", hour: '2-digit', minute:'2-digit'}): "Never"}</b></span></p>
                             </div>
                             <div id="stats" style={{pointerEvents: "none",height:"fit-content", width:"100%",paddingBottom:15}}>
                                 <p className="information" id="qr-expires-cntr"><b>Scans:</b></p>
                                 <p style={{fontWeight:700, pointerEvents:"all"}} title={numberWithCommas(qrcodeJSON.scanCount)}>{numberFormatter(qrcodeJSON.scanCount,2)}</p>
-                                <SmallStat style={{pointerEvents: "all", cursor:"pointer"}} width={150} height={50} data={[...qrcodeJSON.statistics,{count:0},{count:0}]} className="relative left-[50%] -translate-x-1/2 mt-4"></SmallStat>
+                                <SmallStat onClick={"/statistics/"+qrcodeJSON.id} title={"Scans during the last 2 months, click to view all statistics"} style={{pointerEvents: "all", cursor:"pointer"}} width={150} height={50} data={[...qrcodeJSON.statistics,...(qrcodeJSON.statistics.length < 2 ? [{count:0},{count:0}] : [])] } className="relative left-[50%] -translate-x-1/2 mt-4"></SmallStat>
                             </div>
                         </button>
                     </form>

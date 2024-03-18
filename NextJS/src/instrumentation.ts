@@ -96,8 +96,8 @@ export async function register(){
             }
         }
         global.QRCodeTable = await readQRCodeTable()
-        await syncMongoWithFile()
         global.APIKeyTable = await getAPIKeys()
+        await syncMongoWithFile()
 
 
         if (process.env.NODE_ENV == "production") { 

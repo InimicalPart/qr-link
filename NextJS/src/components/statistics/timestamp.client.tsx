@@ -1,11 +1,11 @@
 "use client"
 
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
-
-import { Chart } from "chart.js/auto"
+import { Chart } from "chart.js"
 import 'chartjs-adapter-moment';
-import zoomPlugin from 'chartjs-plugin-zoom';
+
+
 
 //! const data = (await global.QRCodeTable[params.id].getStatistics({
 //!     type:"Scanned",
@@ -22,7 +22,7 @@ import zoomPlugin from 'chartjs-plugin-zoom';
 //! })
 
 
-export default function TimestampGraph({data, width = 600, height = 100}: {
+export default function TimestampGraph({data}: {
     data:{
         info: {
            timestamp: string,
@@ -34,15 +34,19 @@ export default function TimestampGraph({data, width = 600, height = 100}: {
                 [key: string]: any
             }
         }[]
-    },
-    width?: number,
-    height?: number
+    }
 }) {
 
     let scanTimestamp = useRef<HTMLCanvasElement>(null)
+    let [finishedLoading, setFinishedLoading] = useState(false);
 
     useEffect(()=>{
+        const zoomPlugin = require('chartjs-plugin-zoom');
+        Chart.register(zoomPlugin.default);
+    },[])
 
+    useEffect(()=>{
+        let chart: Chart<"line", number[], string> = null;
         function makeEmptyDataset() {
             // for every day between the first and last day, if it's not in the scanData, add it with '0' scans
             let firstDay = new Date(
@@ -84,12 +88,10 @@ export default function TimestampGraph({data, width = 600, height = 100}: {
             let empty = makeEmptyDataset();
             let grouped = groupSameDayScans();
     
-            console.log(empty, grouped)
     
             
             //fill empty with grouped
             for (let scan of grouped) {
-                console.log(scan.timestamp, empty[0].timestamp)
                 let index = empty.findIndex(a=>a.timestamp == scan.timestamp);
                 empty[index].count = scan.count;
             }
@@ -105,12 +107,10 @@ export default function TimestampGraph({data, width = 600, height = 100}: {
 
             
 
-                    
-            Chart.register(zoomPlugin);
 
             const maxDataHeight = Math.max(...b.map(d => d.count));
                 const rounded = Math.round(maxDataHeight + (maxDataHeight * 0.5));
-            new Chart(scanTimestamp.current, {
+            chart = new Chart(scanTimestamp.current, {
                 type: "line",
                 data: {
                     labels: b.map(a => a?.timestamp?.split('T')[0] ?? a.timestamp),
@@ -123,6 +123,8 @@ export default function TimestampGraph({data, width = 600, height = 100}: {
                     }]
                 },
                 options: {
+                    devicePixelRatio: 2,
+                    maintainAspectRatio: false,
                     plugins: {
                         zoom: {
                             pan: {
@@ -152,7 +154,7 @@ export default function TimestampGraph({data, width = 600, height = 100}: {
                     },
                     scales: {
                         x: {
-                            type: "time",
+                            type: 'time',
                             time: {
                                 unit: "day",
                                 tooltipFormat:'MM/DD/YYYY', // <- HERE
@@ -166,14 +168,28 @@ export default function TimestampGraph({data, width = 600, height = 100}: {
                       },
                         
                     },
-                }
+                }as any
             })
+        }
+        setFinishedLoading(true);
+        return () => {
+            if (chart) {
+                chart.destroy();
+            }
         }
     }, [data.info.length, data.important_moments, data.info])
     
-    console.log(data.important_moments)
 
 
 
-    return <div style={{width, height}}>{data.info.length>0?<canvas ref={scanTimestamp}></canvas>:<p style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}><i>No data available</i></p>}</div>
+    return data.info.length > 0 ?
+    <>
+        <p hidden={!!finishedLoading} style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}>
+            Graphing your data... 🛠
+        </p>
+        <canvas ref={scanTimestamp}></canvas>
+    </> :
+    <p style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}>
+        <i>No data available</i>
+    </p>
 }

@@ -57,6 +57,11 @@ export default async function UserAPI() {
         }).then((res) => res.json())
     }
 
+    async function backToProfile() {
+        "use server";
+        redirect("/user/profile")
+    }
+
     return (
         <div style={{
             position:"absolute",
@@ -90,6 +95,10 @@ export default async function UserAPI() {
                 <APIKeyGenerator API_URL={process.env.API_URL} token={cookies().get("token").value} onRevoke={revokeAPIKey} updateAPIName={updateName}/>
             </div>
             <AddAPIKeyButton createAPIKey={createAPIKey}/>
+            <form action={backToProfile}>
+                <button className="user-api back-key">Back</button>
+            </form>
+
 
         </div>
     );

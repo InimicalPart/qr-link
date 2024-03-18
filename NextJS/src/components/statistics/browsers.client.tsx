@@ -1,13 +1,11 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 
 import { Chart } from "chart.js/auto"
 import 'chartjs-adapter-moment';
-import zoomPlugin from 'chartjs-plugin-zoom';
 
-Chart.register(zoomPlugin);
 
 //! const data = (await global.QRCodeTable[params.id].getStatistics({
 //!     type:"Browser",
@@ -23,7 +21,7 @@ Chart.register(zoomPlugin);
 //! })
 
 
-export default function BrowserBar({data, width = 600, height = 300}: {
+export default function BrowserBar({data}: {
     data:{
         info: {
             [key:string]:number
@@ -34,12 +32,11 @@ export default function BrowserBar({data, width = 600, height = 300}: {
                 [key: string]: any
             }
         }[]
-    },
-    width?: number,
-    height?: number
+    }
 }) {
 
     let scanBrowsers = useRef<HTMLCanvasElement>(null)
+    let [finishedLoading, setFinishedLoading] = useState(false);
 
     /*
         {
@@ -57,11 +54,17 @@ export default function BrowserBar({data, width = 600, height = 300}: {
     }, {} as {[key:string]:number})
     
     useEffect(()=>{
+        const zoomPlugin = require('chartjs-plugin-zoom');
+        Chart.register(zoomPlugin.default);
+    },[])
+
+    useEffect(()=>{
         // bar
+        let chart: Chart<"bar", number[], string> = null
         if (scanBrowsers.current && Object.keys(data.info).length>0) {
             let ctx = scanBrowsers.current.getContext('2d');
             if (ctx) {
-                let chart = new Chart(ctx, {
+                chart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: Object.keys(sortedByOccurance),
@@ -79,6 +82,8 @@ export default function BrowserBar({data, width = 600, height = 300}: {
                         
                     },
                     options: {
+                        devicePixelRatio: 2,
+                        maintainAspectRatio: false,
                         scales: {
                             y: {
                                 beginAtZero: true,
@@ -107,13 +112,28 @@ export default function BrowserBar({data, width = 600, height = 300}: {
                                     mode: 'x'
                                 }
                             }
-                        }
+                        } as any
                     }
                 });
             }
         }
-        
+        setFinishedLoading(true);
+        return () => {
+            if (chart) {
+                chart.destroy();
+            }
+        }
+
     }, [data,rounded, sortedByOccurance])
 
-    return <div style={{width, height}}>{Object.keys(data.info).length>0?<canvas ref={scanBrowsers}></canvas>:<p style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}><i>No data available</i></p>}</div>
+    return Object.keys(data.info).length > 0 ?
+    <>
+        <p hidden={!!finishedLoading} style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}>
+            Graphing your data... 🛠
+        </p>
+        <canvas ref={scanBrowsers}></canvas>
+    </> :
+    <p style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}} title={"For information about browsers to show up, make sure your QRLink-code's action is set to 'user-agent' or that you have 'grab user-agent' enabled in your scan data settings. Users may also deny giving you information about their browser if 'require user-agent' isn't turned on, which might be why there is nothing here."}>
+        <i>No data available</i>
+    </p>
 }

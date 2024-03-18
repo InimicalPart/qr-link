@@ -1,14 +1,12 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 
 import { Chart } from "chart.js/auto"
 import 'chartjs-adapter-moment';
-import zoomPlugin from 'chartjs-plugin-zoom';
 import moment from "moment-timezone";
 
-Chart.register(zoomPlugin);
 
 //! const data = (await global.QRCodeTable[params.id].getStatistics({
 //!     type:"ScannedTimeRank",
@@ -23,8 +21,10 @@ Chart.register(zoomPlugin);
 //!     }[]
 //! })
 
-
-export default function TimeRank({data, width = 600, height = 300}: {
+let sortedAlpha: {
+    [key:string]:number
+} = {};
+export default function TimeRank({data}: {
     data:{
         info: {
             [key:string]:number
@@ -35,14 +35,14 @@ export default function TimeRank({data, width = 600, height = 300}: {
                 [key: string]: any
             }
         }[]
-    },
-    width?: number,
-    height?: number
+    }
 }) {
 
-    let scanTime = useRef<HTMLCanvasElement>(null)
-
     console.log(data)
+
+    let scanTime = useRef<HTMLCanvasElement>(null)
+    let [finishedLoading, setFinishedLoading] = useState(false);
+
     /*
         {
             info: { "00:00": 23, ... },
@@ -53,22 +53,56 @@ export default function TimeRank({data, width = 600, height = 300}: {
     const maxDataHeight = Math.max(...Object.values(data.info));
     const rounded = Math.round(maxDataHeight + (maxDataHeight * 0.1));
 
-    const sortedAlpha = Object.keys(data.info).sort((a, b) => {
-        const timeA = moment(a, "hh:mm A");
-        const timeB = moment(b, "hh:mm A");
-        return timeA.diff(timeB);
-    }).reduce((acc, key)=>{
-        acc[key] = data.info[key];
-        return acc;
-    }, {} as {[key:string]:number})
-    
+
+
+        
+    useEffect(()=>{
+        const zoomPlugin = require('chartjs-plugin-zoom');
+        Chart.register(zoomPlugin.default);
+    },[])
+
+    useEffect(()=>{
+
+        // the time in the data is in UTC, so we need to convert it to the user's timezone, and making it 12h format if the user's location prefers it
+        const wants12H = Intl.DateTimeFormat(navigator.language,  { hour: 'numeric' }).resolvedOptions().hour12
+        const is12H = Object.keys(data.info).find((a)=>a.includes("AM") || a.includes("PM"))
+        for (let key in data.info) {
+            let time = key
+            if (is12H) time = moment(time, "hh:mm A").format("HH:mm")
+            const convertedToTZ = new Date("1970-01-02T" + time + ":00Z").toLocaleTimeString(navigator.language, {hour: 'numeric', minute:'2-digit', hour12: wants12H})
+            sortedAlpha[convertedToTZ] = data.info[key];
+        }
+
+        if (Object.keys(sortedAlpha).length>0) {
+
+            let topHour = Object.keys(sortedAlpha).reduce((a, b)=>sortedAlpha[a] > sortedAlpha[b] ? a : b)
+            let topHourCount = sortedAlpha[topHour]
+            
+            document.getElementById("topTime").innerText = `${topHour} (${topHourCount})`
+        }
+            
+        console.log(sortedAlpha)
+
+        sortedAlpha = Object.keys(sortedAlpha).sort((a, b) => {
+            const timeA = moment(a, "hh:mm A");
+            const timeB = moment(b, "hh:mm A");
+            return timeA.diff(timeB);
+        }).reduce((acc, key)=>{
+            acc[key] = sortedAlpha[key];
+            return acc;
+        }, {} as {[key:string]:number})
+
+        console.log(sortedAlpha)
+
+    },[data.info])
     
     useEffect(()=>{
         // bar
+        let chart: Chart<"bar", number[], string> = null
         if (scanTime.current && Object.keys(data.info).length > 0) {
             let ctx = scanTime.current.getContext('2d');
             if (ctx) {
-                let chart = new Chart(ctx, {
+                chart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: Object.keys(sortedAlpha).map((a)=>a[0].toUpperCase() + a.slice(1)),
@@ -86,6 +120,8 @@ export default function TimeRank({data, width = 600, height = 300}: {
                         
                     },
                     options: {
+                        devicePixelRatio: 2,
+                        maintainAspectRatio: false,
                         scales: {
                             y: {
                                 beginAtZero: true,
@@ -114,13 +150,28 @@ export default function TimeRank({data, width = 600, height = 300}: {
                                     mode: 'x'
                                 }
                             }
-                        }
+                        } as any
                     }
                 });
             }
         }
-        
-    }, [data, rounded, sortedAlpha])
+        setFinishedLoading(true);
+        return ()=>{
+            if (chart) {
+                chart.destroy();
+            }
+        }
 
-    return <div style={{width, height}}>{Object.keys(data.info).length>0?<canvas ref={scanTime}></canvas>:<p style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}><i>No data available</i></p>}</div>
+    }, [data, rounded])
+
+    return Object.keys(data.info).length > 0 ?
+        <>
+            <p hidden={!!finishedLoading} style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}>
+                Graphing your data... 🛠
+            </p>
+            <canvas ref={scanTime}></canvas>
+        </> :
+        <p style={{color:"gray", width:"fit-content", position:"relative", left: "50%", top: "50%", transform: "translate(-50%,-50%)"}}>
+            <i>No data available</i>
+        </p>
 }

@@ -8,13 +8,15 @@ export default function ExportButtons({
     id,
     token,
     style,
-    className
+    className,
+    API_URL
 }:{
     qrCodeDetails?: any,
     id?: string,
     token: string,
     style?: any,
-    className?: string
+    className?: string,
+    API_URL: string
 }) {
     const qrcodeid = qrCodeDetails?.id ?? id
     const [svg, setSVG] = useState<string>("")
@@ -61,7 +63,7 @@ export default function ExportButtons({
                     a.click();
                     a.remove();
                 } else {
-                    fetch(`${process.env.API_URL}/qrcode/${qrcodeid}?export=png,svg`, {
+                    fetch(`${API_URL}/qrcode/${qrcodeid}?export=png,svg`, {
                         headers: {
                             Accept: "application/json",
                             Authorization: token
@@ -119,7 +121,7 @@ export default function ExportButtons({
                     a.click();
                     a.remove();
                 } else {
-                    fetch(`${process.env.API_URL}/qrcode/${qrcodeid}?export=png,svg`, {
+                    fetch(`${API_URL}/qrcode/${qrcodeid}?export=png,svg`, {
                         headers: {
                             Accept: "application/json",
                             Authorization: token
@@ -163,14 +165,14 @@ export default function ExportButtons({
         flexWrap: "wrap",
         justifyContent: "center",
         width:300,
-        height:80,
+        height:88,
         left:"50%",
         transform:"translateX(-50%)",
         marginTop:20,
         gap: 5
     }}>
-        <PDFButton token={token} apiURL={process.env.API_URL} id={qrcodeid} className={className}/>
-        <a id="png" onClick={(e)=>exportQR(e,"png")} href={"#"} className={className}>Download PNG</a>
-        <a id="svg" onClick={(e)=>exportQR(e,"svg")} href={"#"} className={className}>Download SVG</a>
+        <PDFButton token={token} apiURL={API_URL} id={qrcodeid} className={className}/>
+        <button id="png" onClick={(e)=>exportQR(e,"png")} className={className}>Download PNG</button>
+        <button id="svg" onClick={(e)=>exportQR(e,"svg")} className={className}>Download SVG</button>
     </div>
 }

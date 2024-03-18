@@ -163,7 +163,6 @@ export default function Location({
             if (selectedZoneIndex != -1 && zones[selectedZoneIndex].type == "circle") {
                 const newZones = [...zones];
                 newZones[selectedZoneIndex].positions[0] = [e.latlng.lat, e.latlng.lng];
-                console.log(newZones[selectedZoneIndex].key)
                 setZones(newZones);
             }
         }
@@ -462,8 +461,6 @@ export default function Location({
 
         function toggleView(index: number) {
             const zone = zones[index];
-            console.log(leafletMap)
-            console.log(zone.L._map)
             if (zone.L._map) {
                 zone.L.removeFrom(leafletMap);
                 zones[index].hidden = true;
@@ -490,6 +487,8 @@ export default function Location({
                 window.removeEventListener("typeChange", onTypeChanged)
             }
         },[map])
+
+        map.invalidateSize()
 
         return <></>
     }
@@ -610,7 +609,8 @@ export default function Location({
                     width:250,
                     left: "50%",
                     position:"relative",
-                    transform:"translateX(-50%)"
+                    transform:"translateX(-50%)",
+                    backgroundColor: "white"
                 }}>
                     {/* <hr style={{
                         height: 2,
