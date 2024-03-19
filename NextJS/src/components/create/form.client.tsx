@@ -159,7 +159,7 @@ export default function Form({
         
     return (<>
         <form id="create-form" action={formAction} style={{
-            position:"relative"
+            position:"relative",
         }}>
         <div id="qr-name-cntr" className="QRL-container">
             <p className="qr-info-label flex justify-center items-center flex-wrap"><b>Name</b><span style={{
@@ -226,7 +226,7 @@ export default function Form({
                 return new Promise((resolve, reject) => {
                     Swal.fire({
                         title: "Are you sure?",
-                        text: "You're about to delete QRLink-code with ID " + qrCodeInfo.id + ". This action is irreversible. Are you sure you want to continue?",
+                        html: "You're about to delete QRLink-code with ID <br/><b>" + qrCodeInfo.id + "</b><br>This action is irreversible.<br/><br/>Are you sure you want to continue?",
                         icon: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#3085d6",
@@ -270,10 +270,11 @@ export default function Form({
                 title: 'QRLink-code with ID '+qrCodeInfo.id+' was deleted successfully'
             })
         }} >
-            <button type="submit" className="outline-none text-white bg-red-700 hover:bg-red-800 font-medium rounded-lg text-sm w-[205px] py-2.5 mt-2">Delete QR-code</button>
+                <button type="submit" className="text-gray-900 bg-white border border-gray-400 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm w-[205px] py-2.5 mt-2">Delete QR-code</button>
         </form>:<></>}
         
-        <button type="button" onClick={()=>cancelConfirmationDialog()} className={"outline-none text-white bg-red-700 hover:bg-red-800 font-medium rounded-lg text-sm w-[205px] py-2.5 disabled:text-white disabled:bg-blue-300 disabled:hover:bg-blue-300 " + (isCreating?"mt-2":"mt-5")}>Cancel</button>
+        <button type="button" onClick={()=>cancelConfirmationDialog()} className={"text-gray-900 bg-white border border-gray-400 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm w-[205px] py-2.5 " + (isCreating?"mt-2":"mt-5")}>Cancel</button>
+
         </>
     )
 }

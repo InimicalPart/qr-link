@@ -95,6 +95,11 @@ export default async function Home({
     const user = await getUser(cookies().get("token").value, { allowAPIKey:false })
     if (!user.isAuthenticated) redirect("/login")
 
+    async function goToHome() {
+        "use server";
+        redirect("/")
+    }
+
     return (
       <div className="dashboard main-container" style={{
         backgroundImage: "url('/res/img/newseed_background.png')",
@@ -107,9 +112,13 @@ export default async function Home({
             </Modal>
         }
         <header style={{padding:"calc(1.5em + 8px)", display:"flex", justifyContent: "space-between"}} className="dashboard">
-            <Image src="/res/img/logo.png" priority={true} width={450} height={99} style={{
-                maxHeight: "99px"
-            }} alt="QRLink logo"/>
+            <form action={goToHome}>
+                <button type="submit">
+                    <Image src="/res/img/logo.png" priority={true} width={450} height={99} style={{
+                        maxHeight: "99px"
+                    }} alt="QRLink logo"/>
+                </button>
+            </form>
 
 
 

@@ -59,15 +59,7 @@ export default function ProfileUpdateForm({
                     color:"red",
                     display: state?.email ? "block" : "none"
                 }}>Email already in use.</p>
-                <button className="font-medium" style={{
-                    background: "linear-gradient(to right, red, purple)",
-                    padding:"10px 20px",
-                    maxWidth: 220,
-                    maxHeight: 220,
-                    borderRadius: "18px",
-                    marginTop: 20,
-                    color:"white"
-                }} type="submit">Update</button>
+                    <button type="submit" className="text-gray-900 bg-white border border-gray-400 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 mt-5">Save Changes</button>
                 <p style={{
                     color:"red",
                     display: state?.default ? "block" : "none"

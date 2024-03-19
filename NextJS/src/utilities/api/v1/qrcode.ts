@@ -68,6 +68,8 @@ export class QRCode {
             date: time,
             update: Object.assign({},update as object)
         })
+
+        this.update_log = this.update_log.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }
 
     /**

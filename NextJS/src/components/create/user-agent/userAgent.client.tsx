@@ -10,7 +10,7 @@ const browserRegexMap = {
     "chrome": /(?:Chrome|CriOS)\/([0-9]+\.[0-9]+)/,
     "firefox": /(?:Firefox)\/([0-9]+\.[0-9]+)/,
     "edge": /(?:Edge)\/([0-9]+\.[0-9]+)/,
-    "safari": /(?:Safari)\/([0-9]+\.[0-9]+)/,
+    "safari": /^(?!.*(?:Chrome|CriOS|Firefox|Edge|Opera|OPR|SamsungBrowser|Trident)).*Safari\/([0-9]+\.[0-9]+)/, // this is so that it matches safari but not chrome, firefox, edge, opera, or samsung browser
     "samsungInternet": /(?:SamsungBrowser)\/([0-9]+\.[0-9]+)/,
     "ie": /(?:Trident)\/([0-9]+\.[0-9]+)/,
     "any": /.*/

@@ -17,7 +17,7 @@ export default function FormSubmit({
                 display: state?.submit_button ? "block" : "none",
                 marginBottom: 5
             }}>{state?.submit_button}</p>
-            <button type="submit" disabled={pending} id="qr-submit" className="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm w-[205px] py-2.5 disabled:text-white disabled:bg-blue-300 disabled:hover:bg-blue-300">{qrCodeInfo.id ? (pending?"Saving...":"Save Changes"):(pending ? "Creating..." : "Create")}</button>
+            <button type="submit" disabled={pending} id="qr-submit" className="text-gray-900 bg-white border border-gray-400 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm w-[205px] py-2.5 mt-2">{qrCodeInfo.id ? (pending?"Saving...":"Save Changes"):(pending ? "Creating..." : "Create")}</button>
         </div>
     )
 }

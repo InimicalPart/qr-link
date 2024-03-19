@@ -72,7 +72,7 @@ export default function GenerateQRs({
                 return nameMatches || descMatches || idMatches;
             }
             return (
-                    <form action={handleClick} key={qrcodeJSON.id} onSubmit={console.log} className="qr select-none" id="manage-qr-form" style={{
+                    <form action={handleClick} key={qrcodeJSON.id} className="qr select-none" id="manage-qr-form" style={{
                         display: "flex",
                         border: "1px black solid",
                         borderRadius:3,
@@ -132,7 +132,14 @@ export default function GenerateQRs({
                             {/* <span className="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded relative ">Matches ID</span> */}
 
                             <div id="information" style={{textAlign: "center"}}>
-                                <p className="information" id="qr-name-cntr"><b>Name:</b><br/><span id="qr-name">{qrcodeJSON.name ?? <i style={{color:"#696969"}}>No Name</i>}</span></p>
+                                <p className="information" id="qr-name-cntr"><b>Name:</b><br/><span id="qr-name" style={{
+                                    height: "3em",
+                                    overflow: "hidden",
+                                    display: "-webkit-box",
+                                    textOverflow: "ellipsis",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical",
+                                }} title={qrcodeJSON.name ?? "No Name"}>{qrcodeJSON.name ?? <i style={{color:"#696969"}}>No Name</i>}</span></p>
                                 <p className="information" id="qr-description-cntr"><b>Description:</b><br/><span className="qr-desc" id="qr-description" style={{
                                     height: "4.5em",
                                     overflow: "hidden",
@@ -140,8 +147,7 @@ export default function GenerateQRs({
                                     textOverflow: "ellipsis",
                                     WebkitLineClamp: 3,
                                     WebkitBoxOrient: "vertical",
-
-                                }}>{ qrcodeJSON.description ?? <i style={{color:"#696969"}}>No Description</i>}</span></p>
+                                }} title={qrcodeJSON.description ?? "No Description"}>{ qrcodeJSON.description ?? <i style={{color:"#696969"}}>No Description</i>}</span></p>
                                 <p className="information" id="qr-expires-cntr"><b>Expires:</b><br/><span id="qr-expires" style={{color:qrcodeJSON.expires ? new Date(qrcodeJSON.expires) > new Date() ? "darkgreen" : "darkred" : "darkgreen"}}><b>{qrcodeJSON.expires ? new Date(qrcodeJSON.expires).toLocaleString([],{day:"numeric", year:"numeric", month:"numeric", hour: '2-digit', minute:'2-digit'}): "Never"}</b></span></p>
                             </div>
                             <div id="stats" style={{pointerEvents: "none",height:"fit-content", width:"100%",paddingBottom:15}}>

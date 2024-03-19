@@ -127,7 +127,7 @@ const qrCodeHTML = `<div style="font-family: 'Inter', sans-serif;min-height:100%
     await page.waitForSelector("body > div > img");
 
     console.log("[-QR-] Generating...")
-    const pdf = await page.pdf({ path: path.join(__dirname, "..","qrcode_"+id+".pdf"), format: "A4", printBackground: true, scale: 0.87, pageRanges: "1"});
+    const pdf = await page.pdf({format: "A4", printBackground: true, scale: 0.87, pageRanges: "1"});
     console.log("[-QR-] Generated PDF for QR-code " + id);
     return "data:application/pdf;base64," + pdf.toString("base64");
 }
