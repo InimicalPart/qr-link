@@ -296,7 +296,7 @@ export async function verifyAPIToken(token: string): Promise<APIKey|null>{
         audience: strippedBaseURL,
         issuer: strippedBaseURL,
         algorithms: ["HS256"],
-        requiredClaims: ["iat", "iss", "aud"],
+        requiredClaims: ["iss", "aud"],
     }).then(() => {
         return {id:payload?.id,...APIKeyDetails}
     }).catch(() => {

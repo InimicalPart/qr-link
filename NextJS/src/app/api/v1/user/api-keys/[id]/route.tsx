@@ -27,7 +27,7 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
                     return new NextResponse(JSON.stringify({
                         error: "NOT_ALLOWED",
                         message: "This API key is not allowed to view the API key with ID " + params.id
-                    }), { status: 401, headers: { "Content-Type": "application/json" } });
+                    }), { status: 403, headers: { "Content-Type": "application/json" } });
             }
         }
         return new NextResponse(JSON.stringify({
@@ -164,7 +164,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
                     return new NextResponse(JSON.stringify({
                         error: "NOT_ALLOWED",
                         message: "This API key is not allowed to update the API key with ID " + params.id
-                    }), { status: 401, headers: { "Content-Type": "application/json" } });
+                    }), { status: 403, headers: { "Content-Type": "application/json" } });
                 case "invalid_perms":
                     return new NextResponse(JSON.stringify({
                         error: "INVALID_PERMISSIONS",

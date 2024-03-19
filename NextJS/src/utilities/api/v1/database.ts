@@ -302,13 +302,40 @@ export async function readQRCodeTable(storage=global.storageMethod) {
             const {promises:fs} = await import("fs")
             console.log(`[DATA] Reading QRCodeTable from '${global.QRBackupFilePath}'...`);
             const data = await fs.readFile(global.QRBackupFilePath, "utf8");
-            const parsed = parseJSONC(data)
+            const parsed = parseJSONC(data) 
             const classed = Object.fromEntries(Object.entries(parsed).map(([key, value]) => [key, new QRCode({...(value as QRCode), id: key})])) as QRCodeTable // Convert QRCode from object to class
             resolve(classed);
       } else {
           try {
                 console.log("[DATA] Reading QRCodeTable from the database...")
               let results: Array<MongoQRCodeInformation> = await global.mongoClient.db("QRLink").collection("qrcodes").find({}).toArray() as unknown as Array<MongoQRCodeInformation>
+            
+
+              results = results.map((obj)=>{
+
+                let objectified = obj
+                if ((objectified.created as unknown as any) instanceof Date) objectified.created = (objectified.created as unknown as any).toISOString()
+                if ((objectified.updated as unknown as any) instanceof Date) objectified.updated = (objectified.updated as unknown as any).toISOString()
+                if ((objectified.expires as unknown as any) instanceof Date) objectified.expires = (objectified.expires as unknown as any).toISOString()
+                //loop through scanData
+                if (objectified.scanData) {
+                    objectified.scanData = objectified.scanData.map((scan) => {
+                        if ((scan as unknown as any).date instanceof Date) (scan as any).date = ((scan as any).date as unknown as any).toISOString()
+                        return scan
+                    })                
+                }
+                //loop through updateLog
+                if (objectified.update_log) {
+                    objectified.update_log = objectified?.update_log?.map((update) => {
+                        if ((update as unknown as any).date instanceof Date) (update as any).date = ((update as any).date as unknown as any).toISOString()
+                        return update
+                    })
+                }
+                return objectified
+              })
+              
+                          
+              
               resolve(await convertToQRCTFormat(results))
           } catch (err) {
               reject(err)
@@ -460,13 +487,51 @@ export async function saveQR(id: string = null, obj: QRCode = new QRCode(), upda
             const {promises:fs} = await import("fs")
             await fs.writeFile(
                 global.QRBackupFilePath,
-                JSON.stringify((Object.keys(global.QRCodeTable).map((key)=>Object.assign({}, global.QRCodeTable[key])))) // Convert QRCode from class to object
+                JSON.stringify((Object.keys(global.QRCodeTable).map((key)=>{
+                
+                    let objectified = Object.assign({}, global.QRCodeTable[key])
+                    if ((objectified.created as unknown as any) instanceof Date) objectified.created = (objectified.created as unknown as any).toISOString()
+                    if ((objectified.updated as unknown as any) instanceof Date) objectified.updated = (objectified.updated as unknown as any).toISOString()
+                    if ((objectified.expires as unknown as any) instanceof Date) objectified.expires = (objectified.expires as unknown as any).toISOString()
+                    //loop through scanData
+                    objectified.scanData = objectified.scanData.map((scan) => {
+                        if ((scan as unknown as any).date instanceof Date) (scan as any).date = ((scan as any).date as unknown as any).toISOString()
+                        return scan
+                    })
+
+                    //loop through updateLog
+                    objectified.update_log = objectified.update_log.map((update) => {
+                        if ((update as unknown as any).date instanceof Date) (update as any).date = ((update as any).date as unknown as any).toISOString()
+                        return update
+                    })
+
+                    return objectified
+                
+                }))) // Convert QRCode from class to object
                );
             resolve()
         } else {
             if (update) {
                 if (global.debugMode) console.log("[DATA] Updating QR-code " + id + " in the database...")
-                global.mongoClient.db("QRLink").collection("qrcodes").updateOne({id: id}, {$set: Object.assign({},obj)}).then((status) => {
+                global.mongoClient.db("QRLink").collection("qrcodes").updateOne({id: id}, {$set: (()=>{
+                    let objectified = Object.assign({},obj)
+                    if ((objectified.created as unknown as any) instanceof Date) objectified.created = (objectified.created as unknown as any).toISOString()
+                    if ((objectified.updated as unknown as any) instanceof Date) objectified.updated = (objectified.updated as unknown as any).toISOString()
+                    if ((objectified.expires as unknown as any) instanceof Date) objectified.expires = (objectified.expires as unknown as any).toISOString()
+                    //loop through scanData
+                    objectified.scanData = objectified.scanData.map((scan) => {
+                        if ((scan as unknown as any).date instanceof Date) (scan as any).date = ((scan as any).date as unknown as any).toISOString()
+                        return scan
+                    })
+
+                    //loop through updateLog
+                    objectified.update_log = objectified.update_log.map((update) => {
+                        if ((update as unknown as any).date instanceof Date) (update as any).date = ((update as any).date as unknown as any).toISOString()
+                        return update
+                    })
+
+                    return objectified
+                })()}).then((status) => {
                     if (status.modifiedCount == 0) {
                         console.log("[DATA] Failed to update QR-code " + id + " in the database.")
                     }
@@ -475,7 +540,26 @@ export async function saveQR(id: string = null, obj: QRCode = new QRCode(), upda
             } else {
                 if (global.debugMode) console.log("[DATA] Inserting QR-code " + id + " into the database...");
                 (obj as MongoQRCodeInformation).id = id 
-                global.mongoClient.db("QRLink").collection("qrcodes").insertOne(Object.assign({},obj)).then((status) => {
+                global.mongoClient.db("QRLink").collection("qrcodes").insertOne((()=>{
+                    let objectified = Object.assign({},obj)
+                    
+                    if ((objectified.created as unknown as any) instanceof Date) objectified.created = (objectified.created as unknown as any).toISOString()
+                    if ((objectified.updated as unknown as any) instanceof Date) objectified.updated = (objectified.updated as unknown as any).toISOString()
+                    if ((objectified.expires as unknown as any) instanceof Date) objectified.expires = (objectified.expires as unknown as any).toISOString()
+                    //loop through scanData
+                    objectified.scanData = objectified.scanData.map((scan) => {
+                        if ((scan as unknown as any).date instanceof Date) (scan as any).date = ((scan as any).date as unknown as any).toISOString()
+                        return scan
+                    })
+
+                    //loop through updateLog
+                    objectified.update_log = objectified.update_log.map((update) => {
+                        if ((update as unknown as any).date instanceof Date) (update as any).date = ((update as any).date as unknown as any).toISOString()
+                        return update
+                    })
+
+                    return objectified
+                })()).then((status) => {
                     if (!status.acknowledged) {
                         console.log("[DATA] Failed to insert QR-code " + id + " into the database.")
                     }

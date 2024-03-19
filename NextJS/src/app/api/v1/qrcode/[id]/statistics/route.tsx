@@ -101,7 +101,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
         return new NextResponse(JSON.stringify({
             error: (statistics as {error:string,message:string}).error,
             message: (statistics as {error:string,message:string}).message
-        }), { status: 500, headers: { "Content-Type": "application/json" } });
+        }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
 

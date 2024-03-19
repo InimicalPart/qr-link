@@ -91,6 +91,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
             </div>
             <script>
                 (async()=>{
+                    let informationText = "";
                     let client = new ClientJS();
 
                     async function getPos(){
@@ -167,10 +168,19 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                                             if (isLocationRequired) {
                                                 document.getElementById("status").innerText = "This QR-code requires location to be sent to the server, but you have denied access to your location. Please allow access to your location and rescan the QR-code."
                                                 return 1
+                                            } else {
+                                                if (confirm("You selected to send your location to the server, but you have denied access to your location. Do you want to try again? (please check your settings to make sure you have enabled location for your browser")) {
+                                                    document.getElementById("accept").disabled = false
+                                                    document.getElementById("accept").innerText = "Accept"
+                                                    document.getElementById("status").innerText = informationText
+                                                    return 0
+                                                }
                                             }
                                         })
                                         if (res == 1) {
                                             ws.close()
+                                            return
+                                        } else {
                                             return
                                         }
                                     } else {
@@ -255,7 +265,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                                 })
                             }
 
-
+                            informationText = document.getElementById("status").innerHTML
 
                             document.getElementById("accept").style.display = "block"
                             if (isLocationRequired || isUserAgentRequired) document.getElementById("deny").style.display = "block"
@@ -484,7 +494,7 @@ export function SOCKET(
                         longitude: number,
                         accuracy: number
                     } | undefined,
-                    timestamp: Date | undefined,
+                    timestamp: string | undefined,
                     "user-agent": string | undefined,
                     ip: string | undefined
                 } = {
@@ -498,7 +508,7 @@ export function SOCKET(
                     scanData = {
                         fingerprint: parsed.data.fingerprint ?? undefined,
                         location: parsed.data.location ?? undefined,
-                        timestamp: new Date(),
+                        timestamp: new Date().toISOString(),
                         "user-agent": parsed.data["user-agent"] ?? undefined,
                         ip: parsed.data.ip ?? undefined
                     }

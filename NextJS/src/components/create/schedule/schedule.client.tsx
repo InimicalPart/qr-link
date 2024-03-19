@@ -3,7 +3,7 @@
 import { getPassedTime } from "@/utilities/api/v1/misc";
 import moment from "moment-timezone";
 import ScheduleList from "./scheduleList.client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Swal from "sweetalert2-ql"
 import "@sweetalert2/theme-dark"
@@ -70,10 +70,13 @@ export default function Schedule({
       setAllDay(event.target.checked);
     };
 
+    useEffect(() => {
+        if (!qrCodeInfo?.data?.timezone) (document.getElementById("scheduletimezone") as HTMLSelectElement).value = moment.tz.guess()
+    }, [qrCodeInfo]);
 
     return (
        <>
-                       <input className="create" type="hidden" disabled={action !== "schedule"} id="scheduleCompacted" name="schedule" value={JSON.stringify(currentScheduleActions)}/>
+                <input className="create" type="hidden" disabled={action !== "schedule"} id="scheduleCompacted" name="schedule" value={JSON.stringify(currentScheduleActions)}/>
                 <div id="currentActions">
                     <ScheduleList currentScheduleActions={currentScheduleActions} setCurrentScheduleActions={setCurrentScheduleActions}/>
                     <p className="qr-info-label flex justify-center items-center flex-wrap" style={{

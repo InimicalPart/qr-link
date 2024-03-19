@@ -14,7 +14,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return new NextResponse(JSON.stringify({
       error: "NO_TOKEN",
       message: "No token provided.",
-    }), { status: 400, headers: { "Content-Type": "application/json" } });
+    }), { status: 401, headers: { "Content-Type": "application/json" } });
   }
 
   let userID: string = null

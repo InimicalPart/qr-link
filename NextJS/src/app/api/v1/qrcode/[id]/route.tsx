@@ -81,6 +81,8 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
             delete qrcodeCopy.type;
             delete qrcodeCopy.name;
             delete qrcodeCopy.description;
+            delete qrcodeCopy.created;
+            delete qrcodeCopy.updated;
         }
     let exportData: Partial<{
         svg: string,
@@ -227,17 +229,8 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
           expires: global.QRCodeTable[id].expires,
       }), { status: 200, headers: { "Content-Type": "application/json" } });
     }
-    saveQR(id, global.QRCodeTable[update.id??id], true)
+    saveQR(id, global.QRCodeTable[id], true)
     
-    let additionalInformation = {};
-    if (update.id && update.id != id) {
-      additionalInformation = {
-          ...additionalInformation,
-          message: "You have changed the ID of this QR-code. Keep in mind that this means that the old ID will no longer work, and that you will have to update the QR-code everywhere you have used it.",
-          warning: "ID_CHANGE_WARNING",
-          new_id: update.id,
-      }
-    }
     return new NextResponse(JSON.stringify({
       ...{
         id,
@@ -245,8 +238,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
         data: global.QRCodeTable[id].data,
         linked_to: global.QRCodeTable[id].linked_to,
         expires: global.QRCodeTable[id].expires,
-      },
-      ...additionalInformation,
+      }
     }), { status: 200, headers: { "Content-Type": "application/json" } });
   
 }
