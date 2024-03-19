@@ -77,6 +77,11 @@ export default async function Update({
         redirect(`/statistics/${params.id}`)
     }
 
+    async function goToHome() {
+        "use server";
+        redirect("/")
+    }
+
     const updateSubmit = submit.bind(null, "update", qrCodeDetails)
     
     return (
@@ -86,9 +91,13 @@ export default async function Update({
             overflowX: "hidden",
         }}>
             <header style={{padding:"calc(1.5em + 8px)", display:"flex", justifyContent: "space-between"}} className="header">
-                <Image src="/res/img/logo.png" priority={true} width={450} height={99} style={{
-                    maxHeight: "99px"
-                }} alt="QRLink logo"/>
+                <form action={goToHome}>
+                    <button type="submit">
+                        <Image src="/res/img/logo.png" priority={true} width={450} height={99} style={{
+                            maxHeight: "99px"
+                        }} alt="QRLink logo"/>
+                    </button>
+                </form>
                 <div className='header topright' style={{
                     display: "flex",
                     gap: "10px",
@@ -107,7 +116,10 @@ export default async function Update({
                 </div>
             </header>
 
-          <div id="create-new">
+          <div id="create-new" style={{
+            position:"relative",
+            top: -80
+          }}>
               <div style={{
                   width: 250,
                   height: 250,

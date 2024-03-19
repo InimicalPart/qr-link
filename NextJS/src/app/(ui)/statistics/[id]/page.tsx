@@ -86,6 +86,10 @@ export default async function Statistics({params}: {params:{id:string}}) {
 
     let scansLast7Days = ((await generateStatistics("ScannedLastX",{time:"day",multiplier:7}))).info.length
 
+    async function goToHome() {
+        "use server";
+        redirect("/")
+    }
 
     return (
         <div className="statistics main-container" style={{
@@ -95,9 +99,13 @@ export default async function Statistics({params}: {params:{id:string}}) {
         }}>
 
             <header style={{padding:"calc(1.5em + 8px)", display:"flex", justifyContent: "space-between"}} className="header">
-                <Image src="/res/img/logo.png" priority={true} width={450} height={99} style={{
-                    maxHeight: "99px"
-                }} alt="QRLink logo"/>
+                <form action={goToHome}>
+                    <button type="submit">
+                        <Image src="/res/img/logo.png" priority={true} width={450} height={99} style={{
+                            maxHeight: "99px"
+                        }} alt="QRLink logo"/>
+                    </button>
+                </form>
                 <div className='header topright' style={{
                     display: "flex",
                     gap: "10px",
@@ -297,8 +305,13 @@ export default async function Statistics({params}: {params:{id:string}}) {
                     </div>
                 </div>
                 <br/>
-                <form action={backToDashboard}>
-                    <button type="submit" className="statistics main-button">Back to Dashboard</button>
+                <form action={backToDashboard} style={{
+                    width: "100%",
+                    maxWidth: 600,
+                    display: "flex",
+                    justifyContent: "center"
+                }}>
+                <button type="submit" className="text-gray-900 bg-white border border-gray-400 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm w-[100svw] max-w-[400px] py-2.5 mt-2">Back to Dashboard</button>
                 </form>
             </div>
             <footer className="copyright-footer statistics">

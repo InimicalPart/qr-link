@@ -29,7 +29,6 @@ const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
 
 export default async function Home() {
 
-
     async function login() {
         "use server";
          function getAuthorizationUrl() {

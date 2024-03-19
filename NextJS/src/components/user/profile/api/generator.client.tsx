@@ -17,6 +17,15 @@ export default function APIKeyGenerator({
     updateAPIName: (id:string, name:string) => void
 }) {
 
+    const permissionsTooltipMap = {
+        "api:delete-self": "Allows the API key to delete itself",
+        "api:update-self": "Allows the API key to update it's own name",
+        "qrcode:create": "Allows the API key to create QR codes on behalf of the user",
+        "qrcode:update": "Allows the API key to update QR codes on behalf of the user",
+        "qrcode:delete": "Allows the API key to delete QR codes on behalf of the user",
+        "qrcode:read": "Allows the API key to view QR codes on the user's account"
+    }
+
     type APIKeyOutput = APIKey & {token_preview: string}
 
     const [apikeys, setAPIKeys] = useState<APIKeyOutput[]>([])
@@ -106,7 +115,6 @@ export default function APIKeyGenerator({
                             
                             let newAPIKey = apikeys.find(a=>a.id==id)
                             newAPIKey.name = newName
-                            console.log([...apikeys.filter(a=>a.id!=id), newAPIKey])
                             setAPIKeys([...apikeys.filter(a=>a.id!=id), newAPIKey])
                             
                             const toast = Swal.mixin({
@@ -262,7 +270,7 @@ export default function APIKeyGenerator({
                         //! Get the first X permissions and map them to a badge
                         const cut = sorted.slice(0, howManyBadges)
                         const result = cut.map((perm, index) => {
-                            return <span key={perm} className="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">{perm}</span>
+                            return <span key={perm} className="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full" title={permissionsTooltipMap[perm]||"???"}>{perm}</span>
                         })
                         
                         const leftovers = sorted.slice(howManyBadges)

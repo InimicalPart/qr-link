@@ -94,9 +94,10 @@ export default async function UserAPI() {
 
                 <APIKeyGenerator API_URL={process.env.API_URL} token={cookies().get("token").value} onRevoke={revokeAPIKey} updateAPIName={updateName}/>
             </div>
+            <br/>
             <AddAPIKeyButton createAPIKey={createAPIKey}/>
             <form action={backToProfile}>
-                <button className="user-api back-key">Back</button>
+                <button type="submit" className="text-gray-900 bg-white border border-gray-400 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm w-[205px] py-2.5 mt-2">Back to Profile</button>
             </form>
 
 

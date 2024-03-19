@@ -34,6 +34,11 @@ export default async function Home() {
         redirect("/login")
     }
 
+    async function goToHome() {
+        "use server";
+        redirect("/")
+    }
+
     return (
         <div className="create main-container" style={{
             backgroundImage: "url('/res/img/newseed_background.png')",
@@ -41,9 +46,13 @@ export default async function Home() {
             overflowX: "hidden",
         }}>
             <header style={{padding:"calc(1.5em + 8px)", display:"flex", justifyContent: "space-between"}} className="header">
-                <Image src="/res/img/logo.png" priority={true} width={450} height={99} style={{
-                    maxHeight: "99px"
-                }} alt="QRLink logo"/>
+                    <form action={goToHome}>
+                        <button type="submit">
+                            <Image src="/res/img/logo.png" priority={true} width={450} height={99} style={{
+                                maxHeight: "99px"
+                            }} alt="QRLink logo"/>
+                        </button>
+                    </form>
                 <div className='header topright' style={{
                     display: "flex",
                     gap: "10px",
@@ -62,8 +71,11 @@ export default async function Home() {
                 </div>
             </header>
 
-            <div id="create-new">
-                <div style={{
+            <div id="create-new" style={{
+            position:"relative",
+            top: -80
+          }}>
+            <div style={{
                     width: 250,
                     height: 250,
                     left: '50%',

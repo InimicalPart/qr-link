@@ -10,7 +10,7 @@ export const getPage = async () => {
   if (page) return page;
 
   const browser = await puppeteer.launch({
-    headless: "new",
+    headless: true,
     defaultViewport: null,
     args: [
       "--mute-audio",

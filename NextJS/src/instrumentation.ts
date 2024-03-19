@@ -125,7 +125,7 @@ export async function register(){
                                 if (global.debugMode) console.log("[QRLI] Removed API-key " + key + " as it was linked to a non-existing user. (ID: " + linked_user_id + ")")
                             }
                         }
-                    } else console.log("[AUTH] User with ID '"+linked_user_id+"' does exist.")
+                    } else if (global.debugMode) console.log("[AUTH] User with ID '"+linked_user_id+"' does exist.")
                 })
             }
         }

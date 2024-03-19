@@ -113,6 +113,6 @@ export default function AddAPIKeyButton({
     }
 
     return (
-        <button onClick={showAPIKeyGenerator} className="user-api add-api-key">Add API Key</button>
+        <button type="button" onClick={showAPIKeyGenerator} className="text-gray-900 bg-white border border-gray-400 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm w-[205px] py-2.5 mt-2">Add API Key</button>
     )
 }

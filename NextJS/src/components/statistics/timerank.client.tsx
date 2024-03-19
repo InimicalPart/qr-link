@@ -38,8 +38,6 @@ export default function TimeRank({data}: {
     }
 }) {
 
-    console.log(data)
-
     let scanTime = useRef<HTMLCanvasElement>(null)
     let [finishedLoading, setFinishedLoading] = useState(false);
 
@@ -81,8 +79,6 @@ export default function TimeRank({data}: {
             document.getElementById("topTime").innerText = `${topHour} (${topHourCount})`
         }
             
-        console.log(sortedAlpha)
-
         sortedAlpha = Object.keys(sortedAlpha).sort((a, b) => {
             const timeA = moment(a, "hh:mm A");
             const timeB = moment(b, "hh:mm A");
@@ -91,8 +87,6 @@ export default function TimeRank({data}: {
             acc[key] = sortedAlpha[key];
             return acc;
         }, {} as {[key:string]:number})
-
-        console.log(sortedAlpha)
 
     },[data.info])
     
