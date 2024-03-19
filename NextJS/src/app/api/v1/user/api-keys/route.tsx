@@ -13,7 +13,7 @@ export async function GET(request:NextRequest) {
     if (!token) {
         return new NextResponse(JSON.stringify({
             error: "NO_TOKEN",
-            message: "No token provided in request."
+            message: "No token provided."
         }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
 
@@ -27,12 +27,12 @@ export async function GET(request:NextRequest) {
                     return new NextResponse(JSON.stringify({
                         error: "NOT_ALLOWED",
                         message: "API keys are not allowed for this request."
-                    }), { status: 401, headers: { "Content-Type": "application/json" } });
+                    }), { status: 403, headers: { "Content-Type": "application/json" } });
                 }
         }
         return new NextResponse(JSON.stringify({
             error: "INVALID_TOKEN",
-            message: "Invalid token provided in request."
+            message: "Invalid token."
         }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
 
@@ -57,11 +57,22 @@ export async function GET(request:NextRequest) {
 }
 export async function POST(request: NextRequest) {
     //! Create a new API key (token is required)
+
+    let body;
+    try {
+        body = await request.json()
+    } catch {
+        return new NextResponse(JSON.stringify({
+            error: "INVALID_JSON",
+            message: "Invalid JSON provided."
+        }), { status: 400, headers: { "Content-Type": "application/json" } });
+    }
+
     const token = request.headers.get("Authorization")
     if (!token) {
         return new NextResponse(JSON.stringify({
             error: "NO_TOKEN",
-            message: "No token provided in request."
+            message: "No token provided."
         }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
 
@@ -75,23 +86,13 @@ export async function POST(request: NextRequest) {
                     return new NextResponse(JSON.stringify({
                         error: "NOT_ALLOWED",
                         message: "API keys are not allowed for this request."
-                    }), { status: 401, headers: { "Content-Type": "application/json" } });
+                    }), { status: 403, headers: { "Content-Type": "application/json" } });
                 }
         }
         return new NextResponse(JSON.stringify({
             error: "INVALID_TOKEN",
-            message: "Invalid token provided in request."
+            message: "Invalid token."
         }), { status: 401, headers: { "Content-Type": "application/json" } });
-    }
-
-    let body;
-    try {
-        body = await request.json()
-    } catch {
-        return new NextResponse(JSON.stringify({
-            error: "INVALID_BODY",
-            message: "Invalid body provided in request."
-        }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
     let { permissions } = body
@@ -144,6 +145,6 @@ export async function POST(request: NextRequest) {
         created: details.created ? details.created : null,
         last_used: null,
         permissions: details.permissions
-    }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }), { status: 201, headers: { "Content-Type": "application/json" } });
 
 }

@@ -31,7 +31,7 @@ fi
 
 echo "[SYS] Running configuration.sh"
 cd /root
-bash /root/configuration.sh
+bash /root/configuration.sh "$@"
 echo "[SYS] configuration.sh has finished configuring QRLink for maximum security"
 
 echo "[SYS] Making sure the required version for puppeteer is installed"

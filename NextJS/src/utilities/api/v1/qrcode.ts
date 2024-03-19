@@ -72,12 +72,33 @@ export class QRCode {
         this.update_log = this.update_log.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }
 
+    private deepAssign(target: any, source: any) {
+        for (const key in source) {
+        if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+            if (!target[key]) {
+            target[key] = {};
+            }
+            this.deepAssign(target[key], source[key]);
+        } else {
+            target[key] = source[key];
+        }
+        }
+    }
+
+    update(update: Partial<QRCode>) {
+        const updateTime = new Date().toISOString()
+        this.addToUpdateLog(update,updateTime)
+        this.updated = updateTime
+
+        this.deepAssign(this, update);
+    }
+
     /**
      * Create a new QR code
      * @param newInformation The information to create the QR code with, if any 
      */
     constructor(newInformation?: Partial<QRCode> | undefined) {
-        if (newInformation) Object.assign(this, newInformation)
+        if (newInformation) this.deepAssign(this, newInformation)
         if (!this.update_log.find(a=>a.update.created)) {
             this.addToUpdateLog({
                 created: this.created
@@ -732,7 +753,7 @@ export interface UserAgentQRCodeDataT {
 export interface ScanDataT {
     fingerprint?: string;
     "user-agent"?: string;
-    timestamp?: Date;
+    timestamp?: string;
     ip?: string;
     location?: {
         latitude: number;

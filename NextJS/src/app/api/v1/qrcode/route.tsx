@@ -3,7 +3,7 @@ declare const global: QRLinkGlobal
 import { getUser } from "@/utilities/api/v1/authentication";
 import { saveQR } from "@/utilities/api/v1/database";
 import { QRCode, Types } from "@/utilities/api/v1/qrcode";
-import { checkDataValidity } from "@/utilities/api/v1/update";
+import { checkDataValidity, validateAndDoUpdate } from "@/utilities/api/v1/update";
 import crypto from "crypto";
 import moment from "moment-timezone";
 import { NextRequest, NextResponse } from "next/server";
@@ -42,13 +42,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             error: "NO_TOKEN",
             message: "No token provided.",
         }), {status:401, headers: { "Content-Type": "application/json" } });
-    }
-    // check if token is valid
-    if (!(typeof (token as any) == "string")) {
-        return new NextResponse(JSON.stringify({
-            error: "INVALID_TOKEN",
-            message: "Token needs to be a string.",
-        }), {status:400, headers: { "Content-Type": "application/json" } });
     }
     let tokenVerificationResult = await getUser(token, {
         required_permission: "qrcode:create",
@@ -165,26 +158,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
         
     if (settings) {
-        // has to be an object
-        if (!(typeof (settings as any) == "object")) {
-            return new NextResponse(JSON.stringify({
-                error: "INVALID_SETTINGS",
-                message: "settings needs to be an object.",
-            }), {status:400, headers: { "Content-Type": "application/json" } });
+        const settingsValidity = await validateAndDoUpdate(null, {settings}, false);
+        const valid = !(settingsValidity instanceof NextResponse) 
+        if (!valid) {
+            return settingsValidity
         }
-        // if settings.scanData.sendToURL is true, settings.scanData.JWTEncryptionKey needs to be a string and not empty
-        if (settings.scanData.sendToURL) {
-            if (
-                !(typeof (settings.scanData.JWTEncryptionKey as any) == "string") ||
-                settings.scanData.JWTEncryptionKey == ""
-                ) {
-                    return new NextResponse(JSON.stringify({
-                        error: "INVALID_JWT_ENCRYPTION_KEY",
-                        message: "JWTEncryptionKey needs to be a string and not empty.",
-                    }), {status:400, headers: { "Content-Type": "application/json" } });
-                }
-        }
-        
     }
         
     
@@ -197,7 +175,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         name: name ? name : null,
         description: description ? description : null,
         linked_to: identifier ? identifier : null,
-        expires: expires ? expires : null,
+        expires: expires ? expires.toISOString() : null,
         scanCount: 0,
         scanData: [],
         settings: {
