@@ -90,6 +90,10 @@ export class QRCode {
         this.addToUpdateLog(update,updateTime)
         this.updated = updateTime
 
+        if (update.data) {
+            this.data = null
+        }
+
         this.deepAssign(this, update);
     }
 
