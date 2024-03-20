@@ -311,28 +311,27 @@ export async function readQRCodeTable(storage=global.storageMethod) {
               let results: Array<MongoQRCodeInformation> = await global.mongoClient.db("QRLink").collection("qrcodes").find({}).toArray() as unknown as Array<MongoQRCodeInformation>
             
 
-              results = results.map((obj)=>{
-
-                let objectified = obj
-                if ((objectified.created as unknown as any) instanceof Date) objectified.created = (objectified.created as unknown as any).toISOString()
-                if ((objectified.updated as unknown as any) instanceof Date) objectified.updated = (objectified.updated as unknown as any).toISOString()
-                if ((objectified.expires as unknown as any) instanceof Date) objectified.expires = (objectified.expires as unknown as any).toISOString()
-                //loop through scanData
-                if (objectified.scanData) {
-                    objectified.scanData = objectified.scanData.map((scan) => {
-                        if ((scan as unknown as any).date instanceof Date) (scan as any).date = ((scan as any).date as unknown as any).toISOString()
-                        return scan
-                    })                
-                }
-                //loop through updateLog
-                if (objectified.update_log) {
-                    objectified.update_log = objectified?.update_log?.map((update) => {
-                        if ((update as unknown as any).date instanceof Date) (update as any).date = ((update as any).date as unknown as any).toISOString()
-                        return update
-                    })
-                }
-                return objectified
-              })
+                //! Make sure to convert the dates to ISO strings, if any are present
+                results = results.map((obj)=>{
+                    if ((obj.created as unknown as any) instanceof Date) obj.created = (obj.created as unknown as any).toISOString()
+                    if ((obj.updated as unknown as any) instanceof Date) obj.updated = (obj.updated as unknown as any).toISOString()
+                    if ((obj.expires as unknown as any) instanceof Date) obj.expires = (obj.expires as unknown as any).toISOString()
+                    //loop through scanData
+                    if (obj.scanData) {
+                        obj.scanData = obj.scanData.map((scan) => {
+                            if ((scan as unknown as any).date instanceof Date) (scan as any).date = ((scan as any).date as unknown as any).toISOString()
+                            return scan
+                        })                
+                    }
+                    //loop through updateLog
+                    if (obj.update_log) {
+                        obj.update_log = obj?.update_log?.map((update) => {
+                            if ((update as unknown as any).date instanceof Date) (update as any).date = ((update as any).date as unknown as any).toISOString()
+                            return update
+                        })
+                    }
+                    return obj
+                })
               
                           
               

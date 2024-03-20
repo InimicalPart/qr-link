@@ -207,10 +207,10 @@ export default function Form({
                 border: '1px black solid',
                 borderRadius: 8,
                 textAlign: 'center'
-            }} disabled type="datetime-local" defaultValue={qrCodeInfo.expires}/>
+            }} disabled={qrCodeInfo?.expires==null ?? true} type="datetime-local" defaultValue={qrCodeInfo.expires ? moment(qrCodeInfo.expires).format("YYYY-MM-DDTHH:mm") : null}/>
             <input className="create" name="expires_never_checkbox" style={{
                 marginLeft: 10
-            }} id="qr-never-expires-checkbox" type="checkbox" onChange={handleNeverExpiresChange} defaultChecked={qrCodeInfo.expires==null?true:false ?? true}/>
+            }} id="qr-never-expires-checkbox" type="checkbox" onChange={handleNeverExpiresChange} defaultChecked={qrCodeInfo?.expires==null ?? true}/>
             <label style={{marginLeft:5}} htmlFor="qr-never-expires-checkbox">Never</label>
         </div>
         

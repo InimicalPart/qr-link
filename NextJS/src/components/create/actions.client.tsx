@@ -56,7 +56,7 @@ export default function Actions({
       <>
         <div id="qr-actiontype-cntr" className="QRL-container">
             <p className="qr-info-label flex justify-center items-center flex-wrap">
-                <b>Action:</b>
+                <b>Action</b>
             </p>
             <select
                 id="qr-action"
