@@ -221,4 +221,3 @@ If everything turns upside-down, feel free to contact me at [`me@inimicalpart.co
 
 ## To the employees at NewSeed IT Solutions AB
 I want to thank you all for a wonderful time, and I hope we get to meet each other again soon! I had a lovely time :)
-> I am writing this in advance, I am not trying to leave! 😂
