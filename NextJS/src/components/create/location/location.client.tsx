@@ -374,9 +374,9 @@ export default function Location({
                                         .map((z) => {
                                             return [
                                                 "<li>Zone " +
-                                                (zones.indexOf(z[0]) + 1) +
+                                                (zones.indexOf(z[1]) + 1) +
                                                 " is inside Zone " +
-                                                (zones.indexOf(z[1]) + 1)
+                                                (zones.indexOf(z[0]) + 1)
                                             +"</li>"];
                                         })
                                         .join("")}
@@ -574,7 +574,7 @@ export default function Location({
                     <p  style={{
                         marginBottom:5
                     }}><b>Zone Type:</b></p>
-                    <select className="create" value={zoneType} style={{ width:200}} onChange={(e) => setZoneType(e.target.value)}>
+                    <select className="create" value={zoneType} style={{ width:200}} onChange={(e) => {setZoneType(e.target.value); setPolygonPositions([])}}>
                         <option className="create" value="circle">Circle</option>
                         <option className="create" value="polygon">Polygon</option>
                         <option className="create" disabled={zones.some(a=>a.isEntireWorld)} hidden={zones.some(a=>a.isEntireWorld)} value="entireWorld">Entire World</option>
@@ -591,7 +591,7 @@ export default function Location({
                 } onClick={finishPolygonZone}>
                     Finish Polygon Zone
                 </button>
-                <p hidden={zones.length < 1 || selectedZoneIndex == -1 || zones[selectedZoneIndex]?.type != "polygon" || zones[selectedZoneIndex]?.isEntireWorld || !isCreatingZone } style={{
+                <p hidden={zones.length < 1 || selectedZoneIndex == -1 || zoneType != "polygon" || zones[selectedZoneIndex]?.isEntireWorld || !isCreatingZone || polygonPositions.length == 0} style={{
                         marginBottom:5,
                         marginTop:10
                     }}><b>Points:</b></p>

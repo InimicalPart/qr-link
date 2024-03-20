@@ -1,5 +1,6 @@
 //! ChatGPT carried 90% of the code, I just made some tweaks to make it work better
 
+import { distanceBetweenPoints } from "chart.js/helpers";
 import type * as Types from "leaflet";
 export interface Circle {
     center: Types.LatLngTuple;
@@ -183,11 +184,25 @@ function circleContainsPolygon(circle: Circle, polygon: Polygon): boolean {
 }
 
 function polygonContainsCircle(polygon: Polygon, circle: Circle): boolean {
-    const [circleLat, circleLong] = circle.center;
-    if (!isPointInsidePolygon(circleLat, circleLong, polygon)) {
+    // Check if the circle's center is inside the polygon
+    if (!isPointInsidePolygon(circle.center[0], circle.center[1], polygon)) {
         return false;
     }
+
+    // Check if any vertex of the polygon is inside the circle
+    for (const vertex of polygon.positions) {
+        if (getDistanceFromLatLonInMeters(vertex[0], vertex[1], circle.center[0], circle.center[1]) <= circle.radius) {
+            return false;
+        }
+    }
+
     return true;
+}
+
+function distanceSquared(point1: Types.LatLngTuple, point2: Types.LatLngTuple): number {
+    const dx = point1[0] - point2[0];
+    const dy = point1[1] - point2[1];
+    return dx * dx + dy * dy;
 }
 
 function polygonContainsPolygon(polygon1: Polygon, polygon2: Polygon): boolean {

@@ -26,8 +26,12 @@ import QRCodeImage from "@/components/create/qrCodeImage.client";
 import ExportButtons from "@/components/all/exportButtons.client";
 import { Metadata, ResolvingMetadata } from "next";
 import { getUser } from "@/utilities/api/v1/authentication";
+import { QRLinkGlobal } from "@/types/api/v1/global";
 
 const API_URL = (process.env.API_URL)
+
+declare const global: QRLinkGlobal
+
 export default async function Update({
     params
 }: {params:{id:string}}) {
@@ -35,6 +39,10 @@ export default async function Update({
     if (!cookies()?.get("token")?.value) redirect("/login")
     let user = await getUser(cookies().get("token").value, { allowAPIKey:false })
     if (!user.isAuthenticated) redirect("/login")
+
+    if (!global.QRCodeTable[params.id]) {
+        redirect("/dashboard")
+    }
 
     const qrCodeDetails = await fetch(`${API_URL}/qrcode/${params.id}?export=png,svg`, {
         headers: {

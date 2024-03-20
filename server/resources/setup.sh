@@ -35,7 +35,7 @@ bash /root/configuration.sh "$@"
 echo "[SYS] configuration.sh has finished configuring QRLink for maximum security"
 
 echo "[SYS] Making sure the required version for puppeteer is installed"
-sudo -u appuser /bin/bash -c "cd /home/appuser; npx puppeteer browsers install chrome --yes"
+sudo -u appuser /bin/bash -c "cd /opt/QRLink/NextJS; npx puppeteer browsers install chrome --yes"
 
 echo "[SYS] Restarting QRLink.service"
 systemctl daemon-reload

@@ -507,11 +507,11 @@ export async function checkUserAgentDataValidity(data: Types.UserAgentQRCodeData
                 message: "User agent needs to have os, os_name, browser, and browser_name properties.",
             }
         }
-        if (userAgentInfo.os.length > 50 || userAgentInfo.browser.length > 50 || userAgentInfo.os_name.length > 20 || userAgentInfo.browser_name.length > 20) {
+        if (userAgentInfo.os.length > 100 || userAgentInfo.browser.length > 100 || userAgentInfo.os_name.length > 30 || userAgentInfo.browser_name.length > 30) {
             return {
                 valid: false,
                 error: "INVALID_USER_AGENT",
-                message: "User agent's os and browser properties need to be less than 50 characters, and os_name and browser_name properties need to be less than 20 characters.",
+                message: "User agent's os and browser properties need to be less than 100 characters, and os_name and browser_name properties need to be less than 30 characters.",
             }
         }
         if (!(typeof (userAgentInfo.os as any) == "string") || !(typeof (userAgentInfo.os_name as any) == "string") || !(typeof (userAgentInfo.browser as any) == "string") || !(typeof (userAgentInfo.browser_name as any) == "string")) {

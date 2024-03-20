@@ -180,7 +180,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                                         if (res == 1) {
                                             ws.close()
                                             return
-                                        } else {
+                                        } else if (res == 0) {
                                             return
                                         }
                                     } else {
