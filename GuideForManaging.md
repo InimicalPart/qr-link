@@ -190,6 +190,9 @@ QRLink uses Authkit (made by WorkOS) to authenticate users to QRLink's systems. 
 
 If you wish to run QRLink on a server, files for configuration can be found in the [`server/` directory](https://github.com/newseedit/dynamic-qr-link/blob/main/server). You will also find some helpful one-liners to automatically upload, build, and configure QRLink on a server (you are required to install some tools before-hand).
 
+> [!NOTE]
+> You might need to install some extra dependencies, please google any errors you get and download the required dependencies.
+
 QRLink uses NGINX to provide HTTPS support as well as managing when the frontend and backend would fail to function appropriately, in which case, the user will be sent to the [`unavailable.html` found here](https://github.com/newseedit/dynamic-qr-link/blob/main/server/resources/unavailable.html)
 
 In the `server/resources/` folder, you will be able to find the appropriate NGINX configuration to use. Make sure to adjust it to your needs.
