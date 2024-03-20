@@ -222,6 +222,7 @@ export default function APIKeyGenerator({
 
             function updateBadges(key: APIKeyOutput) {
 
+                //! Make a map of how many badges to show based on the width of the container
                 const badgeCountMap = {
                     "788": 4, //!  + '+X more' badge
                     "684": 3, //!  + '+X more' badge

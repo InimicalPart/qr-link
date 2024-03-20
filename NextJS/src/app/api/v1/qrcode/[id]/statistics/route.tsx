@@ -8,11 +8,6 @@ declare const global: QRLinkGlobal
 
 export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
 
-    //TODO: REMOVE
-    if (process.env.NODE_ENV == "production") {
-        return notFound()
-    }
-
     const { id } = params
     if (!Object.keys(global.QRCodeTable).includes(id)) {
       return new NextResponse(JSON.stringify({
@@ -80,7 +75,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
         }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
-    if (!["ScannedEachX", "ScannedLastX", "ScannedWhere", "Scanned", "ScannedDayRank", "ScannedTimeRank"].includes(type)) {
+    if (!["ScannedEachX", "ScannedLastX", "ScannedWhere", "Scanned", "ScannedDayRank", "ScannedTimeRank", "Browser", "OS", "ScannedTimeRank12H"].includes(type)) {
         return new NextResponse(JSON.stringify({
             error: "INVALID_TYPE",
             message: "Invalid type provided in request."
