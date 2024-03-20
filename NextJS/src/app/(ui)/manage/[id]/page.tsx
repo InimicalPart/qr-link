@@ -174,7 +174,7 @@ export default async function Update({
                   position: 'relative',
                   top: 20
               }} className="select-none">
-              <Form submit={updateSubmit} qrCodeInfo={qrCodeDetails} delQR={delQR}/>
+                <Form submit={updateSubmit} qrCodeInfo={qrCodeDetails} delQR={delQR}/>
               </div>
           </div>
       
