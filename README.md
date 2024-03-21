@@ -18,7 +18,9 @@ To run QRLink, you need to have the following installed:
 - NPM (>=9.6.7)
 
 ## Documentation
-You can find the OpenAPI specification file for QRLink [here](https://github.com/newseedit/dynamic-qr-link/blob/main/openapi.yml)
+You can find the OpenAPI specification file for QRLink [here](https://github.com/newseedit/dynamic-qr-link/blob/main/NextJS/openapi.json)
+
+To view the Swagger UI, go to `/api-docs` on your website.
 
 ## Usage
 ### Install NPM Dependencies
