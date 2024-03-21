@@ -177,7 +177,7 @@ The conditions for QRLink to consider a MongoDB database as valid are as follows
 - A user with no credentials shall not be able to read or modify entries in the database.
 - The database user provided in the `.env` file shall have a password.
 - The database user provided in the `.env` file shall have valid credentials.
-- The database user provided in the `.env` file shall have read and write access to the "QRLink" database and the "qrcodes" collection (will be created during automatic configuration).
+- The database user provided in the `.env` file shall have read and write access to the "QRLink" database, the "qrcodes" collection and the "apikeys" collection (will be created during automatic configuration).
 
 If QRLink is unable to connect to the database or considers it not to be valid or cannot configure it to be valid, it will switch to the backup storage option (file). The running user has to have read and write access to the file path provided above. QRLink will also attempt to create these folders if they do not exist.
 
@@ -208,6 +208,22 @@ After the NGINX configuration file has been installed and enabled, upload all fi
 > To run the setup.sh file, you need to create the `appuser` user as well as the `project-manager` group. Keep in mind that by default, QRLink's location on the server will be /opt/QRLink and that is hardcoded in the setup.sh & configuration.sh files. If you wish to change the directory, you need to change those files as well.
 
 Due to security precautions, we have made it so that the server runs the NextJS framework as the `appuser` user. Unless you are very knowledged in the Linux area, this is not changeable.
+
+## API-keys
+QRLink has support for API-keys, to allow integration with other systems.
+
+You can create an API-key for your account on the profile page of QRLink (`/user/profile`).
+
+API-keys are tokens that do not expire and may be used by applications to do stuff on behalf of the user.
+
+
+A usual user token is provided through the `Authorization` header as `Bearer`. Though, to use an API key, you need to provide it in the `X-API-Key` header without any prefix. After that is done you can send requests to the usual user API endpoints. Some endpoints might require that the API-key has special permissions, and some might not accept an API-key at all. More information on which endpoints support what can be found either in the Swagger UI or in the [OpenAPI Specification file](https://github.com/newseedit/dynamic-qr-link/blob/main/NextJS/openapi.json)
+
+## Swagger UI
+This project has a built in Swagger UI at endpoint `/api-docs`. This endpoint reads the [OpenAPI Specification file](https://github.com/newseedit/dynamic-qr-link/blob/main/NextJS/openapi.json) and displays it using the `swagger-ui-react` package.
+
+The Swagger UI contains all information about the available API endpoints and how to use them, both as a user and using an API-key.
+
 
 ## Troubleshooting
 

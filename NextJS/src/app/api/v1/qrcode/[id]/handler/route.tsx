@@ -172,7 +172,10 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
                                                 if (confirm("You selected to send your location to the server, but you have denied access to your location. Do you want to try again? (please check your settings to make sure you have enabled location for your browser")) {
                                                     document.getElementById("accept").disabled = false
                                                     document.getElementById("accept").innerText = "Accept"
-                                                    document.getElementById("status").innerText = informationText
+                                                    document.getElementById("status").innerHTML = informationText
+                                                    if (isLocationRequired || isUserAgentRequired) document.getElementById("deny").style.display = "block"
+                                                    if (isLocationRequired || isUserAgentRequired) document.getElementById("deny").disabled = false
+
                                                     return 0
                                                 }
                                             }
