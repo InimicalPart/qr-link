@@ -33,7 +33,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const id = crypto.randomUUID()
     const { type, data, name, description, settings } = body;
     let { expires } = body;
-    const token = request.headers.get("Authorization");
+    const token = request.headers.get("Authorization") ?? request.headers.get("X-API-Key");
     
     
     let identifier = undefined

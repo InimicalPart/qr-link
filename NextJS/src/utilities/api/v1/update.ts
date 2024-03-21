@@ -237,7 +237,7 @@ async function checkRedirectDataValidity(data: Types.RedirectQRCodeData, id: str
             return {
                 valid: false,
                 error: "INVALID_AFTER_EXPIRY",
-                message: "After expiry URL needs to be a valid URL or a vCard.",
+                message: "after_expiry URL needs to be a valid URL or a vCard.",
             };
         }
 
@@ -420,11 +420,11 @@ export async function checkLocationDataValidity(data: Types.LocationQRCodeData, 
         }
     }
 
-    if (zones.some((zone: { redirectTo: any; }) => !zone.redirectTo)) {
+    if (zones.some((zone: { redirect_to: any; }) => !zone.redirect_to)) {
         return {
             valid: false,
             error: "INVALID_LOCATION",
-            message: "All zones need to have a redirectTo.",
+            message: "All zones need to have a redirect_to.",
         }
     }
 
@@ -434,22 +434,22 @@ export async function checkLocationDataValidity(data: Types.LocationQRCodeData, 
         if (zone.type != "circle" && zone.type != "polygon") {
             return {valid:false, error: "INVALID_LOCATION",message:"Zone "+(zoneIndex+1)+"'s type must be either 'circle' or 'polygon'."}
         }
-        // zone.redirectTo has to be a valid URL or a vCard and cannot be empty
-        if (zone.redirectTo == "" || !zone.redirectTo) {
-            return {valid:false, error: "INVALID_LOCATION",message:"Zone "+(zoneIndex+1)+"'s 'Redirect To' must be a valid URL or a vCard."}
+        // zone.redirect_to has to be a valid URL or a vCard and cannot be empty
+        if (zone.redirect_to == "" || !zone.redirect_to) {
+            return {valid:false, error: "INVALID_LOCATION",message:"Zone "+(zoneIndex+1)+"'s 'redirect_to' must be a valid URL or a vCard."}
         }
-        if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(zone.redirectTo)) {
+        if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(zone.redirect_to)) {
             return {
                 valid:false,
                 error: "INVALID_LOCATION",
-                message:"Zone "+(zoneIndex+1)+"'s 'Redirect To' must be a valid URL or a vCard."
+                message:"Zone "+(zoneIndex+1)+"'s 'redirect_to' must be a valid URL or a vCard."
             }
         }
-        // zone.afterExpiry has to be a valid URL or a vCard, but can be empty
-        if (zone.afterExpiry != "" && zone.afterExpiry) {
-            if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(zone.afterExpiry)) {
+        // zone.after_expiry has to be a valid URL or a vCard, but can be empty
+        if (zone.after_expiry != "" && zone.after_expiry) {
+            if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(zone.after_expiry)) {
                 return {
-                    valid:false, error: "INVALID_LOCATION", message:"Zone "+(zoneIndex+1)+"'s 'After Expiry' must be a valid URL or a vCard."}
+                    valid:false, error: "INVALID_LOCATION", message:"Zone "+(zoneIndex+1)+"'s 'after_expiry' must be a valid URL or a vCard."}
             }
         }
 
@@ -483,8 +483,8 @@ export async function checkLocationDataValidity(data: Types.LocationQRCodeData, 
     }
 
     for (let zoneIndex in data.zones) {
-        if (data.zones[zoneIndex].redirectTo) data.zones[zoneIndex].redirectTo = data.zones[zoneIndex].redirectTo.trim()
-        if (data.zones[zoneIndex].afterExpiry) data.zones[zoneIndex].afterExpiry = data.zones[zoneIndex].afterExpiry.trim()
+        if (data.zones[zoneIndex].redirect_to) data.zones[zoneIndex].redirect_to = data.zones[zoneIndex].redirect_to.trim()
+        if (data.zones[zoneIndex].after_expiry) data.zones[zoneIndex].after_expiry = data.zones[zoneIndex].after_expiry.trim()
     }
 
     return { valid: true, newData: (data as unknown as Types.Data) };

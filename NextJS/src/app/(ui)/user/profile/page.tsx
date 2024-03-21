@@ -12,7 +12,7 @@ export default async function UserProfile() {
 
     //! Make sure the user is logged in
     if (!cookies()?.get("token")?.value) redirect("/login")
-    let user = await getUser(cookies().get("token").value, { allowAPIKey:false })
+    let user = await getUser("Bearer " + cookies().get("token").value, { allowAPIKey:false })
     if (!user.isAuthenticated) redirect("/login")
 
     async function updateUserInformation(prevState:any, form: FormData) {
@@ -26,6 +26,7 @@ export default async function UserProfile() {
                 default: "Invalid data"
             }
         }
+
 
         // email validation regex
         const emailValidation = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
@@ -45,10 +46,7 @@ export default async function UserProfile() {
             
             if (newToken) {
                 cookies().set("token", newToken)
-                user = {
-                    isAuthenticated: true,
-                    user: newUser
-                }
+
                 return {
                     success: "User updated"
                 }
@@ -135,12 +133,17 @@ export default async function UserProfile() {
                     borderRadius: "100vh",
                 }}>
                     <ProfilePicture src={user.user.profilePictureUrl??
-                    "https://ui-avatars.com/api/?name="+user.user.firstName+(user.user.lastName ? "+"+user.user.lastName : "")+"&background=random"
+                    "https://ui-avatars.com/api/?name="+user.user.firstName+(user.user.lastName ? "+"+user.user.lastName : "")+"&background=232366&color=f0f0f0&size=200"
                     } width={200} height={200}/>
                 </div>
 
                 <br/>
-                <p className="font-bold text-2xl">{user.user.firstName}</p>
+                <p className="font-bold text-2xl" style={{
+                        maxWidth: "80svw",
+                        width: "100%",
+                        textAlign: "center",
+                        overflowWrap: "break-word",
+                }}>{user.user.firstName??""} {user.user.lastName??""}</p>
                 <br/>
                 <ProfileUpdateForm action={updateUserInformation} user={user.user}/>
                 <br/>

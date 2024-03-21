@@ -37,7 +37,7 @@ export default async function Update({
 }: {params:{id:string}}) {
     //! Make sure the user is logged in
     if (!cookies()?.get("token")?.value) redirect("/login")
-    let user = await getUser(cookies().get("token").value, { allowAPIKey:false })
+    let user = await getUser("Bearer " + cookies().get("token").value, { allowAPIKey:false })
     if (!user.isAuthenticated) redirect("/login")
 
     if (!global.QRCodeTable[params.id]) {
@@ -47,7 +47,7 @@ export default async function Update({
     const qrCodeDetails = await fetch(`${API_URL}/qrcode/${params.id}?export=png,svg`, {
         headers: {
             Accept: "application/json",
-            Authorization: `${cookies().get("token").value}`
+            Authorization: `Bearer ${cookies().get("token").value}`
         },
     }).then((res) => res.json())
 
@@ -66,7 +66,7 @@ export default async function Update({
             await fetch(`${API_URL}/qrcode/${id}`, {
                 method: "DELETE",
                 headers: {
-                    Authorization: cookies().get("token").value
+                    Authorization: "Bearer " + cookies().get("token").value
                 }
             }).then((res) => {
                 if (res.status === 200) {

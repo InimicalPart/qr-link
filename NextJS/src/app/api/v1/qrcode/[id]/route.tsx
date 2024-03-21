@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
     /*
         ?export=pdf
     */
-    const token = request.headers.get("Authorization");
+    const token = request.headers.get("Authorization") ?? request.headers.get("X-API-Key");
     if (!id) {
         return new NextResponse(JSON.stringify({
             error: "NO_ID",
@@ -83,6 +83,7 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
             delete qrcodeCopy.description;
             delete qrcodeCopy.created;
             delete qrcodeCopy.updated;
+            delete qrcodeCopy.update_log;
         }
     let exportData: Partial<{
         svg: string,
@@ -162,7 +163,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
         message: "Invalid ID provided.",
       }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
-    const token = request.headers.get("Authorization")
+    const token = request.headers.get("Authorization") ?? request.headers.get("X-API-Key");
     if (!token) {
         return new NextResponse(JSON.stringify({
             error: "NO_TOKEN",
@@ -264,7 +265,7 @@ export async function DELETE(request: NextRequest, {params}: {params: {id: strin
         message: "Invalid ID provided.",
       }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
-    const token = request.headers.get("Authorization")
+    const token = request.headers.get("Authorization") ?? request.headers.get("X-API-Key");
     if (!token) {
         return new NextResponse(JSON.stringify({
             error: "NO_TOKEN",

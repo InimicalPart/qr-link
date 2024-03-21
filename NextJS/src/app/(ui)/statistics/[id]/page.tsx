@@ -21,7 +21,7 @@ export default async function Statistics({params}: {params:{id:string}}) {
 
     //! Make sure the user is logged in
     if (!cookies()?.get("token")?.value) redirect("/login")
-    let user = await getUser(cookies().get("token").value, { allowAPIKey:false })
+    let user = await getUser("Bearer " + cookies().get("token").value, { allowAPIKey:false })
     if (!user.isAuthenticated) redirect("/login")
 
     const code = global.QRCodeTable[params.id]
@@ -153,7 +153,10 @@ export default async function Statistics({params}: {params:{id:string}}) {
 
                     <div style={{display:"flex",justifyContent:"space-between"}}>
                         <p>Day with most scans:</p>
-                        <b>{topScanDay.text} ({topScanDay.value})</b>
+                        {topScanDay.text == "N/A" ?
+                        <b id="topDay">{topScanDay.text} ({topScanDay.value})</b> :
+                        <b id="topDay">Loading... (??)</b>
+                        }
                     </div>
                     <div style={{display:"flex",justifyContent:"space-between"}}>
                         <p>Most scans happen at:</p>
@@ -213,7 +216,7 @@ export default async function Statistics({params}: {params:{id:string}}) {
                             width:"calc(100% - 40px)",
                             height:"300px"
                     }}>
-                        <DayRank data={dayRank}/>
+                        <DayRank generateStatistics={generateStatistics} startData={dayRank}/>
                     </div>
                 </div>
                 <br/>
@@ -235,7 +238,7 @@ export default async function Statistics({params}: {params:{id:string}}) {
                             width:"calc(100% - 40px)",
                             height:"300px"
                     }}>
-                        <TimeRank data={timeRank} />
+                        <TimeRank data={timeRank}/>
                     </div>
                 </div>
                 <br/>

@@ -183,7 +183,7 @@ export default function GenerateQRs({
 
                 function getQRs(): Promise<object[]> {
                     return new Promise((resolve, reject) => {
-                    fetch(apiURL + "/qrcode/list?export=png&statistics=L2M&fields=timestamp&timezone="+moment.tz.guess(), { headers: { Authorization: `${token}` } }) //! L2M = Last 2 Months
+                    fetch(apiURL + "/qrcode/list?export=png&statistics=L2M&fields=timestamp&timezone="+moment.tz.guess(), { headers: { Authorization: `Bearer ${token}` } }) //! L2M = Last 2 Months
                         .then((response) => response.json())
                         .then((data) => {
                         if (data.error) {

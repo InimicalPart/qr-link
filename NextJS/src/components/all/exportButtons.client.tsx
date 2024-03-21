@@ -66,7 +66,7 @@ export default function ExportButtons({
                     fetch(`${API_URL}/qrcode/${qrcodeid}?export=png,svg`, {
                         headers: {
                             Accept: "application/json",
-                            Authorization: token
+                            Authorization: "Bearer " + token
                         },
                     }).then((res) => res.json()).then((data)=>{
                         (document.getElementById(type) as HTMLAnchorElement).setAttribute("aria-id", qrcodeid);
@@ -124,7 +124,7 @@ export default function ExportButtons({
                     fetch(`${API_URL}/qrcode/${qrcodeid}?export=png,svg`, {
                         headers: {
                             Accept: "application/json",
-                            Authorization: token
+                            Authorization: "Bearer " + token
                         },
                     }).then((res) => res.json()).then((data)=>{
                         (document.getElementById(type) as HTMLAnchorElement).setAttribute("aria-id", qrcodeid);

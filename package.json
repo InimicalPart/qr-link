@@ -1,6 +1,6 @@
 {
   "name": "qrlink",
-  "version": "2.1.0",
+  "version": "2.4.0",
   "description": "A QR-code that can change where it points to",
   "main": "dist/index.js",
   "engines": {

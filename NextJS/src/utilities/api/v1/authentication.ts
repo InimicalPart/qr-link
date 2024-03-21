@@ -29,7 +29,12 @@ const strippedBaseURL = process.env.BASE_URL.replace(/(^\w+:|^)\/\//, '');
  * @returns A boolean indicating whether the token is an API key.
  */
 function isAPIKey(token: string) {
-    return token.startsWith("Bearer ")
+    try {
+        const id = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString()).id
+        return Object.keys(global.APIKeyTable).includes(id) && !token.startsWith("Bearer ")
+    } catch {
+        return false
+    }
 }
 
 
@@ -106,7 +111,7 @@ export async function getUser(token: string,options:{
     required_permission?:APIKeyPermissions|APIKeyPermissions[],
     verify?:(res: UserVerify | APIVerify) => boolean,
     updateLastUsed?:boolean
-} = {}): Promise<{isAuthenticated: boolean, reason?: string, user?: {
+} = {}): Promise<{isAuthenticated: boolean, reason?: string, type?:"api"|"user", user?: {
     profilePictureUrl: string;object:string, id:string, email: string, emailVerified: boolean, firstName: string | null, lastName: string | null, createdAt: Date | string, updatedAt: Date|string 
 }}> {
     
@@ -163,10 +168,15 @@ export async function getUser(token: string,options:{
 
         return {
             isAuthenticated: true,
+            type: "api",
             user: owner,
         };
     } else {
-    
+        if ("Bearer" !== token.split(" ")[0]) {
+            console.log("[AUTH] Token is invalid.")
+            return { isAuthenticated: false };
+        }
+        token = token.replace("Bearer ", "")
         console.log("[AUTH] Verifying user token: " + token.substring(0, 10) + "..." + token.substring(token.length - 10, token.length))
         let verifiedToken;
         try {
@@ -195,6 +205,7 @@ export async function getUser(token: string,options:{
         console.log("[AUTH] Token is valid. User: " + verifiedToken.payload.user.email)
         return {
             isAuthenticated: true,
+            type: "user",
             user: verifiedToken.payload.user,
         };
     }
@@ -286,7 +297,6 @@ export async function generateAPIToken(id: string) {
  * @returns The verified API key details.
  */
 export async function verifyAPIToken(token: string): Promise<APIKey|null>{
-    token = token.replace("Bearer ", "")
     const contentPart = token.split(".")[1]
     const decoded = Buffer.from(contentPart, "base64").toString()
     const payload = JSON.parse(decoded)

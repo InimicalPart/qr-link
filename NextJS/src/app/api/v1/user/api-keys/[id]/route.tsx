@@ -9,7 +9,9 @@ declare const global: QRLinkGlobal
 export async function GET(request: NextRequest, {params}: {params: {id: string}}) {
     //! Get an API key (token is required, and the key must belong to the user), if token is an API key, the "id" must be @me or the API key's ID, and then return the name and id of the key
 
-    const token = request.headers.get("Authorization")
+    params.id = decodeURIComponent(params.id)
+
+    const token = request.headers.get("Authorization") ?? request.headers.get("X-API-Key")
     if (!token) {
         return new NextResponse(JSON.stringify({
             error: "NO_TOKEN",
@@ -36,6 +38,9 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
         }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
 
+
+    if (user.type == "api" && params.id === "@me") params.id = await getIDFromAPIToken(token)
+
     if (!Object.keys(global.APIKeyTable).includes(params.id)) {
         return new NextResponse(JSON.stringify({
             error: "INVALID_ID",
@@ -43,9 +48,8 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
         }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
-    if (token.startsWith("Bearer ")) {
+    if (user.type == "api") {
         const APIID = await getIDFromAPIToken(token)
-        const unBearered = token.replace("Bearer ","")
         const APIDetails = global.APIKeyTable[APIID]
         return new NextResponse(JSON.stringify({
             id: APIDetails.id,
@@ -53,7 +57,7 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
             created_at: APIDetails.created ? APIDetails.created : null,
             last_used: APIDetails.last_used ? APIDetails.last_used : null,
             permissions: APIDetails.permissions,
-            token_preview: unBearered.substring(0, 7) + "..." + unBearered.substring(unBearered.length - 7, unBearered.length)
+            token_preview: token.substring(0, 7) + "..." + token.substring(token.length - 7, token.length)
         }), { status: 200, headers: { "Content-Type": "application/json" } });
     } else {
         if (global.APIKeyTable[params.id].belongs_to !== user.user.id) {
@@ -80,7 +84,10 @@ export async function GET(request: NextRequest, {params}: {params: {id: string}}
 export async function DELETE(request: NextRequest, {params}: {params: {id: string}}) {
     //! Delete an API key (token is required, and the key must belong to the user)
    
-    const token = request.headers.get("Authorization")
+    params.id = decodeURIComponent(params.id)
+
+
+    const token = request.headers.get("Authorization") ?? request.headers.get("X-API-Key")
     if (!token) {
         return new NextResponse(JSON.stringify({
             error: "NO_TOKEN",
@@ -116,30 +123,33 @@ export async function DELETE(request: NextRequest, {params}: {params: {id: strin
         }
             
             
-        const { id } = (params.id === "@me" && token.startsWith("Bearer ") ? {id: await getIDFromAPIToken(token)} : params);
+        if (user.type == "api" && params.id === "@me") params.id = await getIDFromAPIToken(token)
         
-        if (!global.APIKeyTable[id]) {
+        if (!global.APIKeyTable[params.id]) {
             return new NextResponse(JSON.stringify({
                 error: "INVALID_ID",
                 message: "Invalid ID provided in request."
             }), { status: 400, headers: { "Content-Type": "application/json" } });
         }
-        if (global.APIKeyTable[id].belongs_to !== user.user.id) {
+        if (global.APIKeyTable[params.id].belongs_to !== user.user.id) {
             return new NextResponse(JSON.stringify({
                 error: "UNAUTHORIZED",
                 message: "You are not authorized to delete this API key."
             }), { status: 403, headers: { "Content-Type": "application/json" } });
         }
 
-    await deleteAPIKey(id)
+    await deleteAPIKey(params.id)
     return new NextResponse(JSON.stringify({
-        id,
+        id:params.id,
     }), { status: 200, headers: { "Content-Type": "application/json" } });
 }
 
 export async function PATCH(request: NextRequest, {params}: {params: {id: string}}) {
     //! Update an API key (token is required, and the key must belong to the user, only updateable field is 'name')
     
+    params.id = decodeURIComponent(params.id)
+
+
     let body;
     try {
         body = await request.json();
@@ -150,7 +160,7 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
         }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
-    const token = request.headers.get("Authorization")
+    const token = request.headers.get("Authorization") ?? request.headers.get("X-API-Key");
     if (!token) {
         return new NextResponse(JSON.stringify({
             error: "NO_TOKEN",
@@ -185,9 +195,8 @@ export async function PATCH(request: NextRequest, {params}: {params: {id: string
 
     let { name } = body;
 
-    if (params.id === "@me" && token.startsWith("Bearer ")) {
-        params.id = await getIDFromAPIToken(token)
-    }
+    if (user.type == "api" && params.id === "@me") params.id = await getIDFromAPIToken(token)
+
 
     if (!global.APIKeyTable[params.id]) {
         return new NextResponse(JSON.stringify({

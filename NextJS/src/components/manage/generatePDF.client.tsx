@@ -32,7 +32,7 @@ export default function PDFButton({
             fetch(`${apiURL}/qrcode/${id}?export=pdf`, {
                 headers: {
                     Accept: "application/json",
-                    Authorization: token
+                    Authorization: "Bearer " + token
                 },
             }).then((res) => res.json()).then((res) => {
 
