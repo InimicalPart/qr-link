@@ -91,6 +91,9 @@ export default function AddAPIKeyButton({
                         <button id='copy-api-key' class='bg-blue-900 text-blue-300 px-2.5 py-0.5 rounded-lg mt-2 cursor-pointer' onclick='javascript:navigator.clipboard.writeText("${token}");this.innerText="Copied!"'>Click to Copy</button>
                         <br>
                         <br>
+                        <b>To use your API-key, supply it in the <code>X-API-Key</code> header when making requests.</b>
+                        <br>
+                        <br>
                         <b>Make sure to copy this key now, as it will not be shown again.</b>`,
                     icon: "success",
                     didClose: () => {

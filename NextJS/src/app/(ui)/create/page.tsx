@@ -23,7 +23,7 @@ const API_URL = (process.env.API_URL)
 export default async function Home() {
     //! Make sure the user is logged in
     if (!cookies()?.get("token")?.value) redirect("/login")
-    const user = await getUser(cookies().get("token").value, { allowAPIKey:false })
+    const user = await getUser("Bearer " + cookies().get("token").value, { allowAPIKey:false })
     if (!user.isAuthenticated) redirect("/login")
 
     const createSubmit = submit.bind(null, "create", {})

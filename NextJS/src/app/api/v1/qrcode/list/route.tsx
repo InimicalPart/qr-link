@@ -9,7 +9,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // Get all QR-codes that are linked to an identifier
 
   // Check if identifier is valid
-  const token = request.headers.get("Authorization");
+  const token = request.headers.get("Authorization") ?? request.headers.get("X-API-Key");
   if (!token) {
     return new NextResponse(JSON.stringify({
       error: "NO_TOKEN",

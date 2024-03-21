@@ -9,7 +9,7 @@ declare const global: QRLinkGlobal
 export async function GET(request:NextRequest) {
     //! Get all API keys belonging to the user (found in the token. token is required)
 
-    const token = request.headers.get("Authorization")
+    const token = request.headers.get("Authorization") ?? request.headers.get("X-API-Key");
     if (!token) {
         return new NextResponse(JSON.stringify({
             error: "NO_TOKEN",
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
-    const token = request.headers.get("Authorization")
+    const token = request.headers.get("Authorization") ?? request.headers.get("X-API-Key");
     if (!token) {
         return new NextResponse(JSON.stringify({
             error: "NO_TOKEN",

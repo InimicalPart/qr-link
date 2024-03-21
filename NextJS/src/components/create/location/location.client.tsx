@@ -97,16 +97,16 @@ export default function Location({
         priority: number;
         isEntireWorld: boolean;
         positions: LatLngTuple[];
-        redirectTo: string;
-        afterExpiry: string;
+        redirect_to: string;
+        after_expiry: string;
     }| {
         type: 'circle';
         priority: number;
         isEntireWorld: boolean;
         center: LatLngTuple;
         radius: number;
-        redirectTo: string;
-        afterExpiry: string;
+        redirect_to: string;
+        after_expiry: string;
     } | string {
         const res = zones.map((zone: any) => {
             const newZone: {
@@ -116,14 +116,14 @@ export default function Location({
                 positions?: LatLngTuple[];
                 center?: LatLngTuple;
                 radius?: number;
-                redirectTo: string;
-                afterExpiry: string;
+                redirect_to: string;
+                after_expiry: string;
             } = {
                 type: zone.type,
                 priority: zone.priority,
                 isEntireWorld: zone.isEntireWorld || false,
-                redirectTo: zone.redirectTo,
-                afterExpiry: zone.afterExpiry
+                redirect_to: zone.redirect_to,
+                after_expiry: zone.after_expiry
             };
             if (zone.type === "circle") {
                 newZone.center = zone.positions[0];
@@ -205,16 +205,16 @@ export default function Location({
             return;
         }
         setIsCreatingZone(false);
-        setZones([...zones, { positions: JSON.parse(JSON.stringify(polygonPositions)), type: "polygon", priority: 0, hidden:false, redirectTo: "", afterExpiry: "", key:crypto.randomBytes(32).toString("hex")}]);
+        setZones([...zones, { positions: JSON.parse(JSON.stringify(polygonPositions)), type: "polygon", priority: 0, hidden:false, redirect_to: "", after_expiry: "", key:crypto.randomBytes(32).toString("hex")}]);
         setSelectedZoneIndex(zones.length); // Set the newly created zone as the selected zone
         setPolygonPositions([]);
     }
     const createEntireWorldZone = () => {
-        setZones([...zones, { positions: [[-85.05115, -180], [85, -180], [85, 180], [-85.05115, 180]], type: "polygon", hidden:false, isEntireWorld: true, redirectTo: "", afterExpiry: "", priority: -1000,key:crypto.randomBytes(32).toString("hex")}]);
+        setZones([...zones, { positions: [[-85.05115, -180], [85, -180], [85, 180], [-85.05115, 180]], type: "polygon", hidden:false, isEntireWorld: true, redirect_to: "", after_expiry: "", priority: -1000,key:crypto.randomBytes(32).toString("hex")}]);
         setZoneType("circle");
     };
     const createCircleZone = (e: any) => {
-        setZones([...zones, { positions: [[e.latlng.lat, e.latlng.lng]], radius: 300, type: "circle", priority: 0, hidden:false, redirectTo: "", afterExpiry: "", key:crypto.randomBytes(32).toString("hex")}]);
+        setZones([...zones, { positions: [[e.latlng.lat, e.latlng.lng]], radius: 300, type: "circle", priority: 0, hidden:false, redirect_to: "", after_expiry: "", key:crypto.randomBytes(32).toString("hex")}]);
         
     };
     const deactivateAllZones = () => {
@@ -289,8 +289,8 @@ export default function Location({
         isEntireWorld?: boolean;
         positions?: number[][] | number[];
         radius?: number;
-        redirectTo: string;
-        afterExpiry: string;
+        redirect_to: string;
+        after_expiry: string;
         bounds: L.LatLngBounds
     }[]) {
             if (zones.length < 1) {
@@ -389,7 +389,7 @@ export default function Location({
 
             let missingRedirects = [];
             for (let zone of zones) {
-                if (zone.redirectTo == "") {
+                if (zone.redirect_to == "") {
                     missingRedirects.push(zone);
                 }
             }
@@ -412,14 +412,14 @@ export default function Location({
 
             // for each redirect_to and after_expiry, check if its valid using: !/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(redirect_to)
             let invalidRedirects = [];
-            let invalidAfterExpiry = [];
+            let invalidafter_expiry = [];
             for (let zone of zones) {
-                if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(zone.redirectTo)) {
+                if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(zone.redirect_to)) {
                     invalidRedirects.push(zone);
                 }
-                if (zone.afterExpiry) {
-                    if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(zone.afterExpiry)) {
-                        invalidAfterExpiry.push(zone);
+                if (zone.after_expiry) {
+                    if (!/^(BEGIN:VCARD.*END:VCARD$|http(s|):\/\/|.*?\..*?)/gm.test(zone.after_expiry)) {
+                        invalidafter_expiry.push(zone);
                     }
                 }
             }
@@ -438,10 +438,10 @@ export default function Location({
                                 </ul>`
                         ,10000)
                 return false
-            } else if (invalidAfterExpiry.length > 0) {
+            } else if (invalidafter_expiry.length > 0) {
                 showError(`<span class="font-medium">Some zones have invalid 'after expiry' properties. Please fix the following zones:</span>
                                 <ul class="mt-1.5 ml-1.5 list-disc list-inside">
-                                    ${invalidAfterExpiry
+                                    ${invalidafter_expiry
                                         .map((z) => {
                                             return [
                                                 "<li>Zone " +
@@ -503,7 +503,7 @@ export default function Location({
         useEffect(()=>{
             if (leafletMap) {
                 const copy = [...zones];
-                for (let zone of copy.sort((a,b)=>b.priority - a.priority)) { 
+                for (let zone of copy.sort((a,b)=>a.priority-b.priority)) { 
                     zone.L.bringToFront();
                 }
             }
@@ -516,8 +516,8 @@ export default function Location({
         if (zones.length > 0 && selectedZoneIndex != -1) {
             (document.getElementById("radiusChange") as HTMLInputElement).value = zones.length > 0 && selectedZoneIndex != -1 && zones[selectedZoneIndex].radius ? zones[selectedZoneIndex].radius : 300;
             (document.getElementById("prio") as HTMLInputElement).value = zones[selectedZoneIndex]?.priority || 0;
-            (document.getElementById("locRedirect") as HTMLInputElement).value = zones[selectedZoneIndex]?.redirectTo || "";
-            (document.getElementById("locAERedirect") as HTMLInputElement).value = zones[selectedZoneIndex]?.afterExpiry || "";
+            (document.getElementById("locRedirect") as HTMLInputElement).value = zones[selectedZoneIndex]?.redirect_to || "";
+            (document.getElementById("locAERedirect") as HTMLInputElement).value = zones[selectedZoneIndex]?.after_expiry || "";
         }
     },[selectedZoneIndex,zones])
     return (
@@ -674,7 +674,7 @@ export default function Location({
                     onChange={(e) => {
                         // save to zones
                         const newZones = [...zones];
-                        newZones[selectedZoneIndex].redirectTo = e.target.value || "";
+                        newZones[selectedZoneIndex].redirect_to = e.target.value || "";
                         setZones(newZones);
                     }}
                     style={{
@@ -702,7 +702,7 @@ export default function Location({
                         onChange={(e) => {
                             // save to zones
                             const newZones = [...zones];
-                            newZones[selectedZoneIndex].afterExpiry = e.target.value || "";
+                            newZones[selectedZoneIndex].after_expiry = e.target.value || "";
                             setZones(newZones);
                         }}
                     style={{

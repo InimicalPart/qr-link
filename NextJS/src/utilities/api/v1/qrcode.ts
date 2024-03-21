@@ -271,8 +271,8 @@ export class QRCode {
             }
 
 
-            currentAction.redirect_to = currentZone.redirectTo
-            currentAction.after_expiry = currentZone.afterExpiry
+            currentAction.redirect_to = currentZone.redirect_to
+            currentAction.after_expiry = currentZone.after_expiry
         } else if (this.type == "user-agent") {
             const data = (this.data as unknown as UserAgentQRCodeDataT).userAgents.toSorted((a, b) => {
                 //! Set "Any (fallback)" (/.*/ & /.*/) to the end of the list
@@ -468,7 +468,7 @@ export class QRCode {
      * @param timezone The timezone to use
      * @returns An object with the amount of scans that have happened at each hour of the day
      */
-    private getScannedTimeRank12(timezone: string) {
+    private getScannedTimeRank12() {
         let rtrn: { [key: string]: number | null } = {};
         for (let i = 0; i < 12; i++) {
             let amLabel = i === 0 ? "12:00 AM" : i.toString().padStart(2, '0') + ":00 AM";
@@ -672,7 +672,7 @@ export class QRCode {
                 }
             case "ScannedTimeRank12H":
                 return {
-                    info: this.getScannedTimeRank12(timezone),
+                    info: this.getScannedTimeRank12(),
                     important_moments: this.getImportantMoments(this.created, new Date().toISOString())
                 }    
             case "OS":
@@ -739,8 +739,8 @@ export interface LocationQRCodeDataT {
         positions?: number[][];
         center?: number[];
         radius?: number;
-        redirectTo: string;
-        afterExpiry: string;
+        redirect_to: string;
+        after_expiry: string;
     }>
 }
 

@@ -150,7 +150,7 @@ export async function submit(submitType="create", qrCodeInfo:any={}, prevState: 
         method: submitType=="update"?"PATCH":"POST",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": `${cookies().get("token").value}`
+            "Authorization": `Bearer ${cookies().get("token").value}`
         },
         body: JSON.stringify(JSONBody),
         cache: "no-cache"

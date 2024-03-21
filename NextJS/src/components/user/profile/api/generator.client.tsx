@@ -36,7 +36,7 @@ export default function APIKeyGenerator({
             useEffect(() => {
                 function fetchAPIs(): Promise<APIKeyOutput[]> {
                     return new Promise((resolve, reject) => {
-                    fetch(API_URL +  "/user/api-keys", { headers: { Authorization: `${token}` } })
+                    fetch(API_URL +  "/user/api-keys", { headers: { Authorization: `Bearer ${token}` } })
                         .then((response) => response.json())
                         .then((data) => {
                         if (data.error) {

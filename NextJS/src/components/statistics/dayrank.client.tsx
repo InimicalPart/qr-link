@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { Chart } from "chart.js/auto"
 import 'chartjs-adapter-moment';
+import moment from "moment-timezone";
 
 //! const data = (await global.QRCodeTable[params.id].getStatistics({
 //!     type:"ScannedDayRank",
@@ -20,8 +21,20 @@ import 'chartjs-adapter-moment';
 //! })
 
 
-export default function DayRank({data}: {
-    data:{
+export default function DayRank({generateStatistics, startData}: {
+    
+    generateStatistics: (type:string, ...extras:any) => Promise<{
+        info:{
+            [key:string]:number
+        },
+        important_moments: {
+            date: string, update: {
+                created?: string,
+                [key: string]: any
+            }
+        }[]
+    }>,
+    startData:{
         info: {
             [key:string]:number
         },
@@ -34,6 +47,8 @@ export default function DayRank({data}: {
     }
 }) {
 
+
+    let [data, setData] = useState(startData);
     let scanDay = useRef<HTMLCanvasElement>(null)
     let [finishedLoading, setFinishedLoading] = useState(false);
     /*
@@ -55,7 +70,20 @@ export default function DayRank({data}: {
     useEffect(()=>{
         const zoomPlugin = require('chartjs-plugin-zoom');
         Chart.register(zoomPlugin.default);
-    },[])
+    
+        generateStatistics("ScannedDayRank",{
+            timezone: moment.tz.guess()
+        }).then((res)=>{
+            setData(res)
+        })
+    },[generateStatistics])
+
+    useEffect(()=>{
+        let topDay = Object.keys(data.info).reduce((a, b) => data.info[a] > data.info[b] ? a : b);
+        let topDayCount = data.info[topDay];
+
+        document.getElementById("topDay").innerText = `${topDay[0].toUpperCase() + topDay.slice(1)} (${topDayCount})`
+    },[data.info])
 
     useEffect(()=>{
         let chart: Chart<"bar", number[], string> = null

@@ -15,7 +15,7 @@ export default async function UserAPI() {
 
     //! Make sure the user is logged in
     if (!cookies()?.get("token")?.value) redirect("/login")
-    const user = await getUser(cookies().get("token").value, { allowAPIKey:false })
+    const user = await getUser("Bearer " + cookies().get("token").value, { allowAPIKey:false })
     if (!user.isAuthenticated) redirect("/login")
 
     async function revokeAPIKey(id:string) {
@@ -24,7 +24,7 @@ export default async function UserAPI() {
         return await fetch(process.env.API_URL+"/user/api-keys/"+id, {
             method: "DELETE",
             headers: {
-                "Authorization": cookies().get("token").value
+                "Authorization": "Bearer " + cookies().get("token").value
             }
         }).then((res) => res.json())
     }
@@ -35,7 +35,7 @@ export default async function UserAPI() {
         return await fetch(process.env.API_URL+"/user/api-keys/"+id, {
             method: "PATCH",
             headers: {
-                "Authorization": cookies().get("token").value,
+                "Authorization": "Bearer " + cookies().get("token").value,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -50,7 +50,7 @@ export default async function UserAPI() {
         return await fetch(process.env.API_URL+"/user/api-keys", {
             method: "POST",
             headers: {
-                "Authorization": cookies().get("token").value,
+                "Authorization": "Bearer " + cookies().get("token").value,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(data)

@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}) {
       }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     
-    const token = request.headers.get("Authorization")
+    const token = request.headers.get("Authorization") ?? request.headers.get("X-API-Key");
     
     if (!token) {
         return new NextResponse(JSON.stringify({

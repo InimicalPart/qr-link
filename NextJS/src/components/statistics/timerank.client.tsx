@@ -75,7 +75,7 @@ export default function TimeRank({data}: {
 
             let topHour = Object.keys(sortedAlpha).reduce((a, b)=>sortedAlpha[a] > sortedAlpha[b] ? a : b)
             let topHourCount = sortedAlpha[topHour]
-            
+
             document.getElementById("topTime").innerText = `${topHour} (${topHourCount})`
         }
             

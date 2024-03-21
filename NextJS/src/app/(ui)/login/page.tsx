@@ -50,7 +50,7 @@ export default async function Home() {
 
     //! Make sure the user is logged in
     if (cookies()?.get("token")?.value) {
-        let user = await getUser(cookies().get("token").value, { allowAPIKey:false })
+        let user = await getUser("Bearer " + cookies().get("token").value, { allowAPIKey:false })
         if (user.isAuthenticated) redirect("/dashboard")
     }
     
