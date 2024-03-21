@@ -10,8 +10,6 @@ QRLink is a system that allows someone to generate a QR-code and change where it
 ## Management
 For help with managing QRLink, please see [GuideForManaging.md](https://github.com/newseedit/dynamic-qr-link/blob/main/GuideForManaging.md)
 
-NewSeed IT employees, if I, the creator, were no longer at service, look at the linked file for a detailed explanation of QRLink, its systems, and help with troubleshooting.
-
 ## Prerequisites
 To run QRLink, you need to have the following installed:
 - NodeJS (>=18.17.1)
