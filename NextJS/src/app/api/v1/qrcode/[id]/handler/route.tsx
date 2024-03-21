@@ -327,7 +327,7 @@ export async function GET(request: NextRequest, {params}:{params:{id:string}}): 
         })
     } else {
         global.QRCodeTable[id].scanData.push({
-            timestamp: new Date()
+            timestamp: new Date().toISOString()
         })
         global.QRCodeTable[id].scanCount++;
         saveQR(id, global.QRCodeTable[id], true)
