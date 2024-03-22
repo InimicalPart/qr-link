@@ -62,12 +62,52 @@ export default async function UserAPI() {
         redirect("/user/profile")
     }
 
-    return (
+
+    async function logout() {
+        "use server";
+        cookies().delete("token")
+        redirect("/login")
+    }
+
+    async function goToHome() {
+        "use server";
+        redirect("/")
+    }
+
+    return (        <div className="profile-api main-container" style={{
+        backgroundImage: "url('/res/img/newseed_background.png')",
+        backgroundRepeat: "no-repeat",
+        overflowX: "hidden",
+    }}>
+        <header style={{padding:"calc(1.5em + 8px)", display:"flex", justifyContent: "space-between"}} className="header">
+        <form action={goToHome}>
+            <button type="submit">
+                <Image src="/res/img/logo.png" priority={true} width={450} height={99} style={{
+                    maxHeight: "99px"
+                }} alt="QRLink logo"/>
+            </button>
+        </form>
+        <div className='header topright' style={{
+            display: "flex",
+            gap: "10px",
+            height:"min-content",
+            width: "min-content",
+            alignItems: "center"
+        }}>
+            <div id="buttons" className="w-max header buttons h-[60px]">
+
+                <form action={logout} className="w-[200px] h-min" id="logOut">
+                    <button type="submit" id="logOutButton" className="w-[100%] header main-button">
+                        Logout <Image src="/res/img/signout.png" width={40} height={39} alt="Logout" style={{paddingLeft:10}}/>
+                    </button>
+                </form>                        
+            </div>
+        </div>
+    </header>
         <div style={{
-            position:"absolute",
+            position:"relative",
             left:"50%",
-            top: "40%",
-            transform:"translate(-50%,-40%)",
+            transform:"translateX(-50%)",
             width: "fit-content",
             height:"fit-content",
 
@@ -77,7 +117,7 @@ export default async function UserAPI() {
             justifyContent:"center",
             
         }}>
-            <p className="font-extrabold text-xl md:text-2xl lg:text-3xl mb-2">QRLink API keys for {user.user.firstName}</p>
+            <p className="font-extrabold text-xl md:text-2xl lg:text-3xl mb-2 mt-4 md:mt-0">QRLink API keys for {user.user.firstName}</p>
             <div id="api-key-container" style={{
                 display:"flex",
                 flexDirection:"column",
@@ -101,6 +141,12 @@ export default async function UserAPI() {
             </form>
 
 
+        </div>
+        <footer className="copyright-footer profile-api">
+                <p>
+                    &copy; 2024 - <a className="copyright" href="https://github.com/InimicalPart" target="_blank">InimicalPart</a> & <a className="copyright" href="https://newseed.se" target="_blank">NewSeed IT Solutions AB</a> - All rights reserved.
+                </p>
+            </footer>
         </div>
     );
 }

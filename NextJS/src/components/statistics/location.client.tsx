@@ -28,6 +28,8 @@ export default function ScanLocation({data, showRadii=false}: {
             accuracy: number
             browser?: string,
             os?: string,
+            browser_version?: string
+            os_version?: string
         }[],
         important_moments: {
             date: string, update: {
@@ -88,14 +90,21 @@ function PointsMapper() {
                 <Popup>
                     <span><b>{new Date(info.timestamp).toLocaleString()}</b></span>
                     <br/>
-                    <span>Accuracy: {info.accuracy}m</span>
+                    <span>Accuracy: {info.accuracy.toFixed(3)}m</span>
                     <br/>
                     {
-                        info.os ? <><br/><span>OS: {info.os}</span></> : null
+                        info.os ? <><br/><span>OS: {info.os}</span></> : <></>
                     }
                     {
-                        info.browser ? <><br/><span>Browser: {info.browser}</span></> : null
+                        info.os_version ? <><br/><span>Version: {info.os_version}</span></> : <></>
+                    }                    
+                    {
+                        info.browser ? <><br/><span>Browser: {info.browser}</span></> : <></>
                     }
+                    {
+                        info.browser_version ? <><br/><span>Version: {info.browser_version}</span></> : <></>
+                    }
+
                 </Popup>
 
             return <>
