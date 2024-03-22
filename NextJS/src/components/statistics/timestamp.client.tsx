@@ -137,7 +137,7 @@ export default function TimestampGraph({data}: {
                                     max: 'original'
                                 },
                                 y: {
-                                    min: 'original',
+                                    min: 0,
                                     max: 'original'
                                 }
                             },

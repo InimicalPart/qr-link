@@ -15,6 +15,9 @@ mv /opt/QRLink/server/resources/configuration.sh /root
 echo "[SYS] Moving unavailable.html to /var/www/errors"
 mv /opt/QRLink/server/resources/unavailable.html /var/www/errors
 
+echo "[SYS] Turning off QRLink"
+systemctl stop QRLink
+
 echo "[SYS] Installing dependencies"
 cd /opt/QRLink
 npm install

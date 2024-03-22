@@ -401,6 +401,7 @@ export class QRCode {
         let rtrn = []
         for (let scan of this.scanData as ScanDataT[]) {
             if (scan?.location) {
+                const uaInfo = new UAParser(scan["user-agent"])
                 rtrn.push({
                     timestamp: scan.timestamp,
                     latitude: scan.location.latitude,
@@ -408,8 +409,10 @@ export class QRCode {
                     accuracy: scan.location.accuracy,
                     ...(
                         scan["user-agent"] ? {
-                            browser: new UAParser(scan["user-agent"]).getBrowser().name ?? "Unknown",
-                            os: new UAParser(scan["user-agent"]).getOS().name ?? "Unknown"
+                            browser: uaInfo.getBrowser().name ?? "Unknown",
+                            browser_version: uaInfo.getBrowser().version ?? "Unknown",
+                            os: uaInfo.getOS().name ?? "Unknown",
+                            os_version: uaInfo.getOS().version ?? "Unknown"
                         } : {}
                     )
                 })
