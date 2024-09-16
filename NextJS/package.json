@@ -42,7 +42,7 @@
     "react-qr-scanner": "^1.0.0-alpha.11",
     "recharts": "^2.12.2",
     "sharp": "^0.33.2",
-    "swagger-ui-react": "^5.12.0",
+    "swagger-ui-react": "^5.17.14",
     "sweetalert2-ql": "file:../custom-modules/sweetalert2-ql",
     "ua-parser-js": "^1.0.37",
     "ws": "^8.16.0",
