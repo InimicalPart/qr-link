@@ -7,7 +7,7 @@ First of all, let's get into what QRLink is. QRLink is a demo project to showcas
 In more detail, QRLink spits out a QR-code that points to a backend API handler (in this case https://qrlink.newseed.se/api/v1/qrcode/[ID]/handler), which processes the request and makes various checks with the information that the owner has set for the QR-code with that ID.
 
 ## Documentation
-You can find the full OpenAPI specification for QRLink [here](https://github.com/newseedit/dynamic-qr-link/blob/main/openapi.yml).
+You can find the full OpenAPI specification for QRLink [here](https://github.com/InimicalPart/qr-link/blob/main/openapi.yml).
 
 ## QRLink-code's structure
 Below is an example of what a QRLink-code's object looks like:
@@ -167,7 +167,7 @@ This is the data structure of the decoded JWT token:
 
 QRLink supports 2 methods of storing the QRLink-codes, the primary one, which is a MongoDB database, and a backup one, a file (located at `/srv/QRLink/qrcodes.jsonc` on Linux and `%USERPROFILE%\Documents\QRLink\qrcodes.jsonc` on Windows).
 
-The database is configurable in the `.env` file (you can find a template of it [here](https://github.com/newseedit/dynamic-qr-link/blob/main/NextJS/.env.template))
+The database is configurable in the `.env` file (you can find a template of it [here](https://github.com/InimicalPart/qr-link/blob/main/NextJS/.env.template))
 
 You do not need to configure the database for QRLink, because QRLink will automatically detect a non-secure configuration and will attempt to configure it automatically (you will be warned 10 seconds before it happens so you have time to stop it if you do not wish to configure it). If QRLink is unable to automatically configure the database, you will be given a step-by-step instruction on how to configure it yourself. QRLink will not use the database as a storage method if it does not consider it to be secure.
 
@@ -188,12 +188,12 @@ QRLink uses Authkit (made by WorkOS) to authenticate users to QRLink's systems. 
 
 ## Server Configuration
 
-If you wish to run QRLink on a server, files for configuration can be found in the [`server/` directory](https://github.com/newseedit/dynamic-qr-link/blob/main/server). You will also find some helpful one-liners to automatically upload, build, and configure QRLink on a server (you are required to install some tools before-hand).
+If you wish to run QRLink on a server, files for configuration can be found in the [`server/` directory](https://github.com/InimicalPart/qr-link/blob/main/server). You will also find some helpful one-liners to automatically upload, build, and configure QRLink on a server (you are required to install some tools before-hand).
 
 > [!NOTE]
 > You might need to install some extra dependencies, please google any errors you get and download the required dependencies.
 
-QRLink uses NGINX to provide HTTPS support as well as managing when the frontend and backend would fail to function appropriately, in which case, the user will be sent to the [`unavailable.html` found here](https://github.com/newseedit/dynamic-qr-link/blob/main/server/resources/unavailable.html)
+QRLink uses NGINX to provide HTTPS support as well as managing when the frontend and backend would fail to function appropriately, in which case, the user will be sent to the [`unavailable.html` found here](https://github.com/InimicalPart/qr-link/blob/main/server/resources/unavailable.html)
 
 In the `server/resources/` folder, you will be able to find the appropriate NGINX configuration to use. Make sure to adjust it to your needs.
 You also need to symlink the systemd service from `/opt/QRLink/server/resources/QRLink.server` to `/lib/systemd/system/`, you can do so using the following commands:
@@ -217,10 +217,10 @@ You can create an API-key for your account on the profile page of QRLink (`/user
 API-keys are tokens that do not expire and may be used by applications to do stuff on behalf of the user.
 
 
-A usual user token is provided through the `Authorization` header as `Bearer`. Though, to use an API key, you need to provide it in the `X-API-Key` header without any prefix. After that is done you can send requests to the usual user API endpoints. Some endpoints might require that the API-key has special permissions, and some might not accept an API-key at all. More information on which endpoints support what can be found either in the Swagger UI or in the [OpenAPI Specification file](https://github.com/newseedit/dynamic-qr-link/blob/main/NextJS/openapi.json)
+A usual user token is provided through the `Authorization` header as `Bearer`. Though, to use an API key, you need to provide it in the `X-API-Key` header without any prefix. After that is done you can send requests to the usual user API endpoints. Some endpoints might require that the API-key has special permissions, and some might not accept an API-key at all. More information on which endpoints support what can be found either in the Swagger UI or in the [OpenAPI Specification file](https://github.com/InimicalPart/qr-link/blob/main/NextJS/openapi.json)
 
 ## Swagger UI
-This project has a built in Swagger UI at endpoint `/api-docs`. This endpoint reads the [OpenAPI Specification file](https://github.com/newseedit/dynamic-qr-link/blob/main/NextJS/openapi.json) and displays it using the `swagger-ui-react` package.
+This project has a built in Swagger UI at endpoint `/api-docs`. This endpoint reads the [OpenAPI Specification file](https://github.com/InimicalPart/qr-link/blob/main/NextJS/openapi.json) and displays it using the `swagger-ui-react` package.
 
 The Swagger UI contains all information about the available API endpoints and how to use them, both as a user and using an API-key.
 
@@ -237,6 +237,3 @@ In case something goes catastrophically wrong, make sure that the following is t
 - You have googled the errors in the console and searched for ways to fix it
 
 If everything turns upside-down, feel free to contact me at [`me@inimicalpart.com`](mailto:me@inimicalpart.com?subject=I%20need%20help%20with%20QRLink&body=Please%20describe%20your%20issue%20in%20high20detail%20and%20provide20screenshots%20if%20possible.) and I will try to help.
-
-## To the employees at NewSeed IT Solutions AB
-I want to thank you all for a wonderful time, and I hope we get to meet each other again soon! I had a lovely time :)
