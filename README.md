@@ -2,13 +2,17 @@
 <h1 align="center">QRLink</h1>
 <p align="center"><sub><i>Created by <b><a href="https://github.com/InimicalPart">@InimicalPart</a></b> on behalf of <b><a href="https://newseed.se/">NewSeed IT Solutions AB</a></b></i></sub></p>
 
+> [!WARNING]
+> This repository is no longer maintained. This was a project I made as an intern at [NewSeed IT Solutions AB](https://newseed.se).
+> The code should still work, I am aware of some minor bugs during creation, but I am no longer working on this actively so sadly the bugs have to stay.
+
 <br>
 
 ## Description
 QRLink is a system that allows someone to generate a QR-code and change where it's pointing to based on multiple factors like time, location, etc.. QRLink can also be integrated with various other systems to add custom factors.
 
 ## Management
-For help with managing QRLink, please see [GuideForManaging.md](https://github.com/newseedit/dynamic-qr-link/blob/main/GuideForManaging.md)
+For help with managing QRLink, please see [GuideForManaging.md](https://github.com/InimicalPart/qr-link/blob/main/GuideForManaging.md)
 
 ## Prerequisites
 To run QRLink, you need to have the following installed:
@@ -16,7 +20,7 @@ To run QRLink, you need to have the following installed:
 - NPM (>=9.6.7)
 
 ## Documentation
-You can find the OpenAPI specification file for QRLink [here](https://github.com/newseedit/dynamic-qr-link/blob/main/NextJS/openapi.json)
+You can find the OpenAPI specification file for QRLink [here](https://github.com/InimicalPart/qr-link/blob/main/NextJS/openapi.json)
 
 To view the Swagger UI, go to `/api-docs` on your website.
 
